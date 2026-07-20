@@ -1,0 +1,295 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  ADMIN
+  OPERADOR
+}
+
+enum Categoria {
+  CONTRATADO
+  ORDINARIO
+}
+
+enum Dedicacion {
+  HP
+  MT
+  TC
+  DE
+}
+
+enum Modalidad {
+  PRESENCIAL
+  VIRTUAL
+  MULTIMODAL
+}
+
+enum EstadoAsistencia {
+  PRESENTE
+  AUSENTE
+  JUSTIFICADO
+}
+
+enum Genero {
+  FEMENINO
+  MASCULINO
+}
+
+enum EstadoPeriodo {
+  ACTIVO
+  CERRADO
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  nombre    String
+  email     String   @unique
+  password  String
+  rol       Rol      @default(OPERADOR)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("usuarios")
+}
+
+model Region {
+  id     String           @id @default(cuid())
+  nombre String           @unique
+  aulas  AulaTerritorial[]
+  participantes Participante[]
+  docentes Docente[]
+
+  @@map("regiones")
+}
+
+model AulaTerritorial {
+  id           String       @id @default(cuid())
+  nombre       String
+  coordinador  String?
+  enlace       String?
+  costo                Float        @default(0)
+  preinscripcion       Float?       @default(0)
+  inscripcion          Float?       @default(0)
+  gastosAdministrativos Float?      @default(0)
+  limpieza             Float?       @default(0)
+  vigilancia           Float?       @default(0)
+  aporteCoordinacion   Float?       @default(0)
+  viatico              Float?       @default(0)
+  regionId             String
+  region       Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  cronogramas  Cronograma[]
+  docentesOrigen Docente[]  @relation("DocentesAulaOrigen")
+  participantes Participante[]
+  historialTrimestre HistorialTrimestre[]
+
+  @@map("aulas_territoriales")
+}
+
+model Periodo {
+  id                   String       @id @default(cuid())
+  anio                 Int
+  numero               Int
+  modalidad            Modalidad
+  fechaInicioEstimada  DateTime?
+  fechaFinEstimada     DateTime?
+  trimestres           String[]     @default([])
+  tabulador            Float        @default(50)
+  resolucion           String?
+  estado               EstadoPeriodo @default(ACTIVO)
+  createdAt            DateTime     @default(now())
+  cronogramas          Cronograma[]
+  participantes        Participante[]
+
+  @@unique([anio, numero])
+  @@map("periodos")
+}
+
+model Docente {
+  id           String              @id @default(cuid())
+  nombre       String
+  cedula       String              @unique
+  contacto     String?
+  email        String?             @unique
+  numeroCuenta String?
+  categoria    Categoria
+  dedicacion   Dedicacion
+  aulaOrigenId String?
+  aulaOrigen   AulaTerritorial?    @relation("DocentesAulaOrigen", fields: [aulaOrigenId], references: [id])
+  regionId     String?
+  region       Region?             @relation(fields: [regionId], references: [id])
+  activo       Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  asignaciones AsignacionDocente[]
+
+  @@map("docentes")
+}
+
+model UnidadCurricular {
+  id           String              @id @default(cuid())
+  nombre       String
+  creditos     Int
+  horas        Int
+  trimestre    String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  asignaciones AsignacionDocente[]
+  participantes Participante[]
+
+  @@map("unidades_curriculares")
+}
+
+model Seccion {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("secciones")
+}
+
+model Cronograma {
+  id                String            @id @default(cuid())
+  periodoId         String
+  periodo           Periodo           @relation(fields: [periodoId], references: [id])
+  aulaTerritorialId String?
+  aulaTerritorial   AulaTerritorial?  @relation(fields: [aulaTerritorialId], references: [id])
+  trimestre         String
+  seccion           String
+  vocero            String?
+  telefonoVocero    String?
+  emailVocero       String?
+  participantesFem  Int               @default(0)
+  participantesMasc Int               @default(0)
+  modalidad         String            @default("PRESENCIAL")
+  resolucion        String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  asignaciones      AsignacionDocente[]
+  participantes     CronogramaParticipante[]
+
+  @@unique([periodoId, aulaTerritorialId, trimestre, seccion])
+  @@map("cronogramas")
+}
+
+model AsignacionDocente {
+  id           String           @id @default(cuid())
+  cronogramaId String
+  cronograma   Cronograma       @relation(fields: [cronogramaId], references: [id], onDelete: Cascade)
+  docenteId    String?
+  docente      Docente?         @relation(fields: [docenteId], references: [id])
+  unidadId     String
+  unidad       UnidadCurricular @relation(fields: [unidadId], references: [id])
+  lugar        String?
+  horaInicio   String           // "08:15"
+  horaFin      String           // "10:15"
+  modalidad    Modalidad
+  uc           Int
+  cantHoras    Int
+  orden        Int              @default(0)
+  viatico      Float?           @default(0)
+  hp           Float?           @default(0)
+  fechas       FechaEncuentro[]
+
+  @@map("asignaciones_docente")
+}
+
+model FechaEncuentro {
+  id           String            @id @default(cuid())
+  asignacionId String
+  asignacion   AsignacionDocente @relation(fields: [asignacionId], references: [id], onDelete: Cascade)
+  fecha        DateTime
+  modalidad    Modalidad         @default(PRESENCIAL)
+  asistencias  Asistencia[]
+
+  @@map("fechas_encuentro")
+}
+
+model Participante {
+  id           String            @id @default(cuid())
+  nombre       String
+  apellido     String?
+  cedula       String?
+  telefono     String?
+  email        String?
+  genero       Genero
+  unidadId     String?           // Asignatura a cursar (FK a UnidadCurricular)
+  unidad       UnidadCurricular? @relation(fields: [unidadId], references: [id])
+  trimestre    String?
+  seccion      String?
+  periodoId    String?
+  periodo      Periodo?          @relation(fields: [periodoId], references: [id])
+  regionId     String?
+  region       Region?           @relation(fields: [regionId], references: [id])
+  aulaTerritorialId String?
+  aulaTerritorial AulaTerritorial? @relation(fields: [aulaTerritorialId], references: [id])
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  cronogramas  CronogramaParticipante[]
+  asistencias  Asistencia[]
+  historial    HistorialTrimestre[]
+
+  @@map("participantes")
+}
+
+model HistorialTrimestre {
+  id                String       @id @default(cuid())
+  participanteId    String
+  participante      Participante @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+  trimestreAnterior String?
+  trimestreNuevo    String
+  periodoId         String?
+  regionId          String?
+  aulaTerritorialId String?
+  aulaTerritorial   AulaTerritorial? @relation(fields: [aulaTerritorialId], references: [id])
+  cambiadoPor       String?
+  createdAt         DateTime     @default(now())
+
+  @@map("historial_trimestre")
+}
+
+model CronogramaParticipante {
+  id             String       @id @default(cuid())
+  cronogramaId   String
+  cronograma     Cronograma   @relation(fields: [cronogramaId], references: [id], onDelete: Cascade)
+  participanteId String
+  participante   Participante @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+  unidadesIds    String[]     @default([])
+  createdAt      DateTime     @default(now())
+
+  @@unique([cronogramaId, participanteId])
+  @@map("cronograma_participantes")
+}
+
+model Asistencia {
+  id               String           @id @default(cuid())
+  participanteId   String
+  participante     Participante     @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+  fechaEncuentroId String
+  fechaEncuentro   FechaEncuentro   @relation(fields: [fechaEncuentroId], references: [id], onDelete: Cascade)
+  estado           EstadoAsistencia @default(AUSENTE)
+  observacion      String?
+
+  @@unique([participanteId, fechaEncuentroId])
+  @@map("asistencias")
+}
+
+model ConfiguracionSistema {
+  id                              String   @id @default(cuid())
+  coordinadorNacional             String?
+  resolucion                      String?
+  registroDocentesAbierto         Boolean  @default(false)
+  asignacionCargaAbierta          Boolean  @default(false)
+  inscripcionParticipantesAbierta Boolean  @default(false)
+  updatedAt                       DateTime @updatedAt
+
+  @@map("configuracion_sistema")
+}
