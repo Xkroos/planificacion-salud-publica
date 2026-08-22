@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { logAction } from '@/lib/bitacora'
 
 // GET /api/participantes?nombre=&cedula=&unidadId=&genero=
 export async function GET(req: NextRequest) {
@@ -74,6 +75,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const activePeriodo = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
+    if (!activePeriodo) {
+      return NextResponse.json({ error: 'No hay un periodo académico activo' }, { status: 403 })
+    }
+
     const body = await req.json()
 
     const nombreStr = typeof body.nombre === 'string' ? body.nombre.trim() : ''
@@ -89,7 +95,7 @@ export async function POST(req: NextRequest) {
     if (cedulaStr) {
       const existente = await prisma.participante.findFirst({ where: { cedula: cedulaStr } })
       if (existente) {
-        return NextResponse.json({ error: 'La cédula ya existe en el sistema' }, { status: 409 })
+        return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
       }
     }
 
@@ -97,7 +103,7 @@ export async function POST(req: NextRequest) {
     if (body.email) {
       const emailExistente = await prisma.participante.findFirst({ where: { email: body.email.trim() } })
       if (emailExistente) {
-        return NextResponse.json({ error: 'El correo electrónico ya está registrado en el sistema' }, { status: 409 })
+        return NextResponse.json({ error: 'correo registrado en el sistema' }, { status: 409 })
       }
     }
 
@@ -105,7 +111,7 @@ export async function POST(req: NextRequest) {
     if (body.telefono) {
       const tlfExistente = await prisma.participante.findFirst({ where: { telefono: body.telefono.trim() } })
       if (tlfExistente) {
-        return NextResponse.json({ error: 'El número de teléfono ya está registrado en el sistema' }, { status: 409 })
+        return NextResponse.json({ error: 'numero de telefono registrado en el sistema' }, { status: 409 })
       }
     }
 
@@ -127,9 +133,12 @@ export async function POST(req: NextRequest) {
       },
       include: { unidad: true },
     })
+
+    await logAction('PARTICIPANTES', 'CREAR', `Se registró el participante ${participante.nombre} ${participante.apellido || ''} (CI: ${participante.cedula})`)
+
     return NextResponse.json(participante, { status: 201 })
   } catch (error: any) {
     console.error("Error POST participante:", error);
-    return NextResponse.json({ error: 'Error al crear participante', details: error?.message, stack: error?.stack }, { status: 500 })
+    return NextResponse.json({ error: 'Error al crear participante', details: error?.message || 'Error interno' }, { status: 500 })
   }
 }

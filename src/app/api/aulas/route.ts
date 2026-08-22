@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { logAction } from '@/lib/bitacora'
 
 export async function GET() {
   try {
@@ -39,6 +40,9 @@ export async function POST(req: NextRequest) {
       },
       include: { region: true },
     })
+
+    await logAction('AULAS', 'CREAR', `Se registró el aula territorial ${aula.nombre} (Región: ${aula.region?.nombre || ''})`)
+
     return NextResponse.json(aula, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Error al crear aula' }, { status: 500 })

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { logAction } from '@/lib/bitacora'
 
 export async function GET(req: NextRequest) {
   try {
@@ -50,6 +51,11 @@ export async function POST(req: NextRequest) {
     
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'OPERADOR')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+    }
+
+    const activePeriodo = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
+    if (!activePeriodo) {
+      return NextResponse.json({ error: 'No hay un periodo académico activo. No se puede crear el cronograma.' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -164,6 +170,9 @@ export async function POST(req: NextRequest) {
         })
       }
     }
+
+    const aula = await prisma.aulaTerritorial.findUnique({ where: { id: aulaTerritorialId } })
+    await logAction('CRONOGRAMAS', 'CREAR', `Se generaron ${maxSecciones} cronogramas para ${aula?.nombre || 'Sede desconocida'} (${trimestre})`)
 
     return NextResponse.json({ success: true, cronogramasGenerados: maxSecciones }, { status: 201 })
   } catch (e: any) {

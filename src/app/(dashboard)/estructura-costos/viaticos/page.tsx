@@ -1,89 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { MapPin, Save, Building2, ChevronRight, ChevronDown, Check, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { MapPin, ArrowLeft, Users, Home } from 'lucide-react'
 
-type Aula = { id: string; nombre: string; coordinador: string | null; enlace: string | null; costo: number; preinscripcion: number | null; inscripcion: number | null; gastosAdministrativos: number | null; limpieza: number | null; vigilancia: number | null; aporteCoordinacion: number | null; viatico: number | null; regionId: string }
-type Region = { id: string; nombre: string; aulas: Aula[] }
-
-export default function ViaticosPage() {
-  const [regiones, setRegiones] = useState<Region[]>([])
-  const [loading, setLoading] = useState(true)
-  const [expandedRegion, setExpandedRegion] = useState<string | null>(null)
-  const [savingId, setSavingId] = useState<string | null>(null)
-  const [savedId, setSavedId] = useState<string | null>(null)
-  const [editValues, setEditValues] = useState<Record<string, string>>({})
-
-  const fetchRegiones = async () => {
-    try {
-      const res = await fetch('/api/regiones')
-      const data = await res.json()
-      setRegiones(data)
-      
-      // Initialize edit values
-      const initialValues: Record<string, string> = {}
-      data.forEach((r: Region) => {
-        r.aulas.forEach((a: Aula) => {
-          initialValues[a.id] = a.viatico?.toString() || '0'
-        })
-      })
-      setEditValues(initialValues)
-    } catch (e) {
-      console.error('Error fetching regiones', e)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchRegiones()
-  }, [])
-
-  const handleSave = async (aula: Aula) => {
-    setSavingId(aula.id)
-    try {
-      const newValue = parseFloat(editValues[aula.id]) || 0
-      
-      // Merge with existing aula data since PUT endpoint expects it
-      const payload = {
-        nombre: aula.nombre,
-        coordinador: aula.coordinador,
-        enlace: aula.enlace,
-        costo: aula.costo,
-        preinscripcion: aula.preinscripcion,
-        inscripcion: aula.inscripcion,
-        gastosAdministrativos: aula.gastosAdministrativos,
-        limpieza: aula.limpieza,
-        vigilancia: aula.vigilancia,
-        aporteCoordinacion: aula.aporteCoordinacion,
-        viatico: newValue,
-        regionId: aula.regionId
-      }
-
-      const res = await fetch(`/api/aulas/${aula.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      if (res.ok) {
-        setSavedId(aula.id)
-        setTimeout(() => setSavedId(null), 2000)
-        
-        // Update local state
-        setRegiones(prev => prev.map(r => ({
-          ...r,
-          aulas: r.aulas.map(a => a.id === aula.id ? { ...a, viatico: newValue } : a)
-        })))
-      }
-    } catch (e) {
-      console.error('Error saving', e)
-    } finally {
-      setSavingId(null)
-    }
-  }
-
+export default function ViaticosHub() {
   return (
     <div className="fade-in">
       <div style={{ marginBottom: '24px' }}>
@@ -92,97 +12,104 @@ export default function ViaticosPage() {
             <ArrowLeft size={18} />
           </Link>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a3a6b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <MapPin size={24} color="#2d6bc4" /> Asignación de Viáticos por Aula Territorial
+            <MapPin size={24} color="#2d6bc4" /> Asignación de Viáticos
           </h1>
         </div>
         <p style={{ fontSize: '14px', color: '#718096', marginTop: '4px', marginLeft: '34px' }}>
-          Configure el costo de viático asignado a cada Aula Territorial. Este valor se utilizará de forma automática en la asignación de carga docente.
+          Seleccione el tipo de viático que desea asignar a las Aulas Territoriales.
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {loading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#718096' }}>Cargando...</div>
-        ) : regiones.length === 0 ? (
-          <div className="card">
-            <div className="empty-state">
-              <MapPin size={48} />
-              <p style={{ marginTop: '12px', fontWeight: 600 }}>No hay regiones registradas</p>
-            </div>
-          </div>
-        ) : regiones.map(r => (
-          <div key={r.id} className="card">
-            <div
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer', background: expandedRegion === r.id ? '#f8fafc' : 'transparent' }}
-              onClick={() => setExpandedRegion(expandedRegion === r.id ? null : r.id)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {expandedRegion === r.id ? <ChevronDown size={18} color="#2d6bc4" /> : <ChevronRight size={18} color="#718096" />}
-                <div style={{ width: '36px', height: '36px', background: '#dbeafe', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <MapPin size={18} color="#2d6bc4" />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '15px', color: '#1a3a6b' }}>{r.nombre}</div>
-                  <div style={{ fontSize: '12px', color: '#718096' }}>{r.aulas.length} aula(s) territorial(es)</div>
-                </div>
-              </div>
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
 
-            {expandedRegion === r.id && (
-              <div style={{ borderTop: '1px solid #e2e8f0' }}>
-                {r.aulas.length === 0 ? (
-                  <div style={{ padding: '20px', textAlign: 'center', color: '#718096', fontSize: '13px' }}>Sin aulas en esta región.</div>
-                ) : r.aulas.map(a => (
-                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 16px 68px', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <Building2 size={16} color="#718096" />
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#1a3a6b' }}>{a.nombre}</div>
-                        <div style={{ fontSize: '12px', color: '#718096' }}>Tarifa Viático Actual: ${a.viatico || '0'}</div>
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} onClick={e => e.stopPropagation()}>
-                      <div className="input-with-icon" style={{ position: 'relative', width: '140px' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#718096', fontWeight: 600 }}>$</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          className="form-input"
-                          style={{ paddingLeft: '28px', height: '38px' }}
-                          value={editValues[a.id] || ''}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, [a.id]: e.target.value }))}
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ 
-                          height: '38px', 
-                          padding: '0 16px', 
-                          minWidth: '125px', 
-                          background: savedId === a.id ? '#10b981' : undefined,
-                          borderColor: savedId === a.id ? '#10b981' : undefined
-                        }}
-                        onClick={() => handleSave(a)}
-                        disabled={savingId === a.id || parseFloat(editValues[a.id] || '0') === (a.viatico || 0)}
-                      >
-                        {savingId === a.id ? (
-                          'Guardando...'
-                        ) : savedId === a.id ? (
-                          <><Check size={16} /> Guardado</>
-                        ) : (
-                          <><Save size={16} /> Actualizar</>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Card 1: Viáticos de Zona */}
+        <Link href="/estructura-costos/viaticos/zona" style={{ textDecoration: 'none' }}>
+          <div className="card" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            height: '100%',
+            textAlign: 'center',
+            border: '2px solid transparent'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = '#dbeafe'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = 'transparent'
+            }}
+          >
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: '#eff6ff',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px'
+            }}>
+              <Users size={32} color="#2d6bc4" />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1a3a6b', marginBottom: '8px' }}>Asignar viáticos a Docentes de Zona</h3>
+            <p style={{ fontSize: '13px', color: '#718096', margin: 0 }}>
+              Viáticos para docentes del mismo estado del aula territorial (ej. Caracas, Distrito Capital).
+            </p>
           </div>
-        ))}
+        </Link>
+
+        {/* Card 2: Viáticos Sede */}
+        <Link href="/estructura-costos/viaticos/sede" style={{ textDecoration: 'none' }}>
+          <div className="card" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 20px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+            height: '100%',
+            textAlign: 'center',
+            border: '2px solid transparent'
+          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = '#dbeafe'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = 'transparent'
+            }}
+          >
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: '#eff6ff',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px'
+            }}>
+              <Home size={32} color="#2d6bc4" />
+            </div>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1a3a6b', marginBottom: '8px' }}>Asignar viáticos a Los docentes Sede san juan de los Morros </h3>
+            <p style={{ fontSize: '13px', color: '#718096', margin: 0 }}>
+              Establezca las tarifas y montos de viáticos asignados a docentes que viajan desde la sede central.
+            </p>
+          </div>
+        </Link>
+
       </div>
     </div>
   )

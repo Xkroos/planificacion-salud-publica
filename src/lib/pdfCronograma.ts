@@ -7,287 +7,320 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
 
     const pageW = 297
-    const margin = 10
+    const margin = 8
 
-    // Colores UNERG
-    const lightBlue = [156, 194, 229] as [number, number, number]
-    const red = [255, 0, 0] as [number, number, number]
+    const yellow: [number, number, number] = [255, 255, 0]
+    const lightBlue: [number, number, number] = [156, 194, 229]
+    const black: [number, number, number] = [0, 0, 0]
+    const red: [number, number, number] = [192, 0, 0]
 
-    let logoImg: HTMLImageElement | null = null
-    let logoIzq: HTMLImageElement | null = null
-    try {
-      logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const loadImg = (src: string): Promise<HTMLImageElement | null> =>
+      new Promise(resolve => {
         const img = new window.Image()
-        img.src = '/logo-unerg.png'
+        img.src = src
         img.onload = () => resolve(img)
-        img.onerror = (e) => reject(e)
-      })
-    } catch (e) {
-      console.warn('No se pudo cargar el logo unerg', e)
-    }
-
-    try {
-      logoIzq = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new window.Image()
-        img.src = '/logo-caminos.png'
-        img.onload = () => resolve(img)
-        img.onerror = (e) => reject(e)
-      })
-    } catch (e) {
-      console.warn('No se pudo cargar el logo caminos', e)
-    }
-
-    cohortCronogramas.forEach((cronograma, cohortIdx) => {
-      if (cohortIdx > 0) doc.addPage()
-
-      let y = margin - 5
-      doc.setFont('times', 'bold')
-      doc.setFontSize(10)
-      doc.setTextColor(0, 0, 0)
-      
-      const headerText = [
-        'REPÚBLICA BOLIVARIANA DE VENEZUELA',
-        'UNIVERSIDAD NACIONAL EXPERIMENTAL RÓMULO GALLEGOS',
-        'DECANATO DE POSTGRADO',
-        'MAESTRIA EN GERENCIA DE LA SALUD PÚBLICA'
-      ]
-      
-      headerText.forEach(line => {
-        doc.text(line, pageW / 2, y, { align: 'center' })
-        y += 4.5
+        img.onerror = () => resolve(null)
       })
 
-      doc.setTextColor(...red)
-      doc.setFontSize(11)
-      doc.text('CRONOGRAMA DE PLANIFICACION ACADEMICA', pageW / 2, y, { align: 'center' })
-      doc.setTextColor(0, 0, 0)
-      
-      if (logoIzq) {
-        const boxW = 45
-        const boxH = 15
-        const imgRatio = logoIzq.width / logoIzq.height
-        const boxRatio = boxW / boxH
-        let finalW = boxW
-        let finalH = boxH
-        if (imgRatio > boxRatio) {
-          finalH = finalW / imgRatio
-        } else {
-          finalW = finalH * imgRatio
-        }
-        doc.addImage(logoIzq, 'PNG', margin + 30, 5, finalW, finalH)
+    const [logoUnerg, logoCaminos] = await Promise.all([
+      loadImg('/logo-unerg.png'),
+      loadImg('/logo-caminos.png'),
+    ])
+
+    // ─── drawCell segura ───────────────────────────────────────────────────────
+    const drawCell = (
+      text: string,
+      x: number, y: number, w: number, h: number,
+      fill?: [number, number, number],
+      textColor: [number, number, number] = [0, 0, 0],
+      fontSize = 7,
+      fontStyle: 'bold' | 'normal' | 'italic' = 'normal',
+      align: 'center' | 'left' | 'right' = 'center',
+      border = true
+    ) => {
+      // Guardia: valores inválidos → saltar celda sin error
+      if (!isFinite(x) || !isFinite(y) || !isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) return
+
+      if (fill) {
+        doc.setFillColor(...fill)
+        doc.rect(x, y, w, h, 'F')
       }
-      
-      y += 6
-
-      const drawCell = (text: string, x: number, currentY: number, w: number, h: number, fill?: [number, number, number], textColor?: [number, number, number], fontSize: number = 8, fontStyle: string = 'bold', align: 'center' | 'left' | 'right' = 'center') => {
-        if (fill) {
-          doc.setFillColor(...fill)
-          doc.rect(x, currentY, w, h, 'F')
-        }
+      if (border) {
         doc.setDrawColor(0, 0, 0)
         doc.setLineWidth(0.2)
-        doc.rect(x, currentY, w, h)
-        
-        if (textColor) doc.setTextColor(...textColor)
-        else doc.setTextColor(0, 0, 0)
-        
-        doc.setFont('times', fontStyle)
-        doc.setFontSize(fontSize)
-        
-        const lines = doc.splitTextToSize(text, w - 2)
-        const textHeight = lines.length * fontSize * 0.35
-        const startY = currentY + h / 2 - (textHeight / 2) + (fontSize * 0.35)
-        
-        if (align === 'center') {
-          doc.text(lines, x + w / 2, startY, { align: 'center' })
-        } else if (align === 'left') {
-          doc.text(lines, x + 1, startY)
-        } else {
-          doc.text(lines, x + w - 1, startY, { align: 'right' })
-        }
+        doc.rect(x, y, w, h)
       }
+      if (!text) return
 
-      const colA = margin
-      const wA = 80
-      const colB = colA + wA
-      const wB = 35
-      const colC = colB + wB
-      const wC = 35
-      const colD = colC + wC
-      const wD = 45
-      const colE = colD + wD
-      const wE = 42
-      const colF = colE + wE
-      const wF = 40
+      doc.setTextColor(...textColor)
+      doc.setFont('times', fontStyle)
+      doc.setFontSize(fontSize)
+      const pad = 1.5
+      const lines = doc.splitTextToSize(text, w - pad * 2)
+      const lineH = fontSize * 0.35
+      const totalH = lines.length * lineH
+      const startY = y + h / 2 - totalH / 2 + lineH
 
-      const rh = 7
-
-      drawCell('PERIODO:', colA, y, wA, rh, lightBlue, undefined, 9, 'bold')
-      drawCell(`${cronograma.periodo.anio}-${cronograma.periodo.numero} seccion ${cronograma.seccion}`, colB, y, wB + wC + wD, rh, undefined, undefined, 9, 'bold')
-      
-      // ESPACIO PARA LOGO
-      drawCell('', colE, y, wE + wF, rh * 4, undefined, undefined, 9, 'italic')
-      if (logoImg) {
-        const boxW = wE + wF
-        const boxH = rh * 4
-        const imgRatio = logoImg.width / logoImg.height
-        const boxRatio = boxW / boxH
-        let finalW = boxW - 4
-        let finalH = boxH - 4
-        if (imgRatio > boxRatio) {
-          finalH = finalW / imgRatio
-        } else {
-          finalW = finalH * imgRatio
-        }
-        const finalX = colE + (boxW - finalW) / 2
-        const finalY = y + (boxH - finalH) / 2
-        doc.addImage(logoImg, 'PNG', finalX, finalY, finalW, finalH)
+      if (align === 'center') {
+        doc.text(lines, x + w / 2, startY, { align: 'center' })
+      } else if (align === 'left') {
+        doc.text(lines, x + pad, startY)
       } else {
-        doc.text('(Logo UNERG)', colE + (wE + wF) / 2, y + (rh * 4) / 2, { align: 'center' })
+        doc.text(lines, x + w - pad, startY, { align: 'right' })
       }
-      
-      y += rh
-      drawCell('TRIMESTRE:', colA, y, wA, rh, lightBlue, undefined, 9, 'bold')
-      drawCell(`${cronograma.trimestre === 'Introductorio' ? 'INTRODUCTORIO' : cronograma.trimestre + ' TRIMESTRE'}`, colB, y, wB + wC + wD, rh, undefined, undefined, 9, 'bold')
-      
-      y += rh
-      drawCell('MODALIDAD DE ESTUDIO:', colA, y, wA, rh, lightBlue, undefined, 9, 'bold')
-      drawCell(`${cronograma.periodo.modalidad}`, colB, y, wB + wC + wD, rh, undefined, undefined, 9, 'normal')
-      
-      y += rh
-      drawCell('VOCERO:', colA, y, wA, rh * 2, lightBlue, undefined, 9, 'bold')
-      drawCell(`${cronograma.vocero || ''}`, colB, y, wB, rh * 2, undefined, undefined, 9, 'normal')
-      drawCell('TELÉFONO:', colC, y, wC, rh, undefined, undefined, 9, 'normal')
-      drawCell(`${cronograma.telefonoVocero || ''}`, colD, y, wD, rh, undefined, undefined, 9, 'normal')
-      
-      y += rh
-      drawCell('e-mail:', colC, y, wC, rh, undefined, undefined, 9, 'normal')
-      drawCell(`${cronograma.emailVocero || ''}`, colD, y, wD, rh, undefined, undefined, 9, 'normal')
-      drawCell('REGION', colE, y, wE, rh, lightBlue, undefined, 7, 'bold')
-      drawCell(`${cronograma.aulaTerritorial.region.nombre}`, colF, y, wF, rh, undefined, undefined, 8, 'normal')
-      
-      y += rh
-      drawCell('CANTIDAD DE PARTICIPANTES:', colA, y, wA, rh * 3, lightBlue, undefined, 9, 'bold')
-      drawCell('FEMENINO:', colB, y, wB, rh, undefined, undefined, 9, 'normal')
-      drawCell(`${cronograma.participantesFem}`, colC, y, wC + wD, rh, undefined, undefined, 9, 'normal')
-      drawCell('AULA TERRITORIAL', colE, y, wE, rh, lightBlue, undefined, 7, 'bold')
-      drawCell(`${cronograma.aulaTerritorial.nombre}`, colF, y, wF, rh, undefined, undefined, 8, 'normal')
-      
-      y += rh
-      drawCell('MASCULINO:', colB, y, wB, rh, undefined, undefined, 9, 'normal')
-      drawCell(`${cronograma.participantesMasc}`, colC, y, wC + wD, rh, undefined, undefined, 9, 'normal')
-      drawCell('COORDINADOR TERRITORIAL', colE, y, wE, rh, lightBlue, undefined, 7, 'bold')
-      drawCell(`${cronograma.aulaTerritorial.coordinador || ''}`, colF, y, wF, rh, undefined, undefined, 8, 'normal')
-      
-      y += rh
-      drawCell('TOTAL:', colB, y, wB, rh, undefined, undefined, 9, 'normal')
-      drawCell(`${cronograma.participantesFem + cronograma.participantesMasc}`, colC, y, wC + wD, rh, undefined, undefined, 9, 'normal')
-      drawCell('ENLACE TERRITORIAL', colE, y, wE, rh, lightBlue, undefined, 7, 'bold')
-      drawCell(`${cronograma.aulaTerritorial.enlace || ''}`, colF, y, wF, rh, undefined, undefined, 8, 'normal')
+    }
 
-      y += rh + 5
+    const placeImage = (img: HTMLImageElement, bx: number, by: number, bw: number, bh: number) => {
+      if (bw <= 0 || bh <= 0) return
+      const ratio = img.width / img.height
+      const boxRatio = bw / bh
+      let fw = bw - 2, fh = bh - 2
+      if (ratio > boxRatio) fh = fw / ratio
+      else fw = fh * ratio
+      if (fw <= 0 || fh <= 0) return
+      doc.addImage(img, 'PNG', bx + (bw - fw) / 2, by + (bh - fh) / 2, fw, fh)
+    }
 
-      const tA = 45
-      const tCat = 44
-      const tSub = tCat / 8
-      const tJ = 50
-      const tK = 20
-      const tL = 30
-      const tM = 30
-      const tN = 10
-      const tO = 18
-      const tP = 30
+    // ══════════════════════════════════════════════════════════════════════════
+    cohortCronogramas.forEach((cr, idx) => {
+      if (idx > 0) doc.addPage()
 
-      const hRow1 = 7, hRow2 = 4, hRow3 = 4
-      const hTotalHead = hRow1 + hRow2 + hRow3
+      let y = margin
+
+      const logoW = 50
+      const logoH = 35 // Altura mayor para que el logo se vea más grande
+      const textW = pageW - margin * 2 - logoW * 2
+      const textX = margin + logoW
+
+      // ─── Encabezado texto ─────────────────────────────────────────────────
+      const headerLines: { text: string; size: number; style: 'bold' | 'normal' }[] = [
+        { text: 'REPÚBLICA BOLIVARIANA DE VENEZUELA', size: 8, style: 'bold' },
+        { text: 'UNIVERSIDAD NACIONAL EXPERIMENTAL RÓMULO GALLEGOS', size: 9, style: 'bold' },
+        { text: 'DECANATO DE POSTGRADO', size: 8, style: 'bold' },
+        { text: 'MAESTRÍA EN GERENCIA DE LA SALUD PÚBLICA', size: 8, style: 'bold' },
+        { text: `REGIÓN: ${(cr.aulaTerritorial?.region?.nombre || '').toUpperCase()}`, size: 7.5, style: 'bold' },
+        { text: `AULA TERRITORIAL: ${(cr.aulaTerritorial?.nombre || '').toUpperCase()}`, size: 7.5, style: 'bold' },
+      ]
+
+      const headerH = headerLines.length * 4.6
+
+      let ty = y + 3
+      headerLines.forEach(line => {
+        doc.setFont('times', line.style)
+        doc.setFontSize(line.size)
+        doc.setTextColor(...black)
+        doc.text(line.text, textX + textW / 2, ty, { align: 'center' })
+        ty += 4.6
+      })
+
+      // Colocamos los logos con la nueva altura y los centramos un poco verticalmente
+      if (logoCaminos) placeImage(logoCaminos, margin, y - 2, logoW, logoH)
+      if (logoUnerg) placeImage(logoUnerg, margin + logoW + textW, y - 2, logoW, logoH)
+
+      y += Math.max(headerH, logoH - 2) + 5
+
+      // ─── Título ───────────────────────────────────────────────────────────
+      doc.setFont('times', 'bold')
+      doc.setFontSize(10)
+      doc.setTextColor(...red)
+      const titulo = 'CRONOGRAMA DE PLANIFICACION ACADEMICA'
+      doc.text(titulo, pageW / 2, y + 3, { align: 'center' })
+      const tw = doc.getTextWidth(titulo)
+      doc.setDrawColor(...red)
+      doc.setLineWidth(0.3)
+      doc.line(pageW / 2 - tw / 2, y + 3.5, pageW / 2 + tw / 2, y + 3.5)
+      doc.setTextColor(...black)
+      doc.setDrawColor(...black)
+      y += 8
+
+      // ─── Bloque de información ────────────────────────────────────────────
+      // Layout exacto según imagen de referencia
+      const rh = 6.5  // row height
+
+      // Columnas (de izquierda a derecha, todas enteras)
+      // A: Labels (TRIMESTRE/LAPSO/VOCERO)
+      const aX = margin, aW = 38
+      // Para filas 1-2, el valor ocupa bigValW desde bX hasta gX
+      const bX = aX + aW       // = 46
+      const bigValW = 152       // ancho del bloque de valor central
+      const gX = bX + bigValW  // = 198  ← inicio columna COORD/CANTIDAD
+      const gW = 50             // COORDINADOR / CANTIDAD label
+      const hX = gX + gW        // = 248  ← labels FEM/MASC/TOTAL
+      const hW = 20             // ancho label FEMENINO/MASCULINO/TOTAL
+      const iX = hX + hW        // = 268  ← valores FEM/MASC/TOTAL
+      const iW = Math.max(pageW - margin - iX, 8)  // = 21
+
+      // Sub-columnas dentro del área bigValW para la fila VOCERO
+      // "VOCERO:" label ocupa aW + bW. Las subcolumnas dividen el resto (130)
+      const bW  = 22
+      const cX2 = bX + bW   // = 68
+      const cW2 = 44   // NOMBRE Y APELLIDO columna completa
+      const dX2 = cX2 + cW2  // = 112
+      const dW2 = 44   // DIRECCIÓN DE CORREO columna completa
+      const eX2 = dX2 + dW2  // = 156
+      const eW2 = gX - eX2   // = 42  TELÉFONO columna completa
+
+
+      const trimTxt = cr.trimestre === 'Introductorio'
+        ? 'INTRODUCTORIO'
+        : `CURSO ${(cr.trimestre || '').toUpperCase()} TRIMESTRE`
+
+      // ── Fila 1: TRIMESTRE ──────────────────────────────────────────────────
+      drawCell('TRIMESTRE:', aX, y, aW, rh, yellow, black, 7, 'bold')
+      drawCell(trimTxt, bX, y, bigValW, rh, undefined, black, 7, 'bold')
+      // COORD ocupa filas 1-2 (alto 2 * rh)
+      drawCell('COORDINADOR\nTERRITORIAL\nENLACE TERRITORIAL:', gX, y, gW, rh * 2, yellow, black, 5.5, 'bold')
+      // Valor coord ocupa ancho hW+iW combinado, 2 filas
+      drawCell(cr.aulaTerritorial?.coordinador || '', hX, y, hW + iW, rh * 2, undefined, black, 6.5, 'bold')
+      y += rh
+
+      // ── Fila 2: LAPSO ACADÉMICO ────────────────────────────────────────────
+      drawCell('LAPSO ACADÉMICO:', aX, y, aW, rh, yellow, black, 6.5, 'bold')
+      drawCell(`${cr.periodo?.anio || ''}-${cr.periodo?.numero || ''}`, bX, y, bigValW, rh, undefined, black, 8, 'bold')
+      // (celdas gX y hX cubiertas por el span de 2 filas de fila 1)
+      y += rh
+
+      // ── Fila 3: VOCERO - fila de LABELS ────────────────────────────────────
+      // VOCERO: label ocupa filas 3-4 y abarca aW + bW
+      drawCell('VOCERO:', aX, y, aW + bW, rh * 2, yellow, black, 7, 'bold')
+      // Sub-labels en fila 3 (FONDO BLANCO)
+      drawCell('NOMBRE Y APELLIDO:', cX2, y, cW2, rh, undefined, black, 5.5, 'bold')
+      drawCell('DIRECCIÓN DE\nCORREO:', dX2, y, dW2, rh, undefined, black, 5.5, 'bold')
+      drawCell('TELÉFONO:', eX2, y, eW2, rh, undefined, black, 5.5, 'bold')
+      // CANTIDAD ocupa filas 3-4-5
+      drawCell('CANTIDAD DE\nPARTICIPANTES:', gX, y, gW, rh * 3, yellow, black, 5.5, 'bold')
+      // FEMENINO label y valor en fila 3
+      drawCell('FEMENINO:', hX, y, hW, rh, yellow, black, 5.5, 'bold')
+      drawCell(`${cr.participantesFem || 0}`, iX, y, iW, rh, undefined, black, 7, 'bold')
+      y += rh
+
+      // ── Fila 4: VOCERO - fila de VALUES ────────────────────────────────────
+      drawCell(cr.vocero || cr.asignaciones?.[0]?.docente?.nombre || '', cX2, y, cW2, rh, undefined, black, 6, 'normal')
+      drawCell(cr.emailVocero || '', dX2, y, dW2, rh, undefined, black, 6, 'normal')
+      drawCell(cr.telefonoVocero || '', eX2, y, eW2, rh, undefined, black, 6, 'normal')
+      // MASCULINO
+      drawCell('MASCULINO:', hX, y, hW, rh, yellow, black, 5.5, 'bold')
+      drawCell(`${cr.participantesMasc || 0}`, iX, y, iW, rh, undefined, black, 7, 'bold')
+      y += rh
+
+      // ── Fila 5: TOTAL PARTICIPANTES ────────────────────────────────────────
+      drawCell('', aX, y, aW + bW + cW2 + dW2 + eW2, rh)
+      drawCell('TOTAL\nPARTICIPANTES:', hX, y, hW, rh, yellow, black, 4.5, 'bold')
+      drawCell(`${(cr.participantesFem || 0) + (cr.participantesMasc || 0)}`, iX, y, iW, rh, undefined, black, 7, 'bold')
+      y += rh + 3
+
+      // ─── Encabezado tabla principal ───────────────────────────────────────
+      // Anchos fijos (enteros)
+      const tUC = 42
+      const tCat = 40          // 40 / 8 = 5 exacto → sin decimales
+      const tSub = 5           // tCat / 8 = 5
+      const tDoc = 42
+      const tLug = 18
+      const tHor = 24
+      const tFec = 28
+      const tUc2 = 9
+      const tHrs = 16
+      const usedW = tUC + tCat + tDoc + tLug + tHor + tFec + tUc2 + tHrs
+      const tMod = Math.max(pageW - margin * 2 - usedW, 15)
+
+      const hR1 = 6, hR2 = 4, hR3 = 4
+      const totalHead = hR1 + hR2 + hR3
 
       let tx = margin
-      drawCell('DOCENTE', tx, y, tA, hTotalHead, lightBlue, undefined, 8, 'bold')
-      tx += tA
 
-      drawCell('CATEGORIA - DEDICACION\nDOCENTE', tx, y, tCat, hRow1, lightBlue, undefined, 6, 'bold')
-      drawCell('CONTRATADO', tx, y + hRow1, tSub * 4, hRow2, undefined, undefined, 5, 'bold')
-      drawCell('ORDINARIO', tx + tSub * 4, y + hRow1, tSub * 4, hRow2, undefined, undefined, 5, 'bold');
-      
-      ['HP', 'MT', 'TC', 'DE', 'HP', 'MT', 'TC', 'DE'].forEach((label, idx) => {
-        drawCell(label, tx + tSub * idx, y + hRow1 + hRow2, tSub, hRow3, undefined, undefined, 5, 'normal')
+      drawCell('UNIDAD\nCURRICULAR', tx, y, tUC, totalHead, yellow, black, 6, 'bold'); tx += tUC
+
+      drawCell('TIPO DOCENTE', tx, y, tCat, hR1, yellow, black, 6, 'bold')
+      drawCell('CONTRATADO', tx, y + hR1, tSub * 4, hR2, yellow, black, 5, 'bold')
+      drawCell('ORDINARIO', tx + tSub * 4, y + hR1, tSub * 4, hR2, yellow, black, 5, 'bold')
+      ;['HP', 'MT', 'TC', 'DE', 'HP', 'MT', 'TC', 'DE'].forEach((lbl, i) => {
+        drawCell(lbl, tx + tSub * i, y + hR1 + hR2, tSub, hR3, yellow, black, 4, 'bold')
       })
       tx += tCat
 
-      drawCell('UNIDAD CURRICULAR', tx, y, tJ, hTotalHead, lightBlue, undefined, 6, 'bold')
-      tx += tJ
-      drawCell('LUGAR', tx, y, tK, hTotalHead, lightBlue, undefined, 6, 'bold')
-      tx += tK
-      drawCell('HORARIO', tx, y, tL, hTotalHead, lightBlue, undefined, 6, 'bold')
-      tx += tL
-      drawCell('FECHAS DE\nENCUENTROS', tx, y, tM, hTotalHead, lightBlue, undefined, 6, 'bold')
-      tx += tM
-      drawCell('U.C', tx, y, tN, hTotalHead, lightBlue, undefined, 6, 'bold')
-      tx += tN
-      drawCell('CANT\nHORAS', tx, y, tO, hTotalHead, lightBlue, undefined, 6, 'bold')
-      tx += tO
-      drawCell('MODALIDAD', tx, y, tP, hTotalHead, lightBlue, undefined, 6, 'bold')
-      
-      y += hTotalHead
+      drawCell('NOMBRE\nDOCENTE', tx, y, tDoc, totalHead, yellow, black, 6, 'bold'); tx += tDoc
+      drawCell('LUGAR', tx, y, tLug, totalHead, yellow, black, 6, 'bold'); tx += tLug
+      drawCell('HORARIO', tx, y, tHor, totalHead, yellow, black, 6, 'bold'); tx += tHor
+      drawCell('FECHAS DE\nENCUENTROS', tx, y, tFec, totalHead, yellow, black, 6, 'bold'); tx += tFec
+      drawCell('U.C', tx, y, tUc2, totalHead, yellow, black, 6, 'bold'); tx += tUc2
+      drawCell('CANT\nHORAS', tx, y, tHrs, totalHead, yellow, black, 6, 'bold'); tx += tHrs
+      drawCell('MODALIDAD', tx, y, tMod, totalHead, yellow, black, 6, 'bold')
 
-      cronograma.asignaciones.forEach((a: any) => {
-        const rowH = Math.max(12, a.fechas.length * 4.5 + 2)
+      y += totalHead
+
+      // ─── Filas de datos ───────────────────────────────────────────────────
+      const asignaciones: any[] = cr.asignaciones || []
+      asignaciones.forEach((a: any) => {
+        const fechas: any[] = a.fechas || []
+        const numFechas = Math.max(fechas.length, 1)
+        const rowH = Math.max(numFechas * 5 + 2, 12)
+
         tx = margin
 
-        const docenteText = a.docente ? a.docente.nombre : ''
-        drawCell(docenteText, tx, y, tA, rowH, undefined, undefined, 8, 'normal')
-        tx += tA
+        drawCell(a.unidad?.nombre || '', tx, y, tUC, rowH, undefined, black, 6, 'normal', 'center'); tx += tUC
 
-        const checkPos = (a.docente?.categoria === 'CONTRATADO' ? 0 : (a.docente?.categoria === 'ORDINARIO' ? 4 : -1))
-        const dedOff = (a.docente?.dedicacion === 'HP' ? 0 : a.docente?.dedicacion === 'MT' ? 1 : a.docente?.dedicacion === 'TC' ? 2 : a.docente?.dedicacion === 'DE' ? 3 : -1)
-        
+        const catIdx = a.docente?.categoria === 'CONTRATADO' ? 0 : a.docente?.categoria === 'ORDINARIO' ? 4 : -1
+        const dedIdx = a.docente?.dedicacion === 'HP' ? 0 : a.docente?.dedicacion === 'MT' ? 1 : a.docente?.dedicacion === 'TC' ? 2 : a.docente?.dedicacion === 'DE' ? 3 : -1
         for (let i = 0; i < 8; i++) {
-          const isChecked = (checkPos >= 0 && dedOff >= 0 && i === checkPos + dedOff)
-          drawCell(isChecked ? 'X' : '', tx + tSub * i, y, tSub, rowH, undefined, undefined, 8, 'normal')
+          const checked = catIdx >= 0 && dedIdx >= 0 && i === catIdx + dedIdx
+          drawCell(checked ? 'X' : '', tx + tSub * i, y, tSub, rowH, undefined, black, 7, 'bold')
         }
         tx += tCat
 
-        drawCell(a.unidad.nombre, tx, y, tJ, rowH, undefined, undefined, 7, 'normal')
-        tx += tJ
-        drawCell(a.lugar || '', tx, y, tK, rowH, undefined, undefined, 8, 'normal')
-        tx += tK
-        drawCell(`${a.horaInicio} -\n${a.horaFin}`, tx, y, tL, rowH, undefined, undefined, 8, 'normal')
-        tx += tL
+        drawCell((a.docente?.nombre || '').toUpperCase(), tx, y, tDoc, rowH, undefined, black, 6, 'bold', 'center'); tx += tDoc
+        drawCell(a.lugar || '', tx, y, tLug, rowH, undefined, black, 6, 'normal', 'center'); tx += tLug
+        drawCell(`${a.horaInicio || ''} -\n${a.horaFin || ''}`, tx, y, tHor, rowH, undefined, black, 6, 'normal', 'center'); tx += tHor
 
-        let fY = y
-        const dateH = rowH / (a.fechas.length || 1)
-        if (a.fechas.length > 0) {
-           a.fechas.forEach((f: any) => {
-              const dateStr = new Date(f.fecha).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-              drawCell(dateStr, tx, fY, tM, dateH, undefined, undefined, 7, 'normal')
-              fY += dateH
-           })
+        if (fechas.length > 0) {
+          const dateH = rowH / fechas.length
+          fechas.forEach((f: any, fi: number) => {
+            const d = new Date(f.fecha)
+            const dateStr = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+              .toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            drawCell(dateStr, tx, y + fi * dateH, tFec, dateH, undefined, black, 6.5, 'normal')
+          })
         } else {
-           drawCell('', tx, y, tM, rowH, undefined, undefined, 7, 'normal')
+          drawCell('', tx, y, tFec, rowH)
         }
-        tx += tM
+        tx += tFec
 
-        drawCell(a.uc.toString(), tx, y, tN, rowH, undefined, undefined, 8, 'normal')
-        tx += tN
-        drawCell(`${a.cantHoras}hr`, tx, y, tO, rowH, undefined, undefined, 8, 'normal')
-        tx += tO
+        drawCell(String(a.uc ?? ''), tx, y, tUc2, rowH, undefined, black, 7, 'normal'); tx += tUc2
+        drawCell(a.cantHoras ? `${a.cantHoras}hr` : '', tx, y, tHrs, rowH, undefined, black, 7, 'normal'); tx += tHrs
 
-        let mY = y
-        if (a.fechas.length > 0) {
-           a.fechas.forEach((f: any) => {
-              drawCell(f.modalidad || a.modalidad, tx, mY, tP, dateH, undefined, undefined, 7, 'normal')
-              mY += dateH
-           })
+        if (fechas.length > 0) {
+          const dateH = rowH / fechas.length
+          fechas.forEach((f: any, fi: number) => {
+            drawCell((f.modalidad || a.modalidad || 'PRESENCIAL').toUpperCase(), tx, y + fi * dateH, tMod, dateH, undefined, black, 5.5, 'normal', 'center')
+          })
         } else {
-           drawCell(a.modalidad, tx, y, tP, rowH, undefined, undefined, 7, 'normal')
+          drawCell((a.modalidad || 'PRESENCIAL').toUpperCase(), tx, y, tMod, rowH, undefined, black, 5.5, 'normal', 'center')
         }
+
         y += rowH
       })
+
+      // ─── Filas vacías extra ───────────────────────────────────────────────
+      const emptyRows = Math.max(3 - asignaciones.length, 0)
+      for (let i = 0; i < emptyRows; i++) {
+        tx = margin
+        const eH = 10
+        drawCell('', tx, y, tUC, eH); tx += tUC
+        for (let j = 0; j < 8; j++) drawCell('', tx + tSub * j, y, tSub, eH)
+        tx += tCat
+        drawCell('', tx, y, tDoc, eH); tx += tDoc
+        drawCell('', tx, y, tLug, eH); tx += tLug
+        drawCell('', tx, y, tHor, eH); tx += tHor
+        drawCell('', tx, y, tFec, eH); tx += tFec
+        drawCell('', tx, y, tUc2, eH); tx += tUc2
+        drawCell('', tx, y, tHrs, eH); tx += tHrs
+        drawCell('', tx, y, tMod, eH)
+        y += eH
+      }
     })
 
     doc.save(`${filename}.pdf`)
   } catch (e) {
-    console.error(e)
+    console.error('Error generando PDF:', e)
     throw e
   }
 }

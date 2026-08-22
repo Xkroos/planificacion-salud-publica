@@ -25,6 +25,7 @@ export default function CronogramaListPage() {
   const [search, setSearch] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [expandedGroups, setExpandedGroups] = useState<string[]>([])
+  const [activePeriodo, setActivePeriodo] = useState<any>(null)
   
   const [showModal, setShowModal] = useState(false)
   const { data: session } = useSession()
@@ -33,12 +34,15 @@ export default function CronogramaListPage() {
   const [config, setConfig] = useState<any>(null)
 
   const fetch_ = async () => {
-    const [resCr, resConf] = await Promise.all([
+    const [resCr, resConf, resPer] = await Promise.all([
       fetch('/api/cronograma'),
-      fetch('/api/configuracion')
+      fetch('/api/configuracion'),
+      fetch('/api/periodos')
     ])
     setCronogramas(await resCr.json())
     setConfig(await resConf.json())
+    const per = await resPer.json()
+    setActivePeriodo(per.find((p: any) => p.estado === 'ACTIVO') || null)
     setLoading(false)
   }
 
@@ -94,12 +98,16 @@ export default function CronogramaListPage() {
           </h1>
           <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>{cronogramas.length} cronograma(s) registrado(s)</p>
         </div>
-        {(!isAdmin && config && !config.asignacionCargaAbierta) ? (
+        {(!activePeriodo && !loading) ? (
+          <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
+            No hay Periodo academico activo
+          </div>
+        ) : (!isAdmin && config && !config.asignacionCargaAbierta) ? (
           <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
             Proceso de carga cerrado
           </div>
         ) : (
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)} disabled={!activePeriodo}>
             <Plus size={16} /> Nuevo Cronograma
           </button>
         )}
@@ -118,8 +126,10 @@ export default function CronogramaListPage() {
             : filtered.length === 0 ? (
               <div className="empty-state">
                 <ClipboardList size={48} />
-                <p style={{ marginTop: '12px', fontWeight: 600, fontSize: '16px' }}>{search ? 'Sin resultados' : 'No hay cronogramas'}</p>
-                {!search && (isAdmin || (config && config.asignacionCargaAbierta)) && (
+                <p style={{ marginTop: '12px', fontWeight: 600, fontSize: '16px' }}>
+                  {!activePeriodo ? 'No hay Periodo academico activo en este momento' : (search ? 'Sin resultados' : 'No hay cronogramas')}
+                </p>
+                {!search && activePeriodo && (isAdmin || (config && config.asignacionCargaAbierta)) && (
                   <button className="btn btn-primary btn-sm" style={{ marginTop: '16px' }} onClick={() => setShowModal(true)}>Generar primer cronograma</button>
                 )}
               </div>
@@ -394,15 +404,15 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nombre del Vocero</label>
-                  <input className="form-input" type="text" value={form.vocero} onChange={e => setForm({ ...form, vocero: e.target.value })} placeholder="Ej. Maria Perez" />
+                  <input className="form-input" type="text" value={form.vocero} onChange={e => setForm({ ...form, vocero: e.target.value })} placeholder="Ingrese el nombre del vocero" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Teléfono Vocero</label>
-                  <input className="form-input" type="text" value={form.telefonoVocero} onChange={e => setForm({ ...form, telefonoVocero: e.target.value })} />
+                  <input className="form-input" type="text" value={form.telefonoVocero} onChange={e => setForm({ ...form, telefonoVocero: e.target.value })} placeholder="Ingrese el teléfono del vocero" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Email Vocero</label>
-                  <input className="form-input" type="email" value={form.emailVocero} onChange={e => setForm({ ...form, emailVocero: e.target.value })} />
+                  <input className="form-input" type="email" value={form.emailVocero} onChange={e => setForm({ ...form, emailVocero: e.target.value })} placeholder="Ingrese el correo del vocero" />
                 </div>
               </div>
             </div>

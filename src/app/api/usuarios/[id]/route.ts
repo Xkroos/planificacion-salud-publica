@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import { logAction } from '@/lib/bitacora'
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -20,6 +21,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data,
       select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
     })
+    
+    await logAction('USUARIOS', 'ACTUALIZAR', `Se modificó el usuario ${usuario.nombre} (${usuario.email})`)
+    
     return NextResponse.json(usuario)
   } catch {
     return NextResponse.json({ error: 'Error al actualizar usuario' }, { status: 500 })
@@ -29,6 +33,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+    const user = await prisma.usuario.findUnique({ where: { id } })
+    if (user) {
+      await logAction('USUARIOS', 'ELIMINAR', `Se eliminó el usuario ${user.nombre} (${user.email})`)
+    }
     await prisma.usuario.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch {

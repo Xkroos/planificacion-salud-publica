@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import { logAction } from '@/lib/bitacora'
 
 export async function GET() {
   try {
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, nombre: true, email: true, rol: true, activo: true, createdAt: true },
     })
+
+    await logAction('USUARIOS', 'CREAR', `Se creó el usuario ${usuario.nombre} (${usuario.email}) con rol ${usuario.rol}`)
+
     return NextResponse.json(usuario, { status: 201 })
   } catch (e: any) {
     if (e?.code === 'P2002') {

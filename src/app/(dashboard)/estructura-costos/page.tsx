@@ -14,7 +14,7 @@ export default function EstructuraCostosHub() {
     fetch('/api/configuracion')
       .then(r => r.json())
       .then(d => { if (d.resolucion) setResolucion(d.resolucion) })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   const handleSaveResolucion = async () => {
@@ -53,16 +53,14 @@ export default function EstructuraCostosHub() {
       </div>
 
       {/* Configuración de Resolución - sección destacada */}
-      <div className="card" style={{ marginBottom: '24px', borderLeft: '4px solid #2d6bc4' }}>
+      <div className="card" style={{ marginBottom: '24px', borderLeft: '4px solid #2d6bc4', width: 'fit-content', padding: '20px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
           <div style={{ width: '36px', height: '36px', background: '#eff6ff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Hash size={20} color="#2d6bc4" />
           </div>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1a3a6b', margin: 0 }}>Número de Resolución Global</h3>
-            <p style={{ fontSize: '12px', color: '#718096', margin: 0, marginTop: '2px' }}>
-              Este número se aplicará automáticamente a la estructura de costos de todos los cronogramas.
-            </p>
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1a3a6b', margin: 0 }}>Número de Resolución</h3>
+
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -92,13 +90,13 @@ export default function EstructuraCostosHub() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-        
+
         {/* Card 1: Factibilidad / PDF */}
         <Link href="/estructura-costos/factibilidad" style={{ textDecoration: 'none' }}>
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
+          <div className="card" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'center',
             padding: '40px 20px',
             cursor: 'pointer',
@@ -107,30 +105,30 @@ export default function EstructuraCostosHub() {
             textAlign: 'center',
             border: '2px solid transparent'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)'
-            e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-            e.currentTarget.style.borderColor = '#dbeafe'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = '#dbeafe'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = 'transparent'
+            }}
           >
-            <div style={{ 
-              width: '64px', 
-              height: '64px', 
-              background: '#eff6ff', 
-              borderRadius: '16px', 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: '#eff6ff',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px'
             }}>
               <Calculator size={32} color="#2d6bc4" />
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a3a6b', marginBottom: '8px' }}>Generar PDF Factibilidad</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#1a3a6b', marginBottom: '8px' }}>Generar Estructura de Costo</h3>
             <p style={{ fontSize: '13px', color: '#718096', margin: 0 }}>
               Calcule y exporte en formato PDF la estructura de costos detallada (Factibilidad) de un cronograma.
             </p>
@@ -139,10 +137,10 @@ export default function EstructuraCostosHub() {
 
         {/* Card 2: Costos por Aulas Territoriales */}
         <Link href="/estructura-costos/aulas" style={{ textDecoration: 'none' }}>
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
+          <div className="card" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'center',
             padding: '40px 20px',
             cursor: 'pointer',
@@ -151,24 +149,24 @@ export default function EstructuraCostosHub() {
             textAlign: 'center',
             border: '2px solid transparent'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)'
-            e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-            e.currentTarget.style.borderColor = '#dbeafe'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = '#dbeafe'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = 'transparent'
+            }}
           >
-            <div style={{ 
-              width: '64px', 
-              height: '64px', 
-              background: '#eff6ff', 
-              borderRadius: '16px', 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: '#eff6ff',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px'
             }}>
@@ -183,10 +181,10 @@ export default function EstructuraCostosHub() {
 
         {/* Card 3: Asignación de Viáticos */}
         <Link href="/estructura-costos/viaticos" style={{ textDecoration: 'none' }}>
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
+          <div className="card" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'center',
             padding: '40px 20px',
             cursor: 'pointer',
@@ -195,24 +193,24 @@ export default function EstructuraCostosHub() {
             textAlign: 'center',
             border: '2px solid transparent'
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-4px)'
-            e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-            e.currentTarget.style.borderColor = '#dbeafe'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)'
-            e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
-            e.currentTarget.style.borderColor = 'transparent'
-          }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = '#dbeafe'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+              e.currentTarget.style.borderColor = 'transparent'
+            }}
           >
-            <div style={{ 
-              width: '64px', 
-              height: '64px', 
-              background: '#eff6ff', 
-              borderRadius: '16px', 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              width: '64px',
+              height: '64px',
+              background: '#eff6ff',
+              borderRadius: '16px',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px'
             }}>

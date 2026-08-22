@@ -350,12 +350,12 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
             <div className="form-group">
               <label className="form-label">Año *</label>
               <input className="form-input" type="number" min="2020" max="2040"
-                value={form.anio} onChange={e => setForm({ ...form, anio: e.target.value })} />
+                value={form.anio} onChange={e => setForm({ ...form, anio: e.target.value.replace(/^0+(?=\d)/, '') })} />
             </div>
             <div className="form-group">
               <label className="form-label">N° de Periodo *</label>
               <input className="form-input" type="number" min="1" max="4"
-                value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })} />
+                value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value.replace(/^0+(?=\d)/, '') })} />
             </div>
             
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -380,13 +380,13 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
             <div className="form-group">
               <label className="form-label">Tabulador Global ($) *</label>
               <input className="form-input" type="number" min="0" step="0.01" value={form.tabulador}
-                onChange={e => setForm({ ...form, tabulador: e.target.value })} />
+                onChange={e => setForm({ ...form, tabulador: e.target.value.replace(/^0+(?=\d)/, '') })} placeholder="Ingrese una cantidad" />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Nro. de Resolución <span style={{ fontSize: '11px', color: '#718096', fontWeight: 400 }}>(global)</span></label>
+              <label className="form-label">Nro. de Resolución * <span style={{ fontSize: '11px', color: '#718096', fontWeight: 400 }}>(global)</span></label>
               <input className="form-input" type="text" placeholder="Ej: 2025-866" value={form.resolucion}
-                onChange={e => setForm({ ...form, resolucion: e.target.value })} />
+                onChange={e => setForm({ ...form, resolucion: e.target.value })} required />
               <p style={{ fontSize: '11px', color: '#718096', marginTop: '4px' }}>Se aplicará a todos los cronogramas del sistema.</p>
             </div>
             
@@ -406,7 +406,7 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
         </div>
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving || form.trimestres.length === 0}>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || form.trimestres.length === 0 || !form.resolucion.trim()}>
             {saving ? <Loader2 size={16} /> : null}
             {saving ? 'Guardando...' : 'Guardar Periodo'}
           </button>

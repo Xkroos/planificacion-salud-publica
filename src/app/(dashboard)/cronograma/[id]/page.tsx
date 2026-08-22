@@ -335,7 +335,7 @@ export default function CronogramaDetailPage() {
             Estructura de Costos
           </Link>
           <button className="btn btn-primary" onClick={handleGeneratePDF} disabled={generatingPDF}>
-            {generatingPDF ? <Loader2 size={16} className="spin" /> : <FileText size={16} />} Generar PDF
+            {generatingPDF ? <Loader2 size={16} className="spin" /> : <FileText size={16} />} Generar Cronograma
           </button>
         </div>
       </div>
@@ -368,7 +368,6 @@ export default function CronogramaDetailPage() {
           <h2 className="card-title">Asignaciones de Docentes</h2>
           <div style={{ display: 'flex', gap: '8px' }}>
             {canModifyAsignaciones && <button className="btn btn-sm btn-secondary" onClick={() => setShowGenerarModal(true)}><Calendar size={14} /> Generar Fechas</button>}
-            {canModifyAsignaciones && <Link href={`/cronograma/${id}/agregar-docente`} className="btn btn-sm btn-primary"><Plus size={14} /> Agregar</Link>}
           </div>
         </div>
         <div style={{ overflowX: 'auto' }}>
@@ -534,11 +533,11 @@ export default function CronogramaDetailPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                   <div className="form-group">
                     <label className="form-label">Participantes Femenino</label>
-                    <input className="form-input" type="number" min="0" value={simpleFem} onChange={e => setSimpleFem(e.target.value)} required />
+                    <input className="form-input" type="number" min="0" value={simpleFem} onChange={e => setSimpleFem(e.target.value.replace(/^0+(?=\d)/, ''))} required placeholder="Ingrese una cantidad" />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Participantes Masculino</label>
-                    <input className="form-input" type="number" min="0" value={simpleMasc} onChange={e => setSimpleMasc(e.target.value)} required />
+                    <input className="form-input" type="number" min="0" value={simpleMasc} onChange={e => setSimpleMasc(e.target.value.replace(/^0+(?=\d)/, ''))} required placeholder="Ingrese una cantidad" />
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

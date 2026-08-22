@@ -58,7 +58,7 @@ export default function UsuariosPage() {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a3a6b', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Users size={24} color="#2d6bc4" /> Gestión de Usuarios
           </h1>
-          <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>Solo visible para Administradores</p>
+
         </div>
         <button className="btn btn-primary" onClick={openCreate}><Plus size={16} /> Nuevo Usuario</button>
       </div>

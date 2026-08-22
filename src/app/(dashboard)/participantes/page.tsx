@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Users, Pencil, Trash2, X, Search,
   Phone, Mail, GraduationCap, Loader2, UserPlus,
-  ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight
+  ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight, AlertCircle
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 
@@ -69,11 +69,11 @@ function formatDate(d: string | null | undefined) {
 
 const trimColors: Record<string, { bg: string; color: string; border: string }> = {
   'Introductorio': { bg: '#f0f9ff', color: '#0369a1', border: '#7dd3fc' },
-  'I':             { bg: '#f0fdf4', color: '#15803d', border: '#86efac' },
-  'II':            { bg: '#fefce8', color: '#a16207', border: '#fde047' },
-  'III':           { bg: '#fff7ed', color: '#c2410c', border: '#fdba74' },
-  'IV':            { bg: '#fdf4ff', color: '#9333ea', border: '#d8b4fe' },
-  'V':             { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' },
+  'I': { bg: '#f0fdf4', color: '#15803d', border: '#86efac' },
+  'II': { bg: '#fefce8', color: '#a16207', border: '#fde047' },
+  'III': { bg: '#fff7ed', color: '#c2410c', border: '#fdba74' },
+  'IV': { bg: '#fdf4ff', color: '#9333ea', border: '#d8b4fe' },
+  'V': { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' },
 }
 
 export default function ParticipantesPage() {
@@ -87,6 +87,7 @@ export default function ParticipantesPage() {
   const [periodos, setPeriodos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [canRegister, setCanRegister] = useState(false)
+  const [activePeriodo, setActivePeriodo] = useState<any>(null)
 
   const [searchNombre, setSearchNombre] = useState('')
   const [filterUnidad, setFilterUnidad] = useState('')
@@ -142,6 +143,7 @@ export default function ParticipantesPage() {
     setSecciones(Array.isArray(seccData) ? seccData : [])
     setRegiones(Array.isArray(regData) ? regData : [])
     setPeriodos(Array.isArray(perData) ? perData.filter((p: any) => p.estado !== 'CERRADO') : [])
+    setActivePeriodo(Array.isArray(perData) ? perData.find((p: any) => p.estado === 'ACTIVO') || null : null)
     setCanRegister(isAdmin || configData?.inscripcionParticipantesAbierta)
     setLoading(false)
   }, [searchNombre, filterUnidad, filterGenero, filterTrimestre, isAdmin])
@@ -243,7 +245,7 @@ export default function ParticipantesPage() {
   const aulasFiltradas = selectedRegion?.aulas || []
 
   const activePeriodoIds = periodos.map(p => p.id)
-  
+
   const currentParticipantes = participantes.filter(p => !p.periodoId || activePeriodoIds.includes(p.periodoId))
   const oldParticipantes = participantes.filter(p => p.periodoId && !activePeriodoIds.includes(p.periodoId))
 
@@ -253,7 +255,7 @@ export default function ParticipantesPage() {
     acc[key].push(p)
     return acc
   }, {} as Record<string, Participante[]>)
-  
+
   const groupedOldPeriods = Object.entries(groupedOld).sort(([a], [b]) => b.localeCompare(a))
 
   return (
@@ -263,13 +265,20 @@ export default function ParticipantesPage() {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a3a6b', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Users size={24} color="#2d6bc4" /> Participantes
           </h1>
-          <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>Registro global de participantes del sistema</p>
+          <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>Registro global de participantes</p>
         </div>
-        {canRegister && (
-          <button className="btn btn-primary" onClick={openCreate}>
-            <UserPlus size={16} /> Registrar Participante
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {!activePeriodo && !loading && (
+             <span className="badge badge-red" style={{ fontSize: '12px', padding: '6px 12px' }}>
+               <AlertCircle size={14} style={{ marginRight: '4px' }} /> No hay Periodo academico activo
+             </span>
+          )}
+          {canRegister && (
+            <button className="btn btn-primary" onClick={openCreate} disabled={!activePeriodo}>
+              <UserPlus size={16} /> Registrar Participante
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
@@ -293,7 +302,7 @@ export default function ParticipantesPage() {
               style={{ paddingLeft: '38px', borderRadius: '20px' }} value={searchNombre}
               onChange={(e) => setSearchNombre(e.target.value)} />
           </div>
-          
+
           <select className="form-select" style={{ flex: '1', minWidth: '140px' }} value={filterTrimestre} onChange={e => { setFilterTrimestre(e.target.value); setFilterUnidad(''); }}>
             <option value="">Todos los niveles</option>
             {TRIMESTRES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -303,13 +312,13 @@ export default function ParticipantesPage() {
             <option value="">Todas las asignaturas</option>
             {unidades.filter(u => !filterTrimestre || u.trimestre === filterTrimestre).map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
           </select>
-          
+
           <select className="form-select" style={{ flex: '1', minWidth: '130px' }} value={filterGenero} onChange={e => setFilterGenero(e.target.value)}>
             <option value="">Todos los generos</option>
             <option value="FEMENINO">Femenino</option>
             <option value="MASCULINO">Masculino</option>
           </select>
-          
+
           {(searchNombre || filterUnidad || filterGenero || filterTrimestre) && (
             <button className="btn btn-secondary btn-sm" onClick={() => { setSearchNombre(''); setFilterUnidad(''); setFilterGenero(''); setFilterTrimestre(''); }}>
               <X size={14} /> Limpiar
@@ -323,7 +332,7 @@ export default function ParticipantesPage() {
           <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', paddingLeft: '4px' }}>
             Periodos Académicos
           </h3>
-          <button 
+          <button
             onClick={() => setSelectedPeriodView('ACTUAL')}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -347,7 +356,7 @@ export default function ParticipantesPage() {
             <>
               <div style={{ height: '1px', background: '#e2e8f0', margin: '8px 0' }} />
               {groupedOldPeriods.map(([periodoStr, parts]) => (
-                <button 
+                <button
                   key={periodoStr}
                   onClick={() => setSelectedPeriodView(periodoStr)}
                   style={{
@@ -381,15 +390,15 @@ export default function ParticipantesPage() {
               </div>
             ) : (() => {
               const displayParticipantes = selectedPeriodView === 'ACTUAL' ? currentParticipantes : (groupedOld[selectedPeriodView] || [])
-              
+
               if (displayParticipantes.length === 0) {
                 return (
                   <div className="empty-state" style={{ padding: '60px 20px' }}>
                     <Users size={48} style={{ margin: '0 auto', opacity: 0.3 }} />
                     <p style={{ marginTop: '12px', fontWeight: 600 }}>
-                      {searchNombre || filterUnidad || filterGenero ? 'No hay resultados para los filtros aplicados' : 'No hay participantes en este periodo'}
+                      {!activePeriodo && selectedPeriodView === 'ACTUAL' ? 'No hay Periodo academico activo en este momento' : (searchNombre || filterUnidad || filterGenero ? 'No hay resultados para los filtros aplicados' : 'No hay participantes en este periodo')}
                     </p>
-                    {canRegister && selectedPeriodView === 'ACTUAL' && !searchNombre && !filterUnidad && (
+                    {canRegister && activePeriodo && selectedPeriodView === 'ACTUAL' && !searchNombre && !filterUnidad && (
                       <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={openCreate}>
                         <UserPlus size={16} /> Registrar primero
                       </button>
@@ -397,7 +406,7 @@ export default function ParticipantesPage() {
                   </div>
                 )
               }
-              
+
               return (
                 <div style={{ overflowX: 'auto' }}>
                   <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -658,12 +667,12 @@ export default function ParticipantesPage() {
 
                   {(!trayectoParticipante.cronogramas || trayectoParticipante.cronogramas.length === 0) &&
                     (!trayectoParticipante.historial || trayectoParticipante.historial.length === 0) && (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-                      <BookOpen size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                      <p style={{ fontWeight: 600 }}>Sin trayecto registrado</p>
-                      <p style={{ fontSize: '13px', marginTop: '6px' }}>Este participante aun no tiene inscripciones ni cambios de nivel registrados.</p>
-                    </div>
-                  )}
+                      <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                        <BookOpen size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+                        <p style={{ fontWeight: 600 }}>Sin trayecto registrado</p>
+                        <p style={{ fontSize: '13px', marginTop: '6px' }}>Este participante aun no tiene inscripciones ni cambios de nivel registrados.</p>
+                      </div>
+                    )}
                 </>
               )}
             </div>

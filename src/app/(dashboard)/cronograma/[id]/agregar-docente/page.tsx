@@ -21,7 +21,7 @@ type Cronograma = {
   _meta?: { userRole: string; asignacionCargaAbierta: boolean }
 }
 
-type Docente = { id: string; nombre: string; categoria: string; dedicacion: string }
+type Docente = { id: string; nombre: string; categoria: string; dedicacion: string; cedula?: string; activo?: boolean }
 type Unidad = { id: string; nombre: string; creditos: number; horas: number }
 
 export default function AgregarDocentePage() {
@@ -40,6 +40,8 @@ export default function AgregarDocentePage() {
   const [asignacionId, setAsignacionId] = useState<string | null>(null)
 
   const [docenteId, setDocenteId] = useState('')
+  const [docenteSearch, setDocenteSearch] = useState('')
+  
   const [unidadId, setUnidadId] = useState('')
   const [lugar, setLugar] = useState('')
   const [horaInicio, setHoraInicio] = useState('08:00')
@@ -53,7 +55,7 @@ export default function AgregarDocentePage() {
   const [fechas, setFechas] = useState<string[]>([])
   const [nuevaFecha, setNuevaFecha] = useState('')
 
-useEffect(() => {
+  useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search)
     const asigId = searchParams.get('asignacionId')
 
@@ -84,7 +86,18 @@ useEffect(() => {
           }
         }
       }
-      if (Array.isArray(docs)) setDocentes(docs.filter(d => d.activo !== false))
+      if (Array.isArray(docs)) {
+        const activeDocs = docs.filter(d => d.activo !== false)
+        setDocentes(activeDocs)
+        
+        if (asigId && cron.asignaciones) {
+          const a = cron.asignaciones.find((x: any) => x.id === asigId)
+          if (a && a.docenteId) {
+            const d = activeDocs.find((doc: any) => doc.id === a.docenteId)
+            if (d) setDocenteSearch(`${d.nombre} - CI: ${d.cedula || 'N/A'} (${d.dedicacion})`)
+          }
+        }
+      }
       if (Array.isArray(unis)) setUnidades(unis)
       setLoading(false)
     }).catch(() => {
@@ -92,6 +105,17 @@ useEffect(() => {
       setLoading(false)
     })
   }, [id])
+
+  const handleDocenteSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setDocenteSearch(val)
+    const match = docentes.find(d => `${d.nombre} - CI: ${d.cedula || 'N/A'} (${d.dedicacion})` === val)
+    if (match) {
+      setDocenteId(match.id)
+    } else {
+      setDocenteId('')
+    }
+  }
 
   const handleUnidadChange = (val: string) => {
     setUnidadId(val)
@@ -139,7 +163,7 @@ useEffect(() => {
 const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!docenteId || !unidadId) {
-      setError('Seleccione un docente y una unidad curricular')
+      setError('Seleccione un docente válido de la lista y una unidad curricular')
       return
     }
     if (fechas.length === 0) {
@@ -222,10 +246,24 @@ const handleSave = async (e: React.FormEvent) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
           <div className="form-group">
             <label className="form-label">Docente *</label>
-            <select className="form-select" value={docenteId} onChange={e => setDocenteId(e.target.value)} required>
-              <option value="">Seleccionar docente...</option>
-              {docentes.map(d => <option key={d.id} value={d.id}>{d.nombre} ({d.dedicacion})</option>)}
-            </select>
+            <input 
+              className="form-input" 
+              list="docentes-datalist"
+              value={docenteSearch} 
+              onChange={handleDocenteSearchChange} 
+              placeholder="Buscar por nombre o cédula..." 
+              required 
+            />
+            <datalist id="docentes-datalist">
+              {docentes.map(d => (
+                <option key={d.id} value={`${d.nombre} - CI: ${d.cedula || 'N/A'} (${d.dedicacion})`} />
+              ))}
+            </datalist>
+            {!docenteId && docenteSearch && (
+              <span style={{ fontSize: '12px', color: '#e53e3e', marginTop: '4px', display: 'block' }}>
+                Seleccione una opción válida de la lista.
+              </span>
+            )}
           </div>
 
           <div className="form-group">

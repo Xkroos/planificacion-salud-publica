@@ -131,11 +131,11 @@ export default function UnidadesPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Unidades de Crédito (U.C.) *</label>
-                  <input className="form-input" type="number" min="1" max="10" value={form.creditos} onChange={e => setForm({ ...form, creditos: e.target.value })} />
+                  <input className="form-input" type="number" min="1" max="10" value={form.creditos} onChange={e => setForm({ ...form, creditos: e.target.value.replace(/^0+(?=\d)/, '') })} placeholder="Ingrese una cantidad" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Horas Totales *</label>
-                  <input className="form-input" type="number" min="1" value={form.horas} onChange={e => setForm({ ...form, horas: e.target.value })} />
+                  <input className="form-input" type="number" min="1" value={form.horas} onChange={e => setForm({ ...form, horas: e.target.value.replace(/^0+(?=\d)/, '') })} placeholder="Ingrese una cantidad" />
                 </div>
               </div>
               <div className="form-group" style={{ marginTop: '16px' }}>

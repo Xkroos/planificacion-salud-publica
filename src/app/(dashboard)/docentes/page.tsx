@@ -91,6 +91,7 @@ export default function DocentesPage() {
   const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [configOpen, setConfigOpen] = useState<boolean | null>(null)
+  const [activePeriodo, setActivePeriodo] = useState<any>(null)
 
   const fetchDocentes = async () => {
     const res = await fetch('/api/docentes')
@@ -123,10 +124,19 @@ export default function DocentesPage() {
     } catch { /* ignore */ }
   }
 
+  const fetchPeriodos = async () => {
+    try {
+      const res = await fetch('/api/periodos')
+      const data = await res.json()
+      setActivePeriodo(data.find((p: any) => p.estado === 'ACTIVO') || null)
+    } catch { /* ignore */ }
+  }
+
   useEffect(() => {
     fetchDocentes()
     fetchAulas()
     fetchConfig()
+    fetchPeriodos()
   }, [])
 
   const canCreate = isAdmin || configOpen === true
@@ -262,12 +272,16 @@ export default function DocentesPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {!isAdmin && configOpen === false && (
+          {!activePeriodo && !loading ? (
+             <span className="badge badge-red" style={{ fontSize: '12px', padding: '6px 12px' }}>
+               <AlertCircle size={14} style={{ marginRight: '4px' }} /> No hay Periodo academico activo
+             </span>
+          ) : !isAdmin && configOpen === false && (
             <span className="badge badge-red" style={{ fontSize: '12px', padding: '6px 12px' }}>
               <AlertCircle size={14} style={{ marginRight: '4px' }} /> Registro Cerrado
             </span>
           )}
-          <button className="btn btn-primary" onClick={openCreate} disabled={!canCreate}>
+          <button className="btn btn-primary" onClick={openCreate} disabled={!canCreate || !activePeriodo}>
             <Plus size={16} /> Nuevo Docente
           </button>
         </div>
@@ -315,11 +329,13 @@ export default function DocentesPage() {
           ) : filtered.length === 0 ? (
             <div className="empty-state">
               <UserCheck size={48} />
-              <p style={{ marginTop: '12px', fontWeight: 600, fontSize: '16px' }}>No hay docentes</p>
-              <p style={{ fontSize: '13px', marginTop: '4px' }}>
-                {search ? 'No se encontraron resultados' : 'Comienza agregando el primer docente'}
+              <p style={{ marginTop: '12px', fontWeight: 600, fontSize: '16px' }}>
+                {!activePeriodo ? 'No hay Periodo academico activo en este momento' : 'No hay docentes'}
               </p>
-              {!search && canCreate && (
+              <p style={{ fontSize: '13px', marginTop: '4px' }}>
+                {!activePeriodo ? '' : (search ? 'No se encontraron resultados' : 'Comienza agregando el primer docente')}
+              </p>
+              {!search && canCreate && activePeriodo && (
                 <button className="btn btn-primary btn-sm" style={{ marginTop: '16px' }} onClick={openCreate}>
                   <Plus size={14} /> Agregar Docente
                 </button>

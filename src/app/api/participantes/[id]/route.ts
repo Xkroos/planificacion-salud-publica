@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { logAction } from '@/lib/bitacora'
 
 // GET /api/participantes/[id]
 export async function GET(
@@ -61,19 +62,19 @@ export async function PUT(
     // Verificar cédula única
     if (cedulaStr) {
       const existente = await prisma.participante.findFirst({ where: { cedula: cedulaStr, NOT: { id } } })
-      if (existente) return NextResponse.json({ error: 'La cédula ya existe en el sistema' }, { status: 409 })
+      if (existente) return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
     }
 
     // Verificar email único
     if (body.email) {
       const emailExistente = await prisma.participante.findFirst({ where: { email: body.email.trim(), NOT: { id } } })
-      if (emailExistente) return NextResponse.json({ error: 'El correo electrónico ya está registrado en el sistema' }, { status: 409 })
+      if (emailExistente) return NextResponse.json({ error: 'correo registrado en el sistema' }, { status: 409 })
     }
 
     // Verificar teléfono único
     if (body.telefono) {
       const tlfExistente = await prisma.participante.findFirst({ where: { telefono: body.telefono.trim(), NOT: { id } } })
-      if (tlfExistente) return NextResponse.json({ error: 'El número de teléfono ya está registrado en el sistema' }, { status: 409 })
+      if (tlfExistente) return NextResponse.json({ error: 'numero de telefono registrado en el sistema' }, { status: 409 })
     }
 
     // Force rebuild
@@ -95,6 +96,9 @@ export async function PUT(
       },
       include: { unidad: true },
     })
+
+    await logAction('PARTICIPANTES', 'ACTUALIZAR', `Se actualizó el participante ${participante.nombre} ${participante.apellido || ''} (CI: ${participante.cedula})`)
+
     return NextResponse.json(participante)
   } catch {
     return NextResponse.json({ error: 'Error al actualizar participante' }, { status: 500 })
@@ -117,6 +121,12 @@ export async function DELETE(
       }
     }
     const { id } = await params
+
+    const p = await prisma.participante.findUnique({ where: { id } })
+    if (p) {
+      await logAction('PARTICIPANTES', 'ELIMINAR', `Se eliminó el participante ${p.nombre} ${p.apellido || ''} (CI: ${p.cedula})`)
+    }
+
     await prisma.participante.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch {

@@ -23,7 +23,7 @@ async function getStats() {
       where: { asignaciones: { some: { cronograma: { periodoId: activePeriodId } } } }
     }) : Promise.resolve(0),
   ])
-  
+
   // Aulas activas: AAT with at least one asignación in active period
   const aulasActivas = activePeriod ? await prisma.aulaTerritorial.count({
     where: {
@@ -36,15 +36,15 @@ async function getStats() {
     },
   }) : 0
 
-  return { 
-    docentes, 
-    periodoString: activePeriod ? `${activePeriod.anio}-${activePeriod.numero}` : 'Ninguno', 
-    cronogramas, 
-    unidades, 
-    regiones, 
-    participantes, 
-    aulasTotal, 
-    aulasActivas, 
+  return {
+    docentes,
+    periodoString: activePeriod ? `${activePeriod.anio}-${activePeriod.numero}` : 'Ninguno',
+    cronogramas,
+    unidades,
+    regiones,
+    participantes,
+    aulasTotal,
+    aulasActivas,
     docentesConCarga,
     activePeriodId
   }
@@ -89,8 +89,8 @@ export default async function DashboardPage() {
           Dashboard
         </h1>
         <p style={{ fontSize: '14px', color: '#718096' }}>
-          Bienvenido, <strong>{session?.user?.name}</strong> —
-          Sistema de Planificación Académica UNERG Postgrado
+          Bienvenido, <strong>{session?.user?.name}</strong>,
+          Sistema de Planificación Académica de Salud Publica
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ClipboardList size={18} color="#2d6bc4" />
+              <ClipboardList size={18} color="#000000" />
               Cronogramas Recientes
             </h2>
             <Link href="/cronograma" className="btn btn-sm btn-secondary">Ver todos</Link>
@@ -128,10 +128,14 @@ export default async function DashboardPage() {
             {recientes.length === 0 ? (
               <div className="empty-state" style={{ padding: '40px 20px' }}>
                 <ClipboardList size={40} />
-                <p style={{ marginTop: '8px', fontWeight: 500 }}>No hay cronogramas aún</p>
-                <Link href="/cronograma/nuevo" className="btn btn-primary btn-sm" style={{ marginTop: '12px', display: 'inline-flex' }}>
-                  Crear primer cronograma
-                </Link>
+                <p style={{ marginTop: '8px', fontWeight: 500 }}>
+                  {stats.activePeriodId === 'none' ? 'No hay Periodo academico activo en este momento' : 'No hay cronogramas aún'}
+                </p>
+                {stats.activePeriodId !== 'none' && (
+                  <Link href="/cronograma/nuevo" className="btn btn-primary btn-sm" style={{ marginTop: '12px', display: 'inline-flex', background: '#FFFF5C', color: '#000000' }}>
+                    Crear primer cronograma
+                  </Link>
+                )}
               </div>
             ) : (
               <table className="data-table">
@@ -160,7 +164,7 @@ export default async function DashboardPage() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span className="badge badge-blue" style={{ width: 'fit-content' }}>
+                          <span className="badge badge-gray" style={{ width: 'fit-content' }}>
                             {new Set(c.asignaciones.filter((a: any) => a.docenteId).map((a: any) => a.docenteId)).size} docentes
                           </span>
                           <span style={{ fontSize: '11px', color: '#718096' }}>
@@ -183,14 +187,20 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <TrendingUp size={18} color="#2d6bc4" />
+              <TrendingUp size={18} color="#000000" />
               Acciones Rápidas
             </h2>
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <Link href="/cronograma/nuevo" className="btn btn-primary" style={{ justifyContent: 'center' }}>
-              <ClipboardList size={16} /> Nuevo Cronograma
-            </Link>
+            {stats.activePeriodId !== 'none' ? (
+              <Link href="/cronograma/nuevo" className="btn btn-primary" style={{ justifyContent: 'center', background: '#FFFF5C', color: '#000000' }}>
+                <ClipboardList size={16} /> Nuevo Cronograma
+              </Link>
+            ) : (
+              <button className="btn btn-primary" disabled style={{ justifyContent: 'center', opacity: 0.6, cursor: 'not-allowed' }}>
+                <ClipboardList size={16} /> Nuevo Cronograma
+              </button>
+            )}
             <Link href="/docentes" className="btn btn-secondary" style={{ justifyContent: 'center' }}>
               <UserCheck size={16} /> Gestionar Docentes
             </Link>

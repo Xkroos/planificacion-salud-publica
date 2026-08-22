@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { PlantillaCostosPDF } from '@/components/PlantillaCostosPDF'
 import toast from 'react-hot-toast'
+import { determinarTipoViatico } from '@/lib/viaticos'
 
 type Cronograma = {
   id: string
@@ -46,10 +47,7 @@ type Cronograma = {
   participantes: any[]
 }
 
-function aplicaViatico(docenteRegion?: string) {
-  const r = docenteRegion?.toLowerCase() || ''
-  return r.includes('san juan') || r.includes('guarico') || r.includes('guárico')
-}
+
 
 export default function EstructuraCostosPage() {
   const { id } = useParams()
@@ -59,7 +57,7 @@ export default function EstructuraCostosPage() {
   const [saving, setSaving] = useState(false)
 
   // Local state for edits
-  const [asignaciones, setAsignaciones] = useState<{ id: string, hp: number, viatico: number }[]>([])
+  const [asignaciones, setAsignaciones] = useState<{ id: string, hp: string, viatico: string }[]>([])
   const [aulaCostos, setAulaCostos] = useState({
     preinscripcion: '',
     inscripcion: '',
@@ -73,6 +71,9 @@ export default function EstructuraCostosPage() {
   const [refDocumento, setRefDocumento] = useState('')
   const [resolucion, setResolucion] = useState('')
   const pdfRef = React.useRef<HTMLDivElement>(null)
+
+  // Confirmation Modal state
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   useEffect(() => {
     fetchCronograma()
@@ -114,11 +115,18 @@ export default function EstructuraCostosPage() {
       const data = await res.json()
       setCronograma(data)
       // La resolución se carga desde la configuración global, no del cronograma
-      setAsignaciones(data.asignaciones.map((a: any) => ({
-        id: a.id,
-        hp: a.hp || data.periodo?.tabulador || 50,
-        viatico: a.viatico || (aplicaViatico(a.docente?.region?.nombre) ? data.aulaTerritorial?.viatico : 0) || 0
-      })))
+      setAsignaciones(data.asignaciones.map((a: any) => {
+        const tipoViatico = determinarTipoViatico(a.docente?.region?.nombre, data.aulaTerritorial?.region?.nombre)
+        let defaultViatico = 0
+        if (tipoViatico === 'SEDE') defaultViatico = data.aulaTerritorial?.viatico || 0
+        if (tipoViatico === 'ZONA') defaultViatico = data.aulaTerritorial?.viaticoZona || 0
+
+        return {
+          id: a.id,
+          hp: (a.hp || data.periodo?.tabulador || 50).toString(),
+          viatico: (a.viatico || defaultViatico || 0).toString()
+        }
+      }))
       setAulaCostos({
         preinscripcion: data.aulaTerritorial?.preinscripcion ? data.aulaTerritorial.preinscripcion.toString() : '',
         inscripcion: data.aulaTerritorial?.inscripcion ? data.aulaTerritorial.inscripcion.toString() : '',
@@ -136,12 +144,12 @@ export default function EstructuraCostosPage() {
 
   const handleAsignacionChange = (id: string, field: 'hp' | 'viatico', value: string) => {
     setAsignaciones(prev => prev.map(a => 
-      a.id === id ? { ...a, [field]: parseFloat(value) || 0 } : a
+      a.id === id ? { ...a, [field]: value.replace(/^0+(?=\d)/, '') } : a
     ))
   }
 
   const handleAulaCostoChange = (field: keyof typeof aulaCostos, value: string) => {
-    setAulaCostos(prev => ({ ...prev, [field]: value }))
+    setAulaCostos(prev => ({ ...prev, [field]: value.replace(/^0+(?=\d)/, '') }))
   }
 
   const handleSave = async () => {
@@ -150,7 +158,7 @@ export default function EstructuraCostosPage() {
       const res = await fetch(`/api/cronograma/${id}/costos`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ asignaciones, aulaCostos, resolucion })
+        body: JSON.stringify({ asignaciones: asignaciones.map(a => ({ id: a.id, hp: parseFloat(a.hp) || 0, viatico: parseFloat(a.viatico) || 0 })), aulaCostos, resolucion })
       })
       if (!res.ok) throw new Error('Error al guardar')
       await fetchCronograma()
@@ -163,16 +171,38 @@ export default function EstructuraCostosPage() {
     }
   }
 
-  const generatePDF = async () => {
+  const requestPDFGeneration = () => {
     if (!cronograma) return
     if (!pdfRef.current) return
     
-    // Validate inputs
-    if (!refDocumento || !resolucion) {
-      if (!confirm('No ha ingresado la Referencia o Resolución. ¿Desea generar el PDF de todas formas?')) return
+    const participantesTotal = (cronograma.participantesFem || 0) + (cronograma.participantesMasc || 0)
+    if (participantesTotal === 0) {
+      toast.error('Debe haber al menos 1 participante inscrito en el cronograma para descargar la estructura de costos.')
+      return
     }
 
+    // Validate inputs
+    if (!resolucion) {
+      toast.error('Debe configurar el Nro. de Resolución en el sistema antes de descargar el PDF.')
+      return
+    }
+
+    if (!refDocumento) {
+      setShowConfirmModal(true)
+      return
+    }
+
+    executeGeneratePDF()
+  }
+
+  const executeGeneratePDF = async () => {
+    setShowConfirmModal(false)
+    
     try {
+      if (!pdfRef.current || !cronograma) return
+      
+      const toastId = toast.loading('Generando PDF...')
+      
       const canvas = await html2canvas(pdfRef.current, { scale: 2 })
       const imgData = canvas.toDataURL('image/png')
       
@@ -184,6 +214,9 @@ export default function EstructuraCostosPage() {
       
       doc.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
       doc.save(`Estructura_Costos_${cronograma.seccion}.pdf`)
+      
+      toast.dismiss(toastId)
+      toast.success('PDF generado exitosamente')
     } catch (error) {
       console.error('Error generando PDF:', error)
       toast.error('Hubo un error al generar el PDF')
@@ -201,16 +234,65 @@ export default function EstructuraCostosPage() {
   let currentTotalEgresos = (parseFloat(aulaCostos.limpieza) || 0) + (parseFloat(aulaCostos.vigilancia) || 0) + (parseFloat(aulaCostos.aporteCoordinacion) || 0)
   cronograma.asignaciones.forEach(a => {
     const match = asignaciones.find(x => x.id === a.id)
-    const hp = match?.hp ?? 0
-    const viatico = match?.viatico ?? 0
+    const hp = parseFloat(match?.hp || '0') || 0
+    const viatico = parseFloat(match?.viatico || '0') || 0
     const encuentros = a.fechas?.length || 0
-    const isSanJuan = aplicaViatico(a.docente?.region?.nombre)
+    const tipoViatico = determinarTipoViatico(a.docente?.region?.nombre, cronograma.aulaTerritorial?.region?.nombre)
+    const hasViatico = tipoViatico !== 'NO_APLICA'
     
-    currentTotalEgresos += (hp * encuentros) + (isSanJuan ? (viatico * encuentros) : 0)
+    currentTotalEgresos += (hp * encuentros) + (hasViatico ? (viatico * encuentros) : 0)
   })
 
   return (
     <div className="fade-in" style={{ paddingBottom: '40px' }}>
+      {/* Custom Animated Modal Overlay */}
+      {showConfirmModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <div style={{
+            backgroundColor: 'white', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1a202c', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ backgroundColor: '#fff5f5', padding: '8px', borderRadius: '50%', color: '#e53e3e' }}>
+                <FileText size={20} />
+              </div>
+              Campos Faltantes
+            </h3>
+            <p style={{ color: '#4a5568', fontSize: '15px', lineHeight: '1.5', marginBottom: '24px' }}>
+              No ha ingresado la <strong style={{color:'#2d3748'}}>Referencia (REF)</strong>. 
+              <br/><br/>
+              El PDF se generará con este campo en blanco. ¿Desea continuar de todas formas?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => setShowConfirmModal(false)}
+                className="btn"
+                style={{ backgroundColor: '#f1f5f9', color: '#475569', fontWeight: 500, border: 'none' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={executeGeneratePDF}
+                className="btn btn-primary"
+                style={{ backgroundColor: '#3182ce', fontWeight: 500 }}
+              >
+                Sí, generar PDF
+              </button>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes scaleIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+          `}</style>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
@@ -246,8 +328,8 @@ export default function EstructuraCostosPage() {
           <button className="btn btn-secondary" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />} Guardar Costos
           </button>
-          <button className="btn btn-primary" onClick={generatePDF}>
-            <FileText size={16} /> Descargar PDF
+          <button className="btn btn-primary" onClick={requestPDFGeneration}>
+            <FileText size={16} /> Generar Estructura de Costo
           </button>
         </div>
       </div>
@@ -257,7 +339,7 @@ export default function EstructuraCostosPage() {
         <PlantillaCostosPDF 
           ref={pdfRef} 
           cronograma={cronograma} 
-          asignaciones={asignaciones} 
+          asignaciones={asignaciones.map(a => ({ id: a.id, hp: parseFloat(a.hp) || 0, viatico: parseFloat(a.viatico) || 0 }))} 
           refDocumento={refDocumento}
           resolucion={resolucion}
           coordinadorNacional={(cronograma as any)._meta?.coordinadorNacional || ''}
@@ -286,7 +368,8 @@ export default function EstructuraCostosPage() {
             </thead>
             <tbody>
               {cronograma.asignaciones.map(a => {
-                const isSanJuan = aplicaViatico(a.docente?.region?.nombre)
+                const tipoViatico = determinarTipoViatico(a.docente?.region?.nombre, cronograma.aulaTerritorial?.region?.nombre)
+                const hasViatico = tipoViatico !== 'NO_APLICA'
                 const local = asignaciones.find(x => x.id === a.id)
                 
                 return (
@@ -304,19 +387,26 @@ export default function EstructuraCostosPage() {
                         type="number" 
                         className="form-input" 
                         style={{ width: '100px', padding: '4px 8px' }}
-                        value={local?.hp ?? 0}
+                        value={local?.hp || ''}
                         onChange={(e) => handleAsignacionChange(a.id, 'hp', e.target.value)}
+                        placeholder="Ingrese una cantidad"
                       />
                     </td>
                     <td>
-                      {isSanJuan ? (
-                        <input 
-                          type="number" 
-                          className="form-input" 
-                          style={{ width: '100px', padding: '4px 8px' }}
-                          value={local?.viatico ?? 0}
-                          onChange={(e) => handleAsignacionChange(a.id, 'viatico', e.target.value)}
-                        />
+                      {hasViatico ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input 
+                            type="number" 
+                            className="form-input" 
+                            style={{ width: '100px', padding: '4px 8px' }}
+                            value={local?.viatico || ''}
+                            onChange={(e) => handleAsignacionChange(a.id, 'viatico', e.target.value)}
+                            placeholder="Ingrese una cantidad"
+                          />
+                          <span style={{ fontSize: '10px', color: '#4a5568', fontWeight: 600, background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
+                            {tipoViatico === 'SEDE' ? 'Sede' : 'Zona'}
+                          </span>
+                        </div>
                       ) : (
                         <span style={{ color: '#cbd5e0', fontSize: '13px' }}>No aplica</span>
                       )}
@@ -344,21 +434,21 @@ export default function EstructuraCostosPage() {
               <span style={{ color: '#4a5568' }}>Preinscripción:</span>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '4px' }}>$</span>
-                <input type="number" className="form-input" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.preinscripcion} onChange={e => handleAulaCostoChange('preinscripcion', e.target.value)} />
+                <input type="number" className="form-input" style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.preinscripcion} onChange={e => handleAulaCostoChange('preinscripcion', e.target.value)} placeholder="Ingrese una cantidad" />
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#4a5568' }}>Inscripción:</span>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '4px' }}>$</span>
-                <input type="number" className="form-input" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.inscripcion} onChange={e => handleAulaCostoChange('inscripcion', e.target.value)} />
+                <input type="number" className="form-input" style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.inscripcion} onChange={e => handleAulaCostoChange('inscripcion', e.target.value)} placeholder="Ingrese una cantidad" />
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#4a5568' }}>Gastos Administrativos:</span>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '4px' }}>$</span>
-                <input type="number" className="form-input" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.gastosAdministrativos} onChange={e => handleAulaCostoChange('gastosAdministrativos', e.target.value)} />
+                <input type="number" className="form-input" style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.gastosAdministrativos} onChange={e => handleAulaCostoChange('gastosAdministrativos', e.target.value)} placeholder="Ingrese una cantidad" />
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #e2e8f0', paddingTop: '10px', marginTop: '4px' }}>
@@ -390,21 +480,21 @@ export default function EstructuraCostosPage() {
               <span style={{ color: '#4a5568' }}>Limpieza y Mantenimiento:</span>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '4px' }}>$</span>
-                <input type="number" className="form-input" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.limpieza} onChange={e => handleAulaCostoChange('limpieza', e.target.value)} />
+                <input type="number" className="form-input" style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.limpieza} onChange={e => handleAulaCostoChange('limpieza', e.target.value)} placeholder="Ingrese una cantidad" />
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#4a5568' }}>Vigilancia:</span>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '4px' }}>$</span>
-                <input type="number" className="form-input" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.vigilancia} onChange={e => handleAulaCostoChange('vigilancia', e.target.value)} />
+                <input type="number" className="form-input" style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.vigilancia} onChange={e => handleAulaCostoChange('vigilancia', e.target.value)} placeholder="Ingrese una cantidad" />
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#4a5568' }}>Aporte a la Coordinación:</span>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginRight: '4px' }}>$</span>
-                <input type="number" className="form-input" style={{ width: '80px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.aporteCoordinacion} onChange={e => handleAulaCostoChange('aporteCoordinacion', e.target.value)} />
+                <input type="number" className="form-input" style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} value={aulaCostos.aporteCoordinacion} onChange={e => handleAulaCostoChange('aporteCoordinacion', e.target.value)} placeholder="Ingrese una cantidad" />
               </div>
             </div>
           </div>

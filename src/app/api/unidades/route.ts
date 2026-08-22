@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 
 export async function GET() {
   try {
@@ -15,6 +16,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth()
+    if (!session || session.user.role !== 'ADMIN') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+
     const body = await req.json()
     const unidad = await prisma.unidadCurricular.create({
       data: {

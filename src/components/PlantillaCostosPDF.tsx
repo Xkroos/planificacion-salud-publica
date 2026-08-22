@@ -8,10 +8,7 @@ type PlantillaCostosPDFProps = {
   coordinadorNacional: string
 }
 
-function aplicaViatico(docenteRegion?: string) {
-  const r = docenteRegion?.toLowerCase() || ''
-  return r.includes('san juan') || r.includes('guarico') || r.includes('guárico')
-}
+import { determinarTipoViatico } from '@/lib/viaticos'
 
 export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFProps>(({
   cronograma,
@@ -33,10 +30,11 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
     const hp = match?.hp ?? 0
     const viatico = match?.viatico ?? 0
     const encuentros = a.fechas?.length || 0
-    const isSanJuan = aplicaViatico(a.docente?.region?.nombre)
+    const tipoViatico = determinarTipoViatico(a.docente?.region?.nombre, aula.region?.nombre)
+    const hasViatico = tipoViatico !== 'NO_APLICA'
     
     const totalHonorarios = hp * encuentros
-    const totalViaticos = isSanJuan ? (viatico * encuentros) : 0
+    const totalViaticos = hasViatico ? (viatico * encuentros) : 0
     
     totalEgresosHonorarios += totalHonorarios
     totalEgresosViaticos += totalViaticos
@@ -49,7 +47,7 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
       viatico,
       encuentros,
       fechas: a.fechas || [],
-      isSanJuan,
+      hasViatico,
       totalHonorarios,
       totalViaticos,
       total: totalHonorarios + totalViaticos
@@ -65,7 +63,8 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
   const aporteCoordinacion = aula.aporteCoordinacion || 0
 
   const costoTotalEncuentros = totalEgresosHonorarios + totalEgresosViaticos + limpieza + vigilancia + aporteCoordinacion
-  const costoEncuentroPorParticipante = costoTotalEncuentros / divisorParticipantes
+  const hasParticipantes = participantesTotal > 0
+  const costoEncuentroPorParticipante = hasParticipantes ? (costoTotalEncuentros / participantesTotal) : 0
   
   const totalParticipanteTrimestre = preinscripcion + inscripcion + gastosAdmin + costoEncuentroPorParticipante
   const presupuestoTotal = totalParticipanteTrimestre * 5
@@ -75,173 +74,157 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
     <div 
       ref={ref} 
       style={{
-        width: '1350px', // Fixed wide width to act as a landscape page
+        width: '1350px',
         background: 'white',
         color: 'black',
         fontFamily: 'Arial, sans-serif',
         fontSize: '11px',
-        padding: '20px',
+        padding: '30px',
         position: 'absolute',
-        top: '-10000px', // Hide off-screen
+        top: '-10000px',
         left: '-10000px',
-        border: '1px solid #ddd'
       }}
     >
       <style dangerouslySetInnerHTML={{__html: `
-        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; text-align: center; font-size: 10px; vertical-align: middle; }
-        .bg-blue { background-color: #8faadc !important; color: black !important; font-weight: bold; }
-        .bg-gray { background-color: #f2f2f2 !important; }
-        .bg-yellow { background-color: #ffff00 !important; font-weight: bold; }
-        .bg-pink { background-color: #e6b8b7 !important; font-weight: bold; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 10px; vertical-align: middle; }
+        .bg-yellow { background-color: #ffff00 !important; color: black !important; font-weight: bold; }
+        .bg-blue { background-color: #8ea9db !important; color: black !important; font-weight: bold; }
+        .bg-light-blue { background-color: #b4c6e7 !important; color: black !important; font-weight: bold; }
+        .bg-purple { background-color: #d9e1f2 !important; color: black !important; font-weight: bold; }
         .text-red { color: red !important; font-weight: bold; }
-        .text-blue { color: #2d6bc4 !important; font-weight: bold; }
-        .header-title { font-weight: bold; font-size: 12px; text-align: center; }
+        .text-bold { font-weight: bold; }
         .no-border { border: none !important; }
+        .header-title { font-weight: bold; font-size: 13px; text-align: center; line-height: 1.2; }
       `}} />
 
       {/* HEADER */}
-      <table className="pdf-table no-border" style={{ marginBottom: '15px' }}>
-        <tbody>
-          <tr>
-            <td className="no-border" style={{ width: '15%', textAlign: 'left' }}>
-               <div style={{ width: '120px', height: '60px', border: '1px dashed #ccc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#999' }}>
-                 [Logo Caminos y Horizontes]
-               </div>
-            </td>
-            <td className="no-border header-title" style={{ width: '60%' }}>
-              REPÚBLICA BOLIVARIANA DE VENEZUELA<br/>
-              UNIVERSIDAD NACIONAL EXPERIMENTAL RÓMULO GALLEGOS<br/>
-              DECANATO DE POSTGRADO<br/>
-              MAESTRÍA EN GERENCIA DE LA SALUD PÚBLICA
-            </td>
-            <td className="no-border" style={{ width: '10%' }}>
-               <div style={{ width: '80px', height: '80px', border: '1px dashed #ccc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#999', margin: '0 auto' }}>
-                 [Logo UNERG]
-               </div>
-            </td>
-            <td className="no-border" style={{ width: '15%', textAlign: 'right', fontSize: '10px' }}>
-              <table className="pdf-table" style={{ width: '100%', marginBottom: '5px' }}>
-                <tbody>
-                  <tr>
-                    <td className="bg-yellow" style={{ width: '40%' }}>REF.</td>
-                    <td>{refDocumento || '-'}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div style={{ fontWeight: 'bold' }}>{coordinadorNacional || 'COORDINADOR NO DEFINIDO'}</div>
-              <div>Coordinador(a) Nacional de la MSc Gerencia Salud Pública</div>
-              <div>Resolución Nro. {resolucion || '-'}</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div style={{ position: 'relative', marginBottom: '20px' }}>
+        {/* Red Box for REF and DATE */}
+        <div style={{ position: 'absolute', top: 0, right: 0, background: 'red', color: 'black', padding: '4px', width: '90px', textAlign: 'center', fontWeight: 'bold', fontSize: '11px', border: '1px solid black' }}>
+          <div style={{ borderBottom: '1px solid black', marginBottom: '2px', paddingBottom: '2px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>REF</span>
+            <span>{refDocumento || '-'}</span>
+          </div>
+          <div>{new Date().toLocaleDateString('es-ES')}</div>
+        </div>
 
-      <div className="text-red" style={{ textAlign: 'center', fontSize: '13px', marginBottom: '8px', textDecoration: 'underline', fontWeight: 'bold' }}>
-        FACTIBILIDAD DE GASTOS DE FUNCIONAMIENTO (ESTRUCTURA DE COSTOS)
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <div style={{ width: '180px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/logo-caminos.png" alt="Caminos y Horizontes" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          </div>
+          
+          <div style={{ textAlign: 'center', flex: 1, fontSize: '9px', fontWeight: 'bold', lineHeight: '1.2' }}>
+            REPÚBLICA BOLIVARIANA DE VENEZUELA<br/>
+            UNIVERSIDAD NACIONAL EXPERIMENTAL RÓMULO GALLEGOS<br/>
+            DECANATO DE POSTGRADO<br/>
+            MAESTRÍA EN GERENCIA DE LA SALUD PÚBLICA<br/>
+            REGION: {cronograma.aulaTerritorial.region.nombre.toUpperCase()}<br/>
+            AULA ACADÉMICA TERRITORIAL: {cronograma.aulaTerritorial.nombre.toUpperCase()}
+          </div>
+
+          <div style={{ width: '180px', height: '90px' }}></div>
+        </div>
+
+        {/* Absolute UNERG Logo */}
+        <div style={{ position: 'absolute', top: '-30px', right: '110px', width: '160px', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <img src="/logo-unerg.png" alt="UNERG" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
+
+        <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 'bold', textDecoration: 'underline', marginTop: '10px' }}>
+          ESTRUCTURA DE COSTOS
+        </div>
       </div>
 
       {/* TOP GRIDS */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-        {/* Left and Middle Grid merged */}
-        <table className="pdf-table" style={{ width: '65%' }}>
+        {/* Left Grid */}
+        <table className="pdf-table" style={{ width: '60%' }}>
           <tbody>
             <tr>
-              <td className="bg-blue" style={{ width: '25%' }}>PERIODO:</td>
-              <td colSpan={3}>{cronograma.periodo.anio}-{cronograma.periodo.numero}</td>
+              <td className="bg-yellow" style={{ width: '22%' }}>TRIMESTRE:</td>
+              <td colSpan={5} style={{ width: '78%' }}>CURSO INTRODUCTORIO</td>
             </tr>
             <tr>
-              <td className="bg-blue">TRIMESTRE:</td>
-              <td colSpan={3}>CURSO INTRODUCTORIO</td>
+              <td className="bg-yellow">LAPSO ACADÉMICO:</td>
+              <td colSpan={5}>{cronograma.periodo?.anio}-{cronograma.periodo?.numero}</td>
             </tr>
             <tr>
-              <td className="bg-blue">MODALIDAD DE ESTUDIO:</td>
-              <td colSpan={3}>{cronograma.modalidad?.toUpperCase() || 'MULTIMODAL'}</td>
+              <td className="bg-yellow">MODALIDAD DE ESTUDIO:</td>
+              <td colSpan={5}>{cronograma.modalidad?.toUpperCase() || 'MULTIMODAL'}</td>
             </tr>
             <tr>
-              <td className="bg-blue" rowSpan={2}>
-                <div style={{ marginBottom: '4px' }}>VOCERO:</div>
-                <div style={{ fontWeight: 'normal' }}>{cronograma.vocero?.toUpperCase() || ''}</div>
-              </td>
-              <td style={{ width: '15%' }}>TELÉFONO:</td>
-              <td colSpan={2}>{cronograma.telefonoVocero || ''}</td>
+              <td className="bg-yellow" rowSpan={2}>VOCERO:</td>
+              <td style={{ width: '22%' }}>NOMBRE Y APELLIDO</td>
+              <td style={{ width: '15%' }}>TELEFONO:</td>
+              <td style={{ width: '15%' }}>e-mail:</td>
+              <td className="bg-yellow" colSpan={2} style={{ width: '26%' }}>CANTIDAD DE PARTICIPANTES</td>
             </tr>
             <tr>
-              <td>e-mail:</td>
-              <td colSpan={2}>{cronograma.emailVocero || ''}</td>
-            </tr>
-            <tr>
-              <td className="bg-blue" rowSpan={3}>CANTIDAD DE PARTICIPANTES:</td>
-              <td>FEMENINO:</td>
-              <td style={{ width: '20%' }}>{cronograma.participantesFem}</td>
-              <td className="bg-blue" style={{ width: '40%' }}>REGION</td>
-              <td>{aula.region?.nombre?.toUpperCase() || ''}</td>
-            </tr>
-            <tr>
-              <td>MASCULINO:</td>
-              <td>{cronograma.participantesMasc}</td>
-              <td className="bg-blue">AULA TERRITORIAL</td>
-              <td>{aula.nombre.toUpperCase()}</td>
-            </tr>
-            <tr>
-              <td>TOTAL:</td>
-              <td>{participantesTotal}</td>
-              <td className="bg-blue">COORDINADOR NACIONAL</td>
-              <td>{coordinadorNacional?.toUpperCase() || ''}</td>
-            </tr>
-            <tr>
-              <td colSpan={3} className="no-border"></td>
-              <td className="bg-blue">ENLACE TERRITORIAL</td>
               <td>{cronograma.vocero?.toUpperCase() || ''}</td>
+              <td>{cronograma.telefonoVocero || ''}</td>
+              <td>{cronograma.emailVocero || ''}</td>
+              <td className="bg-yellow" style={{ width: '13%' }}>MASCULINO:</td>
+              <td style={{ width: '13%' }}>{cronograma.participantesMasc}</td>
+            </tr>
+            <tr>
+              <td className="bg-yellow">COORDINADOR NACIONAL:</td>
+              <td colSpan={3}>{coordinadorNacional?.toUpperCase() || ''}</td>
+              <td className="bg-yellow">FEMENINO:</td>
+              <td>{cronograma.participantesFem}</td>
+            </tr>
+            <tr>
+              <td className="bg-yellow">ENLACE TERRITORIAL:</td>
+              <td colSpan={2}>{cronograma.vocero?.toUpperCase() || ''}</td>
+              <td className="text-bold">TOTAL:</td>
+              <td className="bg-yellow">TOTAL</td>
+              <td>{participantesTotal}</td>
             </tr>
           </tbody>
         </table>
 
         {/* Right Grid */}
-        <table className="pdf-table" style={{ width: '35%' }}>
+        <table className="pdf-table" style={{ width: '40%' }}>
           <tbody>
             <tr>
-              <td colSpan={4} className="text-red" style={{ textAlign: 'left', border: 'none' }}>
+              <td colSpan={4} className="bg-light-blue text-bold" style={{ textAlign: 'center' }}>
                 PROYECCIÓN ESTIMADO TOTAL POR CADA PARTICIPANTE:
               </td>
             </tr>
             <tr>
-              <td colSpan={2}></td>
-              <td className="text-red">TRIMESTRAL</td>
-              <td className="text-red">MENSUAL</td>
+              <td colSpan={2} className="no-border"></td>
+              <td className="text-bold" style={{ width: '20%' }}>TRIMESTRAL</td>
+              <td className="text-bold" style={{ width: '20%' }}>MENSUAL</td>
             </tr>
             <tr>
-              <td style={{ textAlign: 'left' }}>PREINSCRIPCIÓN</td>
-              <td></td>
+              <td colSpan={2} style={{ textAlign: 'left' }}>PREINSCRIPCIÓN</td>
               <td>${preinscripcion.toFixed(2)}</td>
               <td>${(preinscripcion / 4).toFixed(2)}</td>
             </tr>
             <tr>
-              <td style={{ textAlign: 'left' }}>INSCRIPCIÓN (MATRICULA)</td>
-              <td>{(refNumber * inscripcion).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td style={{ textAlign: 'left', width: '40%' }}>INSCRIPCIÓN (MATRICULA)</td>
+              <td style={{ width: '20%' }}>{(refNumber * inscripcion).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               <td>${inscripcion.toFixed(2)}</td>
               <td>${(inscripcion / 4).toFixed(2)}</td>
             </tr>
             <tr>
-              <td style={{ textAlign: 'left' }}>GASTOS ADMINISTRATIVOS</td>
-              <td></td>
+              <td colSpan={2} style={{ textAlign: 'left' }}>GASTOS ADMINISTRATIVOS</td>
               <td>${gastosAdmin.toFixed(2)}</td>
               <td>${(gastosAdmin / 4).toFixed(2)}</td>
             </tr>
             <tr>
-              <td style={{ textAlign: 'left' }}>ENCUENTROS</td>
-              <td></td>
-              <td>${costoEncuentroPorParticipante.toFixed(2)}</td>
-              <td>${(costoEncuentroPorParticipante / 4).toFixed(2)}</td>
+              <td colSpan={2} style={{ textAlign: 'left' }}>ENCUENTROS</td>
+              <td>{hasParticipantes ? `$${costoEncuentroPorParticipante.toFixed(2)}` : '#DIV/0!'}</td>
+              <td>{hasParticipantes ? `$${(costoEncuentroPorParticipante / 4).toFixed(2)}` : '#DIV/0!'}</td>
             </tr>
             <tr>
-              <td colSpan={2} className="bg-pink text-blue" style={{ fontWeight: 'bold', textAlign: 'center' }}>TOTAL POR PARTICIPANTE EN SU TRIMESTRE</td>
-              <td className="bg-pink text-red" style={{ fontWeight: 'bold' }}>${totalParticipanteTrimestre.toFixed(2)}</td>
-              <td className="bg-pink text-red" style={{ fontWeight: 'bold' }}>${(totalParticipanteTrimestre / 4).toFixed(2)}</td>
+              <td colSpan={2} className="bg-light-blue text-bold" style={{ textAlign: 'center' }}>TOTAL POR PARTICIPANTE EN SU TRIMESTRE</td>
+              <td className="bg-light-blue text-bold">{hasParticipantes ? `$${totalParticipanteTrimestre.toFixed(2)}` : '#DIV/0!'}</td>
+              <td className="bg-light-blue text-bold">{hasParticipantes ? `$${(totalParticipanteTrimestre / 4).toFixed(2)}` : '#DIV/0!'}</td>
             </tr>
             <tr>
-              <td colSpan={3} className="bg-yellow text-red" style={{ fontWeight: 'bold', textAlign: 'center' }}>PRESUPUESTO TOTAL DE SU POSTGRADO POR PARTICIPANTE<br/>(02 AÑOS)</td>
-              <td className="bg-yellow text-red" style={{ fontWeight: 'bold', fontSize: '14px' }}>${presupuestoTotal.toFixed(2)}</td>
+              <td colSpan={3} className="bg-yellow text-bold" style={{ textAlign: 'center' }}>PRESUPUESTO TOTAL DE SU POSTGRADO<br/>POR PARTICIPANTE (02 AÑOS)</td>
+              <td className="bg-yellow text-bold" style={{ fontSize: '12px' }}>{hasParticipantes ? `$${presupuestoTotal.toFixed(2)}` : '#DIV/0!'}</td>
             </tr>
           </tbody>
         </table>
@@ -251,16 +234,18 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
       <table className="pdf-table">
         <thead>
           <tr>
-            <td className="bg-blue text-red" rowSpan={3} style={{ width: '15%' }}>COMPONENTES ESTRUCTURA FUNCIONAMIENTO</td>
-            <td className="bg-blue text-red" rowSpan={3} style={{ width: '8%' }}>
-              <div style={{ fontSize: '9px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                NOMBRES DOCENTES
+            <td className="bg-yellow" rowSpan={5} style={{ width: '14%' }}>COMPONENTES<br/>ESTRUCTURA<br/>FUNCIONAMIENTO</td>
+            <td className="bg-yellow" rowSpan={5} style={{ width: '5%' }}>
+              <div style={{ position: 'relative', height: '120px', width: '100%' }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', fontSize: '9px', fontWeight: 'bold' }}>
+                  NOMBRES DOCENTES
+                </div>
               </div>
             </td>
-            <td className="bg-blue text-red" rowSpan={3} style={{ width: '8%' }}>TABULADOR<br/>(CONSEJO<br/>UNIVERSITARIO)</td>
-            <td className="bg-blue text-red" colSpan={2} style={{ width: '10%' }}>DESGLOSE TABULADOR</td>
-            <td className="bg-yellow text-red" colSpan={12}>INTRODUCTORIO</td>
-            <td className="bg-blue" rowSpan={3} style={{ width: '6%' }}>
+            <td className="bg-yellow" rowSpan={5} style={{ width: '6%' }}>TABULADOR<br/>(CONSEJO<br/>UNIVERSITARIO)</td>
+            <td className="bg-yellow" colSpan={2} style={{ width: '8%' }}>DESGLOSE TABULADOR</td>
+            <td className="bg-blue" colSpan={12}>INTRODUCTORIO</td>
+            <td className="bg-yellow" rowSpan={5} style={{ width: '4%' }}>
               <div style={{ position: 'relative', height: '120px', width: '100%' }}>
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold' }}>
                   TOTALES DEL TRIMESTRE
@@ -269,140 +254,147 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
             </td>
           </tr>
           <tr>
-            <td className="bg-blue text-red" rowSpan={2}>VIATICOS</td>
-            <td className="bg-blue text-red" rowSpan={2}>HORA ACOMPAÑAMIENTO (HP)</td>
-            <td className="text-blue" colSpan={12}>CANTIDAD DE ENCUENTROS EN EL TRIMESTRE</td>
+            <td className="bg-yellow" rowSpan={4} style={{ width: '4%' }}>
+              <div style={{ position: 'relative', height: '100px', width: '100%' }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold' }}>
+                  VIATICOS
+                </div>
+              </div>
+            </td>
+            <td className="bg-yellow" rowSpan={4} style={{ width: '4%' }}>
+              <div style={{ position: 'relative', height: '100px', width: '100%' }}>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', fontSize: '8px', fontWeight: 'bold' }}>
+                  HORA ACOMPAÑADA<br/>MENSUAL (HP)
+                </div>
+              </div>
+            </td>
+            <td className="bg-light-blue" colSpan={12} style={{ color: '#2d6bc4 !important' }}>CANTIDAD DE ENCUENTROS EN EL TRIMESTRE</td>
           </tr>
           <tr>
             {[1,2,3,4,5,6].map(i => (
+              <td key={i} colSpan={2} className="bg-purple text-bold">{i}</td>
+            ))}
+          </tr>
+          <tr>
+            {[0,1,2,3,4,5].map(i => {
+              const fechasFirstAsignacion = cronograma.asignaciones[0]?.fechas || []
+              let dateStr = ''
+              if (fechasFirstAsignacion[i]) {
+                 const d = new Date(fechasFirstAsignacion[i].fecha)
+                 dateStr = `${d.getUTCDate().toString().padStart(2, '0')}/${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear().toString().slice(-2)}`
+              }
+              return (
+                <td colSpan={2} key={i} className="bg-purple text-bold" style={{ fontSize: '9px', height: '24px' }}>
+                  {dateStr ? (
+                    <>
+                      <div>{dateStr}</div>
+                      <div>PRESENCIAL</div>
+                    </>
+                  ) : (
+                    <div>-</div>
+                  )}
+                </td>
+              )
+            })}
+          </tr>
+          <tr>
+            {[0,1,2,3,4,5].map(i => (
               <React.Fragment key={i}>
-                <td colSpan={2} className="text-blue">{i}</td>
+                <td className="bg-purple text-bold" style={{ width: '3.6%' }}>
+                  <div style={{ position: 'relative', height: '50px', width: '100%' }}>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', fontSize: '9px' }}>VIATICO</div>
+                  </div>
+                </td>
+                <td className="bg-purple text-bold" style={{ width: '3.6%' }}>
+                  <div style={{ position: 'relative', height: '50px', width: '100%' }}>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', fontSize: '9px' }}>HP</div>
+                  </div>
+                </td>
               </React.Fragment>
             ))}
           </tr>
         </thead>
         <tbody>
-          {/* Subheader for dates */}
-          <tr>
-            <td colSpan={5}></td>
-            {[0,1,2,3,4,5].map(i => {
-              const fechasFirstAsignacion = cronograma.asignaciones[0]?.fechas || []
-              let dateStr = '-'
-              if (fechasFirstAsignacion[i]) {
-                const d = new Date(fechasFirstAsignacion[i].fecha)
-                // Usar UTC para evitar que cambie el día por la zona horaria
-                dateStr = `${d.getUTCDate().toString().padStart(2, '0')}/${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear().toString().slice(-2)}`
-              }
-              return (
-                <React.Fragment key={i}>
-                  <td colSpan={2} className="text-blue">
-                    {dateStr}
-                  </td>
-                </React.Fragment>
-              )
-            })}
-            <td></td>
-          </tr>
-          <tr>
-            <td colSpan={5}></td>
-            {[1,2,3,4,5,6].map(i => (
-              <React.Fragment key={i}>
-                <td colSpan={2} className="text-blue" style={{ fontSize: '9px' }}>PRESENCIAL</td>
-              </React.Fragment>
-            ))}
-            <td></td>
-          </tr>
-          <tr>
-            <td colSpan={5}></td>
-            {[0,1,2,3,4,5].map(i => (
-              <React.Fragment key={i}>
-                <td>
-                  <div style={{ position: 'relative', height: '60px', width: '100%' }}>
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '10px' }}>
-                      VIATICO
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <div style={{ position: 'relative', height: '60px', width: '100%' }}>
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-90deg)', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '10px' }}>
-                      HP
-                    </div>
-                  </div>
-                </td>
-              </React.Fragment>
-            ))}
-            <td></td>
-          </tr>
 
-          {/* Teachers rows */}
           {docentesData.map((d: any, idx: number) => {
-             const tabulador = d.hp + d.viatico
-             
-             return (
-               <tr key={idx}>
-                 <td style={{ textAlign: 'left', padding: '6px' }}>DOCENTE {idx+1} ({d.zona})</td>
-                 <td>
-                   <div style={{ fontSize: '10px', whiteSpace: 'normal', wordWrap: 'break-word', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     {d.nombre}
-                   </div>
-                 </td>
-                 <td>${tabulador.toFixed(2)}</td>
-                 <td>${d.viatico.toFixed(2)}</td>
-                 <td>${d.hp.toFixed(2)}</td>
-                 {[0,1,2,3,4,5].map(i => {
-                   const hasEncuentro = i < d.encuentros
-                   return (
-                     <React.Fragment key={i}>
-                       <td>{hasEncuentro ? `$${d.viatico.toFixed(2)}` : '$0.00'}</td>
-                       <td>{hasEncuentro ? `$${d.hp.toFixed(2)}` : '$0.00'}</td>
-                     </React.Fragment>
-                   )
-                 })}
-                 <td className="bg-gray" style={{ fontWeight: 'bold' }}>${d.total.toFixed(2)}</td>
-               </tr>
-             )
+            const tabulador = d.hp + d.viatico
+            return (
+              <tr key={idx}>
+                <td style={{ textAlign: 'left', textTransform: 'uppercase' }}>DOCENTE {idx+1} ({d.zona})</td>
+                <td style={{ textTransform: 'uppercase', fontSize: '8px' }}>{d.nombre}</td>
+                <td>${tabulador.toFixed(2)}</td>
+                <td>${d.viatico.toFixed(2)}</td>
+                <td>${d.hp.toFixed(2)}</td>
+                {[0,1,2,3,4,5].map(i => {
+                  const hasEncuentro = i < d.encuentros
+                  return (
+                    <React.Fragment key={i}>
+                      <td>{hasEncuentro ? `$${d.viatico.toFixed(2)}` : '$0.00'}</td>
+                      <td>{hasEncuentro ? `$${d.hp.toFixed(2)}` : '$0.00'}</td>
+                    </React.Fragment>
+                  )
+                })}
+                <td className="text-bold">${d.total.toFixed(2)}</td>
+              </tr>
+            )
           })}
 
-          {/* Aula costs rows */}
           <tr>
             <td style={{ textAlign: 'left' }}>COSTO DEL USO POR EL AULA</td>
             <td colSpan={2}></td>
             <td>$0.00</td>
             <td>$0.00</td>
-            <td colSpan={12}></td>
-            <td className="bg-gray" style={{ fontWeight: 'bold' }}>$0.00</td>
+            {[0,1,2,3,4,5].map(i => (
+               <React.Fragment key={i}>
+                  <td>$0.00</td>
+                  <td>$0.00</td>
+               </React.Fragment>
+            ))}
+            <td className="text-bold">$0.00</td>
           </tr>
           <tr>
             <td style={{ textAlign: 'left' }}>LIMPIEZA</td>
             <td colSpan={2}></td>
-            <td>$0.00</td>
-            <td>${limpieza.toFixed(2)}</td>
-            <td colSpan={12}></td>
-            <td className="bg-gray" style={{ fontWeight: 'bold' }}>${limpieza.toFixed(2)}</td>
+            <td></td>
+            <td></td>
+            {[0,1,2,3,4,5].map(i => (
+               <React.Fragment key={i}>
+                  <td></td>
+                  <td></td>
+               </React.Fragment>
+            ))}
+            <td className="text-bold">${limpieza.toFixed(2)}</td>
           </tr>
           <tr>
             <td style={{ textAlign: 'left' }}>VIGILANCIA</td>
             <td colSpan={2}></td>
-            <td>$0.00</td>
-            <td>${vigilancia.toFixed(2)}</td>
-            <td colSpan={12}></td>
-            <td className="bg-gray" style={{ fontWeight: 'bold' }}>${vigilancia.toFixed(2)}</td>
+            <td></td>
+            <td></td>
+            {[0,1,2,3,4,5].map(i => (
+               <React.Fragment key={i}>
+                  <td></td>
+                  <td></td>
+               </React.Fragment>
+            ))}
+            <td className="text-bold">${vigilancia.toFixed(2)}</td>
           </tr>
           <tr>
             <td style={{ textAlign: 'left' }}>APORTE COORDINACION</td>
             <td colSpan={2}></td>
-            <td>$0.00</td>
-            <td>${aporteCoordinacion.toFixed(2)}</td>
-            <td colSpan={12}></td>
-            <td className="bg-gray" style={{ fontWeight: 'bold' }}>${aporteCoordinacion.toFixed(2)}</td>
+            <td></td>
+            <td></td>
+            {[0,1,2,3,4,5].map(i => (
+               <React.Fragment key={i}>
+                  <td></td>
+                  <td></td>
+               </React.Fragment>
+            ))}
+            <td className="text-bold">${aporteCoordinacion.toFixed(2)}</td>
           </tr>
 
-          {/* Totals rows */}
-          {/* Fila 1: Viáticos y HP separados por encuentro */}
           <tr>
-            <td colSpan={5} className="bg-blue"></td>
-            {[0, 1, 2, 3, 4, 5].map(i => {
+            <td colSpan={5} className="bg-yellow text-bold" style={{ textAlign: 'right' }}>COSTOS TOTALES POR ENCUENTROS -----------</td>
+            {[0,1,2,3,4,5].map(i => {
               let colViatico = 0
               let colHp = 0
               docentesData.forEach((d: any) => {
@@ -413,64 +405,43 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
               })
               return (
                 <React.Fragment key={i}>
-                  <td className="bg-yellow" style={{ fontWeight: 'bold' }}>${colViatico > 0 ? colViatico.toFixed(2) : '0.00'}</td>
-                  <td className="bg-yellow" style={{ fontWeight: 'bold' }}>${colHp > 0 ? colHp.toFixed(2) : '0.00'}</td>
+                  <td className="bg-light-blue text-bold">
+                    ${colViatico > 0 ? colViatico.toFixed(2) : '0.00'}
+                  </td>
+                  <td className="bg-light-blue text-bold">
+                    ${colHp > 0 ? colHp.toFixed(2) : '0.00'}
+                  </td>
                 </React.Fragment>
               )
             })}
-            <td className="bg-blue"></td>
+            <td className="bg-yellow text-bold">${costoTotalEncuentros.toFixed(2)}</td>
           </tr>
-
-          {/* Fila 2: Suma de Viático + HP por encuentro */}
           <tr>
-            <td colSpan={5} className="bg-gray text-red" style={{ textAlign: 'right', fontWeight: 'bold' }}>
-              COSTOS TOTALES POR ENCUENTROS -----------
-            </td>
-            {[0, 1, 2, 3, 4, 5].map(i => {
+            <td colSpan={5} className="bg-yellow text-bold" style={{ textAlign: 'right' }}>COSTOS DEL ENCUENTRO POR PARTICIPANTE -----------</td>
+            {[0,1,2,3,4,5].map(i => {
               let colTotal = 0
               docentesData.forEach((d: any) => {
                 if (i < d.encuentros) {
                   colTotal += d.viatico + d.hp
                 }
               })
+              const perParticipant = hasParticipantes ? (colTotal / participantesTotal) : 0
               return (
-                <td colSpan={2} key={i} style={{ fontWeight: 'bold' }}>
-                  ${colTotal > 0 ? colTotal.toFixed(2) : '0.00'}
+                <td colSpan={2} key={i} className="text-bold">
+                  {hasParticipantes ? `$${perParticipant.toFixed(2)}` : '#DIV/0!'}
                 </td>
               )
             })}
-            <td className="bg-gray" style={{ fontWeight: 'bold' }}>${costoTotalEncuentros.toFixed(2)}</td>
-          </tr>
-
-          {/* Fila 3: Suma por encuentro dividida entre participantes */}
-          <tr>
-            <td colSpan={5} className="bg-gray text-red" style={{ textAlign: 'right', fontWeight: 'bold' }}>
-              COSTOS DEL ENCUENTRO POR PARTICIPANTE -----------
-            </td>
-            {[0, 1, 2, 3, 4, 5].map(i => {
-              let colTotal = 0
-              docentesData.forEach((d: any) => {
-                if (i < d.encuentros) {
-                  colTotal += d.viatico + d.hp
-                }
-              })
-              const perParticipant = colTotal / divisorParticipantes
-              return (
-                <td colSpan={2} key={i} style={{ fontWeight: 'bold' }}>
-                  ${perParticipant > 0 ? perParticipant.toFixed(2) : '0.00'}
-                </td>
-              )
-            })}
-            <td className="bg-pink text-red" style={{ fontWeight: 'bold' }}>${costoEncuentroPorParticipante.toFixed(2)}</td>
+            <td className="bg-yellow text-bold">{hasParticipantes ? `$${costoEncuentroPorParticipante.toFixed(2)}` : '#DIV/0!'}</td>
           </tr>
         </tbody>
       </table>
 
       {/* FOOTER SIGNATURES */}
-      <div style={{ marginTop: '30px', textAlign: 'center', fontWeight: 'bold', fontSize: '12px' }}>
-        <div>{coordinadorNacional || 'COORDINADOR NO DEFINIDO'}</div>
-        <div>Coordinador(a) Nacional de la MSc Gerencia Salud Pública</div>
-        <div>Resolución Nro. {resolucion || '-'} de fecha {new Date().toLocaleDateString('es-VE')}</div>
+      <div style={{ marginTop: '20px', textAlign: 'center', fontWeight: 'bold', fontSize: '11px' }}>
+        <div>Dra. {coordinadorNacional || 'MILDRE PEREZ'}</div>
+        <div>Coordinadora Nacional de la Msc Gerencia Salud Publica</div>
+        <div>Resolución Nro. {resolucion || '-'}</div>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { logAction } from '@/lib/bitacora'
 
 // PATCH /api/participantes/[id]/estatus
 export async function PATCH(
@@ -54,9 +55,11 @@ export async function PATCH(
       })
     ])
 
+    await logAction('PARTICIPANTES', 'ACTUALIZAR', `Se actualizó el nivel del participante ${participanteActualizado.nombre} (de ${participanteActual.trimestre || 'ninguno'} a ${trimestreNuevo})`)
+
     return NextResponse.json(participanteActualizado)
   } catch (error: any) {
     console.error('Error PATCH estatus participante:', error)
-    return NextResponse.json({ error: 'Error al actualizar estatus', details: error?.message }, { status: 500 })
+    return NextResponse.json({ error: 'Error interno del servidor al actualizar estatus' }, { status: 500 })
   }
 }

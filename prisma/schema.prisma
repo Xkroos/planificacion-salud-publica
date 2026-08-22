@@ -57,6 +57,7 @@ model Usuario {
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  bitacoras Bitacora[]
 
   @@map("usuarios")
 }
@@ -84,6 +85,7 @@ model AulaTerritorial {
   vigilancia           Float?       @default(0)
   aporteCoordinacion   Float?       @default(0)
   viatico              Float?       @default(0)
+  viaticoZona          Float?       @default(0)
   regionId             String
   region       Region       @relation(fields: [regionId], references: [id], onDelete: Cascade)
   cronogramas  Cronograma[]
@@ -292,4 +294,16 @@ model ConfiguracionSistema {
   updatedAt                       DateTime @updatedAt
 
   @@map("configuracion_sistema")
+}
+
+model Bitacora {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  modulo    String
+  accion    String
+  detalles  String
+  createdAt DateTime @default(now())
+
+  @@map("bitacora")
 }

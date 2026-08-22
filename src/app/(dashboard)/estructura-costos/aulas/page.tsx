@@ -34,12 +34,12 @@ export default function AulasCostosPage() {
       data.forEach((r: Region) => {
         r.aulas.forEach((a: Aula) => {
           initialValues[a.id] = {
-            preinscripcion: a.preinscripcion?.toString() || '0',
-            inscripcion: a.inscripcion?.toString() || '0',
-            gastosAdministrativos: a.gastosAdministrativos?.toString() || '0',
-            limpieza: a.limpieza?.toString() || '0',
-            vigilancia: a.vigilancia?.toString() || '0',
-            aporteCoordinacion: a.aporteCoordinacion?.toString() || '0'
+            preinscripcion: a.preinscripcion ? a.preinscripcion.toString() : '',
+            inscripcion: a.inscripcion ? a.inscripcion.toString() : '',
+            gastosAdministrativos: a.gastosAdministrativos ? a.gastosAdministrativos.toString() : '',
+            limpieza: a.limpieza ? a.limpieza.toString() : '',
+            vigilancia: a.vigilancia ? a.vigilancia.toString() : '',
+            aporteCoordinacion: a.aporteCoordinacion ? a.aporteCoordinacion.toString() : ''
           }
         })
       })
@@ -66,7 +66,7 @@ export default function AulasCostosPage() {
       ...prev,
       [aulaId]: {
         ...prev[aulaId],
-        [field]: value
+        [field]: value.replace(/^0+(?=\d)/, '')
       }
     }))
   }
@@ -133,7 +133,7 @@ export default function AulasCostosPage() {
           style={{ paddingLeft: '24px', height: '34px', fontSize: '13px' }}
           value={editValues[aula.id]?.[field] ?? ''}
           onChange={(e) => handleChange(aula.id, field, e.target.value)}
-          placeholder="0.00"
+          placeholder="Ingrese una cantidad"
         />
       </div>
     </div>

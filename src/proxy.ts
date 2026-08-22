@@ -17,6 +17,9 @@ export default auth((req) => {
   }
 
   if (!isLoggedIn) {
+    if (nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
     return NextResponse.redirect(new URL('/login', req.url))
   }
 

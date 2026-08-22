@@ -38,13 +38,13 @@ export default function LoginPage() {
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
-          <div className="login-logo-icon" style={{ background: 'white', width: '120px', height: '120px', borderRadius: '50%', padding: '6px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-            <img src="/logo-unerg.png" alt="Logo UNERG" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+          <div style={{ width: '280px', height: 'auto', margin: '-40px auto -50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/logo-unerg.png" alt="Logo UNERG" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
           </div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#1a3a6b', marginBottom: '4px' }}>
-            UNERG — Postgrado
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#000000', marginBottom: '8px', marginTop: '0' }}>
+            Salud Publica
           </h1>
-          <p style={{ fontSize: '13px', color: '#718096', lineHeight: '1.4' }}>
+          <p style={{ fontSize: '15px', fontWeight: 600, color: '#000000', lineHeight: '1.4' }}>
             Maestría en Gerencia de la Salud Pública<br />
             Sistema de Planificación Académica
           </p>
@@ -111,7 +111,7 @@ export default function LoginPage() {
             type="submit"
             className="btn btn-primary"
             disabled={loading}
-            style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '15px', marginTop: '8px' }}
+            style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '15px', marginTop: '8px', background: '#0d6efd', color: '#FFFFFF', border: '1px solid #0d6efd' }}
           >
             {loading ? (
               <>
@@ -124,12 +124,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Footer */}
-        <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', color: '#a0aec0' }}>
-            © 2026 Universidad Nacional Experimental Rómulo Gallegos<br />
-            Decanato de Postgrado
-          </p>
+        {/* Footer Logo */}
+        <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'center' }}>
+          <img src="/plan-unerg.png" alt="Plan UNERG" style={{ width: '100%', maxWidth: '240px', height: 'auto', objectFit: 'contain' }} />
         </div>
       </div>
 

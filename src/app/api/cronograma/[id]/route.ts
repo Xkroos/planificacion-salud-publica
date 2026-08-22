@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { logAction } from '@/lib/bitacora'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -63,6 +64,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         participantesMasc: parseInt(body.participantesMasc) || 0,
       },
     })
+
+    await logAction('CRONOGRAMAS', 'ACTUALIZAR', `Se actualizaron datos del cronograma (ID: ${cronograma.id})`)
+
     return NextResponse.json(cronograma)
   } catch {
     return NextResponse.json({ error: 'Error al actualizar cronograma' }, { status: 500 })
@@ -76,6 +80,12 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
     const { id } = await params
+    
+    const cron = await prisma.cronograma.findUnique({ where: { id }, include: { aulaTerritorial: true, periodo: true } })
+    if (cron) {
+      await logAction('CRONOGRAMAS', 'ELIMINAR', `Se eliminó el cronograma de ${cron.aulaTerritorial?.nombre || 'Sede'} - T${cron.trimestre} S${cron.seccion}`)
+    }
+
     await prisma.cronograma.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch {

@@ -11,18 +11,18 @@
   --unerg-gold: #f39c12;
 
   /* Superficie */
-  --bg-primary: #f0f4f8;
+  --bg-primary: #FFFF5C;
   --bg-card: #ffffff;
-  --bg-sidebar: #1a3a6b;
-  --bg-sidebar-hover: #243f72;
-  --bg-sidebar-active: #2d6bc4;
+  --bg-sidebar: #C7C2C2;
+  --bg-sidebar-hover: #b0abac;
+  --bg-sidebar-active: #9c9899;
 
   /* Texto */
-  --text-primary: #1a202c;
-  --text-secondary: #4a5568;
-  --text-muted: #718096;
-  --text-sidebar: #cbd5e0;
-  --text-sidebar-active: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-muted: #4a5568;
+  --text-sidebar: #000000;
+  --text-sidebar-active: #000000;
 
   /* Bordes */
   --border: #e2e8f0;
@@ -48,7 +48,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar personalizado */
+/* Scrollbar personalizado — global fino */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -62,6 +62,28 @@ html, body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
+}
+
+/* Scrollbar más grueso dentro de modales */
+.modal::-webkit-scrollbar,
+.modal-overlay .modal::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.modal::-webkit-scrollbar-track,
+.modal-overlay .modal::-webkit-scrollbar-track {
+  background: #dbeafe;
+  border-radius: 8px;
+}
+.modal::-webkit-scrollbar-thumb,
+.modal-overlay .modal::-webkit-scrollbar-thumb {
+  background: #2d6bc4;
+  border-radius: 8px;
+  border: 2px solid #dbeafe;
+}
+.modal::-webkit-scrollbar-thumb:hover,
+.modal-overlay .modal::-webkit-scrollbar-thumb:hover {
+  background: #1a3a6b;
 }
 
 /* ========================
@@ -100,14 +122,14 @@ html, body {
   align-items: center;
   gap: 12px;
   padding: 20px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
   min-height: 72px;
 }
 
 .sidebar-logo-icon {
   width: 40px;
   height: 40px;
-  background: var(--unerg-blue);
+  background: #000000;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -125,7 +147,7 @@ html, body {
 .sidebar-logo-text h1 {
   font-size: 14px;
   font-weight: 700;
-  color: white;
+  color: #000000;
   line-height: 1.2;
 }
 .sidebar-logo-text span {
@@ -145,7 +167,7 @@ html, body {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
+  color: rgba(0,0,0,0.6);
   padding: 8px 20px 4px;
   margin-top: 8px;
 }
@@ -168,13 +190,13 @@ html, body {
 
 .nav-item:hover {
   background: var(--bg-sidebar-hover);
-  color: white;
+  color: #000000;
 }
 
 .nav-item.active {
   background: var(--bg-sidebar-active);
-  color: white;
-  border-left-color: #60a5fa;
+  color: #000000;
+  border-left-color: #000000;
 }
 
 .nav-item-icon {
@@ -188,7 +210,7 @@ html, body {
 
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(0,0,0,0.1);
 }
 
 /* ========================
@@ -317,7 +339,7 @@ html, body {
   background: var(--unerg-blue);
   color: white;
 }
-.btn-primary:hover { background: var(--unerg-navy); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(45,107,196,0.3); }
+.btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
 .btn-secondary {
   background: #f1f5f9;
@@ -550,7 +572,7 @@ html, body {
    ======================== */
 .login-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a3a6b 0%, #2d6bc4 50%, #1a3a6b 100%);
+  background: #C7C2C2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -576,13 +598,13 @@ html, body {
   width: 400px;
   height: 400px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.03);
   bottom: -100px;
   left: -100px;
 }
 
 .login-card {
-  background: white;
+  background: #FFFF5C;
   border-radius: 20px;
   padding: 48px 40px;
   width: 100%;
@@ -600,7 +622,7 @@ html, body {
 .login-logo-icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #1a3a6b, #2d6bc4);
+  background: #000000;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -658,16 +680,18 @@ html, body {
 }
 
 @media (max-width: 768px) {
-  /* Layout adjustments */
+  /* ========================
+     LAYOUT CORE
+     ======================== */
   .app-layout {
     flex-direction: column;
   }
-  
+
   .mobile-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px;
+    height: 56px;
     background: white;
     border-bottom: 1px solid var(--border);
     padding: 0 16px;
@@ -675,12 +699,12 @@ html, body {
     z-index: 40;
     flex-shrink: 0;
   }
-  
+
   .mobile-header-logo {
     display: flex;
     align-items: center;
   }
-  
+
   .mobile-menu-btn {
     background: transparent;
     border: none;
@@ -690,8 +714,10 @@ html, body {
     align-items: center;
     justify-content: center;
   }
-  
-  /* Sidebar */
+
+  /* ========================
+     SIDEBAR (drawer mode)
+     ======================== */
   .sidebar {
     position: fixed;
     left: -280px;
@@ -702,11 +728,11 @@ html, body {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateX(0);
   }
-  
+
   .sidebar.mobile-open {
     transform: translateX(280px);
   }
-  
+
   .sidebar-mobile-close {
     display: flex;
     position: absolute;
@@ -727,40 +753,399 @@ html, body {
     z-index: 90;
     animation: fadeIn 0.3s ease;
   }
-  
-  /* Content */
+
+  /* ========================
+     MAIN CONTENT AREA
+     ======================== */
   .main-content {
     flex: 1;
     overflow-y: auto;
   }
 
-  .page-content { 
-    padding: 16px; 
-  }
-  
-  /* Tables */
-  .card-body, .data-table {
-    overflow-x: auto;
-    display: block;
-    width: 100%;
+  .page-content {
+    padding: 14px !important;
   }
 
-  /* Grid layout overrides */
-  .dashboard-grid, div[style*="grid-template-columns"] {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-  
-  /* Flex direction fixes */
-  .card-header, .top-header {
+  .top-header {
     flex-direction: column;
     align-items: flex-start !important;
     gap: 12px;
-  }
-  
-  .top-header {
     height: auto;
-    padding: 16px;
+    padding: 12px 16px;
+  }
+
+  /* ========================
+     PAGE HEADERS
+     Title + buttons side-by-side → stacked
+     ======================== */
+  /* Any flex container that acts as a page header (title left, buttons right) */
+  .fade-in > div:first-child[style*="justify-content: space-between"],
+  .fade-in > div:first-child[style*="justifyContent"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  /* ========================
+     BUTTON GROUPS
+     Horizontal button rows → wrap or stack
+     ======================== */
+  /* Generic: any flex div with gap that contains buttons/links */
+  div[style*="display: flex"][style*="gap: 10px"]:has(> .btn),
+  div[style*="display: flex"][style*="gap: 10px"]:has(> a.btn),
+  div[style*="display: flex"][style*="gap: 8px"]:has(> .btn),
+  div[style*="display: flex"][style*="gap: 8px"]:has(> button) {
+    flex-wrap: wrap !important;
+  }
+
+  /* Buttons in those groups: allow them to grow */
+  .btn {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+  }
+
+  /* ========================
+     INFO GRIDS / STAT GRIDS
+     auto-fill grids → 2 columns on mobile
+     ======================== */
+  div[style*="grid-template-columns: repeat(auto-fill"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Dashboard stat cards grid */
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* 2-column grids (e.g. costos page side-by-side cards) → 1 column */
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* 3+ column grids → 1 column */
+  div[style*="grid-template-columns: 1fr 1fr 1fr"],
+  div[style*="gridTemplateColumns: repeat(3"],
+  div[style*="gridTemplateColumns: repeat(4"] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ========================
+     CARDS
+     ======================== */
+  .card {
+    border-radius: 10px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  .card-body {
+    padding: 14px 16px;
+  }
+
+  .card-title {
+    font-size: 15px;
+  }
+
+  /* ========================
+     STAT CARDS
+     ======================== */
+  .stat-card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+  }
+
+  /* ========================
+     DATA TABLES
+     Horizontal scroll + smaller font
+     ======================== */
+  .card > div[style*="overflow"],
+  div[style*="overflowX: 'auto'"],
+  .data-table {
+    overflow-x: auto !important;
+    display: block !important;
+    width: 100% !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    font-size: 12px !important;
+    min-width: 600px;
+  }
+
+  .data-table th {
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* ========================
+     MODALS
+     Full-width on mobile, better padding
+     ======================== */
+  .modal-overlay {
+    padding: 10px !important;
+    align-items: flex-end !important;
+  }
+
+  .modal {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 85vh !important;
+    animation: slideUpMobile 0.3s ease !important;
+  }
+
+  .modal-lg {
+    max-width: 100% !important;
+  }
+
+  .modal-header {
+    padding: 16px !important;
+  }
+
+  .modal-title {
+    font-size: 15px !important;
+  }
+
+  .modal-body {
+    padding: 16px !important;
+  }
+
+  .modal-footer {
+    padding: 12px 16px !important;
+    flex-wrap: wrap;
+  }
+
+  .modal-footer .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* Profile modal */
+  .profile-modal {
+    max-width: 100% !important;
+  }
+
+  .profile-tabs {
+    padding: 0 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-tab {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .profile-modal-body {
+    padding: 16px 16px 4px;
+  }
+
+  /* ========================
+     FORMS
+     ======================== */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-input, .form-select {
+    padding: 10px 12px !important;
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+
+  /* Multi-column form grids → 1 column */
+  div[style*="gridTemplateColumns: '1fr 1fr'"],
+  div[style*="grid-template-columns: 1fr 1fr"]:has(> .form-group) {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ========================
+     TOOLBAR INPUTS
+     (e.g. REF + Resolución + buttons on costos page)
+     ======================== */
+  div[style*="display: flex"][style*="gap"]:has(> .form-input):has(> .btn) {
+    flex-wrap: wrap !important;
+  }
+
+  div[style*="display: flex"][style*="gap"]:has(> .form-input):has(> .btn) .form-input {
+    flex: 1 1 120px !important;
+    min-width: 0 !important;
+  }
+
+  /* ========================
+     BADGES
+     ======================== */
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  /* ========================
+     SEARCH BARS
+     ======================== */
+  input[type="search"],
+  input[placeholder*="Buscar"],
+  input[placeholder*="buscar"] {
+    font-size: 16px !important; /* Prevents iOS zoom */
+  }
+
+  /* ========================
+     LOGIN PAGE
+     ======================== */
+  .login-card {
+    padding: 32px 24px;
+    border-radius: 16px;
+    max-width: 100%;
+  }
+
+  .login-logo-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* ========================
+     EMPTY STATES
+     ======================== */
+  .empty-state {
+    padding: 40px 16px;
+  }
+
+  /* ========================
+     ALERTS
+     ======================== */
+  .alert {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  /* ========================
+     MISC INLINE LAYOUT FIXES
+     These target common inline-style patterns across pages
+     ======================== */
+
+  /* Flex containers with space-between that should stack */
+  div[style*="justifyContent: 'space-between'"],
+  div[style*="justify-content: space-between"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Page title h1 */
+  h1[style*="fontSize: '22px'"],
+  h1[style*="fontSize: '20px'"],
+  h1[style*="font-size: 22px"],
+  h1[style*="font-size: 20px"] {
+    font-size: 17px !important;
+  }
+
+  /* Cronograma list groups: make row flex items wrap */
+  div[style*="display: flex"][style*="align-items: center"][style*="justify-content: space-between"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Fix the costos page 2-column bottom section */
+  div[style*="display: grid"][style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ========================
+     MOBILE ANIMATION
+     ======================== */
+  @keyframes slideUpMobile {
+    from { opacity: 0; transform: translateY(100px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ========================
+   SMALL PHONES (< 480px)
+   ======================== */
+@media (max-width: 480px) {
+  .page-content {
+    padding: 10px !important;
+  }
+
+  /* Info grids → 1 column on very small screens */
+  div[style*="grid-template-columns: repeat(auto-fill"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stack all buttons fully */
+  div[style*="display: flex"][style*="gap"]:has(> .btn) {
+    flex-direction: column !important;
+  }
+
+  div[style*="display: flex"][style*="gap"]:has(> .btn) .btn,
+  div[style*="display: flex"][style*="gap"]:has(> .btn) a.btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  /* Modal body scroll */
+  .modal-body {
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+  }
+
+  h1[style*="fontSize"],
+  h1[style*="font-size"] {
+    font-size: 16px !important;
+  }
+
+  .card-header {
+    padding: 12px 14px;
+  }
+
+  .card-body {
+    padding: 12px 14px;
+  }
+
+  .btn {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+
+  .btn-sm {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
   }
 }
 
@@ -849,3 +1234,342 @@ input[type="number"] {
     transform: translate3d(100%, 0, 0);
   }
 }
+
+/* ========================
+   PERFIL DE USUARIO (Sidebar button + Modal)
+   ======================== */
+
+/* ── Botón de perfil en el sidebar footer ── */
+.user-profile-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  text-align: left;
+}
+
+.user-profile-btn:hover {
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.user-profile-btn:hover .user-settings-icon {
+  opacity: 1;
+  transform: rotate(60deg);
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b0abac, #9c9899);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.user-role {
+  font-size: 11px;
+  color: rgba(0,0,0,0.55);
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.user-settings-icon {
+  color: rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.35s cubic-bezier(.34,1.56,.64,1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Modal de perfil ── */
+.profile-modal {
+  max-width: 460px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Header del modal */
+.profile-modal-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-modal-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-modal-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.profile-modal-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.profile-close-btn {
+  background: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--text-muted);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.profile-close-btn:hover {
+  background: #e2e8f0;
+  color: var(--text-primary);
+}
+
+/* Tabs */
+.profile-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid var(--border);
+  padding: 0 22px;
+  gap: 0;
+  background: #fafafa;
+}
+
+.profile-tab {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+
+.profile-tab:hover {
+  color: var(--text-primary);
+}
+
+.profile-tab.active {
+  color: var(--unerg-blue);
+  border-bottom-color: var(--unerg-blue);
+  font-weight: 600;
+}
+
+/* Body del modal */
+.profile-modal-body {
+  padding: 22px 22px 4px;
+}
+
+/* Footer del modal */
+.profile-modal-footer {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 16px 0 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* Feedback (éxito / error) */
+.profile-feedback {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+  animation: fadeIn 0.25s ease;
+  line-height: 1.4;
+}
+
+.profile-feedback.success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.profile-feedback.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ── Input de contraseña con ojo integrado ── */
+.pw-field {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pw-field:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(45,107,196,0.1);
+}
+
+.pw-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.pw-input::placeholder {
+  color: #a0aec0;
+}
+
+.pw-eye {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.pw-eye:hover {
+  color: var(--text-primary);
+  background: #f8fafc;
+}
+
+/* Barra de fortaleza */
+.pw-strength {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.pw-strength-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.pw-strength-bar::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background 0.3s;
+}
+
+.pw-strength-bar.weak::after  { width: 33%; background: #ef4444; }
+.pw-strength-bar.medium::after { width: 66%; background: #f59e0b; }
+.pw-strength-bar.strong::after { width: 100%; background: #22c55e; }
+
+.pw-strength-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+/* Texto de ayuda bajo input */
+.form-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+/* Info box en tab de email */
+.profile-email-info {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1e40af;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.profile-email-info svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
