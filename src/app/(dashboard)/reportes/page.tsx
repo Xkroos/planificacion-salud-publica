@@ -35,6 +35,7 @@ export default function ReportesPage() {
   // Filtros Docentes
   const [profRegion, setProfRegion] = useState('')
   const [profAula, setProfAula] = useState('')
+  const [profTrimestre, setProfTrimestre] = useState('')
   const [profSeccion, setProfSeccion] = useState('')
 
   useEffect(() => {
@@ -136,6 +137,7 @@ export default function ReportesPage() {
       let filteredCrons = cronogramas
       if (profRegion) filteredCrons = filteredCrons.filter(c => c.aulaTerritorial.region.id === profRegion)
       if (profAula) filteredCrons = filteredCrons.filter(c => c.aulaTerritorial.id === profAula)
+      if (profTrimestre) filteredCrons = filteredCrons.filter(c => c.trimestre === profTrimestre)
       if (profSeccion) filteredCrons = filteredCrons.filter(c => c.id === profSeccion)
 
       const teacherMap = new Map()
@@ -169,6 +171,7 @@ export default function ReportesPage() {
       let subtitle = 'Filtro: Todos los profesores'
       if (profRegion) subtitle = `Estado: ${groupedData[profRegion]?.nombre}`
       if (profAula) subtitle += ` | Aula: ${groupedData[profRegion]?.aulas[profAula]?.nombre}`
+      if (profTrimestre) subtitle += ` | Trimestre: ${profTrimestre}`
       if (profSeccion) subtitle += ` | Sección: ${cronogramas.find(c => c.id === profSeccion)?.seccion}`
       
       doc.setFontSize(10)
@@ -229,17 +232,24 @@ export default function ReportesPage() {
             <div className="card-header"><h2 className="card-title">Listado de Profesores</h2></div>
             <div className="card-body">
               <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profRegion} onChange={e => { setProfRegion(e.target.value); setProfAula(''); setProfSeccion('') }}>
+                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profRegion} onChange={e => { setProfRegion(e.target.value); setProfAula(''); setProfTrimestre(''); setProfSeccion('') }}>
                   <option value="">Todos los Estados (Global)</option>
                   {Object.values(groupedData).map((r: any) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
                 </select>
-                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profAula} onChange={e => { setProfAula(e.target.value); setProfSeccion('') }} disabled={!profRegion}>
+                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profAula} onChange={e => { setProfAula(e.target.value); setProfTrimestre(''); setProfSeccion('') }} disabled={!profRegion}>
                   <option value="">Todas las Aulas del Estado</option>
                   {profRegion && groupedData[profRegion] && Object.values(groupedData[profRegion].aulas).map((a: any) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
                 </select>
-                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profSeccion} onChange={e => setProfSeccion(e.target.value)} disabled={!profAula}>
-                  <option value="">Todas las Secciones del Aula</option>
-                  {profAula && profRegion && getAllFromAula(groupedData[profRegion]?.aulas[profAula]).map((c: any) => <option key={c.id} value={c.id}>Sección {c.seccion}</option>)}
+                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profTrimestre} onChange={e => { setProfTrimestre(e.target.value); setProfSeccion('') }} disabled={!profAula}>
+                  <option value="">Todos los Trimestres</option>
+                  {profAula && profRegion && Object.keys(groupedData[profRegion]?.aulas[profAula]?.trimestres || {}).map((t: string) => <option key={t} value={t}>{t === 'Introductorio' ? t : `${t}° Trimestre`}</option>)}
+                </select>
+                <select className="form-select" style={{ flex: 1, minWidth: '150px' }} value={profSeccion} onChange={e => setProfSeccion(e.target.value)} disabled={!profTrimestre && !profAula}>
+                  <option value="">Todas las Secciones</option>
+                  {profAula && profRegion && (profTrimestre 
+                    ? groupedData[profRegion]?.aulas[profAula]?.trimestres[profTrimestre]?.cronogramas 
+                    : getAllFromAula(groupedData[profRegion]?.aulas[profAula])
+                  )?.map((c: any) => <option key={c.id} value={c.id}>Sección {c.seccion} {profTrimestre ? '' : `(${c.trimestre})`}</option>)}
                 </select>
                 <button className="btn btn-primary" onClick={handleGenerateProfesores} disabled={generating}>
                   {generating ? <Loader2 size={16} className="spin" /> : <Download size={16}/>} Descargar Reporte

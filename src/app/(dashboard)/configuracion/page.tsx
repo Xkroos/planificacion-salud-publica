@@ -11,25 +11,18 @@ type Config = {
   inscripcionParticipantesAbierta: boolean
   coordinadorNacional?: string
 }
-type Seccion = { id: string; nombre: string }
 
 export default function ConfiguracionPage() {
   const { data: session } = useSession()
   const [config, setConfig] = useState<Config | null>(null)
-  const [secciones, setSecciones] = useState<Seccion[]>([])
-  const [nuevaSeccion, setNuevaSeccion] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const fetchConfig = async () => {
     try {
-      const [configRes, seccionesRes] = await Promise.all([
-        fetch('/api/configuracion'),
-        fetch('/api/secciones')
-      ])
+      const configRes = await fetch('/api/configuracion')
       setConfig(await configRes.json())
-      setSecciones(await seccionesRes.json())
     } catch {
       setMessage({ type: 'error', text: 'Error al cargar la configuración' })
     } finally {
@@ -60,59 +53,6 @@ export default function ConfiguracionPage() {
       setMessage({ type: 'error', text: (error as Error).message || 'Error al actualizar la configuración' })
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleUpdateCoordinador = async (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!config) return
-    if (config.coordinadorNacional === e.target.value) return // No change
-    setSaving(true)
-    setMessage(null)
-    try {
-      const res = await fetch('/api/configuracion', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...config, coordinadorNacional: e.target.value }),
-      })
-      if (!res.ok) throw new Error('Error al actualizar coordinador')
-      const data = await res.json()
-      setConfig(data)
-      setMessage({ type: 'success', text: 'Coordinador Nacional actualizado' })
-    } catch (error: unknown) {
-      setMessage({ type: 'error', text: (error as Error).message })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleAddSeccion = async () => {
-    if (!nuevaSeccion.trim()) return
-    setSaving(true)
-    try {
-      const res = await fetch('/api/secciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nuevaSeccion }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setSecciones([...secciones, data])
-      setNuevaSeccion('')
-      setMessage({ type: 'success', text: 'Sección agregada' })
-    } catch (e: unknown) {
-      setMessage({ type: 'error', text: (e as Error).message })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleDeleteSeccion = async (id: string) => {
-    try {
-      const res = await fetch(`/api/secciones/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Error al eliminar sección')
-      setSecciones(secciones.filter(s => s.id !== id))
-    } catch (e: unknown) {
-      setMessage({ type: 'error', text: (e as Error).message })
     }
   }
 
@@ -282,63 +222,6 @@ export default function ConfiguracionPage() {
             >
               {saving ? 'Guardando...' : config?.inscripcionParticipantesAbierta ? 'Cerrar Proceso' : 'Abrir Proceso'}
             </button>
-          </div>
-        </div>
-
-        {/* Coordinador Nacional */}
-        <div className="card">
-          <div style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1a3a6b', marginBottom: '8px' }}>Coordinador Nacional de Postgrado</h3>
-            <p style={{ fontSize: '13px', color: '#718096', marginBottom: '16px' }}>
-              Este nombre aparecerá en todos los reportes y estructuras de costos.
-            </p>
-            <input
-              type="text"
-              className="form-input"
-              style={{ maxWidth: '400px' }}
-              placeholder="Ej: Dra. Estrella Marquina"
-              defaultValue={config?.coordinadorNacional || ''}
-              onBlur={handleUpdateCoordinador}
-              disabled={saving}
-            />
-          </div>
-        </div>
-
-        {/* Gestión de Secciones */}
-        <div className="card">
-          <div style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1a3a6b', marginBottom: '8px' }}>Gestión de Secciones</h3>
-            <p style={{ fontSize: '13px', color: '#718096', marginBottom: '16px' }}>
-              Define las secciones que los operadores podrán seleccionar al inscribir participantes y crear cronogramas.
-            </p>
-            
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', maxWidth: '400px' }}>
-              <input 
-                className="form-input" 
-                placeholder="Ej: A, B, I, II..." 
-                value={nuevaSeccion} 
-                onChange={e => setNuevaSeccion(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddSeccion()}
-              />
-              <button className="btn btn-primary" onClick={handleAddSeccion} disabled={!nuevaSeccion.trim() || saving}>
-                Añadir
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {secciones.length === 0 ? (
-                <span style={{ fontSize: '13px', color: '#a0aec0' }}>No hay secciones configuradas.</span>
-              ) : (
-                secciones.map(s => (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '6px 12px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, color: '#1a3a6b' }}>
-                    {s.nombre}
-                    <button onClick={() => handleDeleteSeccion(s.id)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', padding: 0, marginLeft: '4px', display: 'flex' }} title="Eliminar sección">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
           </div>
         </div>
       </div>

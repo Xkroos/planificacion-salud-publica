@@ -1,8 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { FolderArchive, ArrowLeft, Loader2, BookOpen, Users, FileText, ChevronRight, ChevronDown, MapPin, Building } from 'lucide-react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { FolderArchive, ArrowLeft, Loader2, BookOpen, Users, FileText, ChevronRight, ChevronDown, MapPin, Building, DollarSign, Download, Search } from 'lucide-react'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
+import { PlantillaCostosPDF } from '@/components/PlantillaCostosPDF'
+import { determinarTipoViatico } from '@/lib/viaticos'
+import toast from 'react-hot-toast'
 
 type Periodo = {
   id: string
@@ -118,16 +123,34 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
   }, {} as any)
 
 
+  const [resolucion, setResolucion] = useState('')
+  const [refDocumento, setRefDocumento] = useState('')
+  const [activeCronogramaForPDF, setActiveCronogramaForPDF] = useState<any>(null)
+  const pdfRef = React.useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     async function loadData() {
       setLoading(true)
       try {
-        const [resCr, resPa] = await Promise.all([
+        const [resCr, resPa, resConf, resBcv] = await Promise.all([
           fetch(`/api/cronograma?periodoId=${periodo.id}`),
-          fetch(`/api/participantes?periodoId=${periodo.id}`)
+          fetch(`/api/participantes?periodoId=${periodo.id}`),
+          fetch('/api/configuracion'),
+          fetch('https://ve.dolarapi.com/v1/dolares/oficial').catch(() => null)
         ])
+        
         setCronogramas(await resCr.json())
         setParticipantes(await resPa.json())
+        
+        const conf = await resConf.json()
+        if (conf.resolucion) setResolucion(conf.resolucion)
+        
+        if (resBcv && resBcv.ok) {
+          const bcvData = await resBcv.json()
+          if (bcvData.promedio) {
+            setRefDocumento(bcvData.promedio.toFixed(2).replace('.', ','))
+          }
+        }
       } catch (e) {
         console.error(e)
       } finally {
@@ -145,6 +168,57 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
       setGenerating(false)
     }
   }
+
+  const handleGenCostosPDF = async (cronograma: any) => {
+    if (!resolucion) {
+      toast.error('No se ha configurado la resolución en el sistema.')
+      return
+    }
+    
+    setActiveCronogramaForPDF(cronograma)
+    setGenerating(true)
+    
+    // Allow React to render the hidden component before capturing
+    setTimeout(async () => {
+      try {
+        if (!pdfRef.current) return
+        const canvas = await html2canvas(pdfRef.current, { scale: 2 })
+        const imgData = canvas.toDataURL('image/png')
+        
+        const doc = new jsPDF({
+          orientation: 'landscape',
+          unit: 'px',
+          format: [canvas.width, canvas.height]
+        })
+        
+        doc.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+        doc.save(`Estructura_Costos_${cronograma.seccion}.pdf`)
+        toast.success('PDF generado exitosamente')
+      } catch (err) {
+        console.error('Error generando PDF:', err)
+        toast.error('Hubo un error al generar el PDF')
+      } finally {
+        setGenerating(false)
+        setActiveCronogramaForPDF(null)
+      }
+    }, 200)
+  }
+
+  // Prepara las asignaciones del cronograma activo para el componente PlantillaCostosPDF
+  const activeAsignaciones = activeCronogramaForPDF ? activeCronogramaForPDF.asignaciones.map((a: any) => {
+    const tipoViatico = determinarTipoViatico(a.docente?.region?.nombre, activeCronogramaForPDF.aulaTerritorial?.region?.nombre)
+    let defaultViatico = 0
+    if (tipoViatico === 'SEDE') defaultViatico = activeCronogramaForPDF.aulaTerritorial?.viatico || 0
+    if (tipoViatico === 'ZONA') defaultViatico = activeCronogramaForPDF.aulaTerritorial?.viaticoZona || 0
+
+    const viaticoFinal = tipoViatico === 'NO_APLICA' ? 0 : (a.viatico || defaultViatico || 0)
+
+    return {
+      id: a.id,
+      hp: parseFloat(a.hp || activeCronogramaForPDF.periodo?.tabulador || 50),
+      viatico: viaticoFinal
+    }
+  }) : []
 
   return (
     <div>
@@ -250,9 +324,14 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
                                                 Modalidad: {c.modalidad}
                                               </p>
                                             </div>
-                                            <button className="btn btn-primary btn-sm" onClick={() => handleGenPDF(c)} disabled={generating}>
-                                              {generating ? <Loader2 size={14} className="spin" /> : <FileText size={14} />} Generar PDF
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                              <button className="btn btn-secondary btn-sm" onClick={() => handleGenCostosPDF(c)} disabled={generating}>
+                                                {generating && activeCronogramaForPDF?.id === c.id ? <Loader2 size={14} className="spin" /> : <DollarSign size={14} />} Estructura Costos
+                                              </button>
+                                              <button className="btn btn-primary btn-sm" onClick={() => handleGenPDF(c)} disabled={generating}>
+                                                {generating && activeCronogramaForPDF?.id !== c.id ? <Loader2 size={14} className="spin" /> : <FileText size={14} />} Cronograma
+                                              </button>
+                                            </div>
                                           </div>
                                         ))}
                                       </div>
@@ -300,6 +379,20 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
             </div>
           )}
         </>
+      )}
+
+      {/* Hidden PDF Template for Estructura de Costos */}
+      {activeCronogramaForPDF && (
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          <PlantillaCostosPDF 
+            ref={pdfRef} 
+            cronograma={activeCronogramaForPDF} 
+            asignaciones={activeAsignaciones} 
+            refDocumento={refDocumento}
+            resolucion={resolucion}
+            coordinadorNacional={(activeCronogramaForPDF as any)._meta?.coordinadorNacional || ''}
+          />
+        </div>
       )}
     </div>
   )

@@ -501,11 +501,11 @@ export default function Sidebar() {
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
           className="nav-item"
-          style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', justifyContent: collapsed ? 'center' : 'flex-start' }}
+          style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', justifyContent: collapsed ? 'center' : 'flex-start', color: '#dc2626' }}
           title={collapsed ? 'Cerrar sesión' : undefined}
         >
           <span className="nav-item-icon"><LogOut size={18} /></span>
-          {!collapsed && <span>Cerrar sesión</span>}
+          {!collapsed && <span style={{ fontWeight: 600 }}>Cerrar sesión</span>}
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}

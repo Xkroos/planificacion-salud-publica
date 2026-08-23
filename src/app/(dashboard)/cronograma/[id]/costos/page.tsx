@@ -121,10 +121,13 @@ export default function EstructuraCostosPage() {
         if (tipoViatico === 'SEDE') defaultViatico = data.aulaTerritorial?.viatico || 0
         if (tipoViatico === 'ZONA') defaultViatico = data.aulaTerritorial?.viaticoZona || 0
 
+        // Si el tipo de viático es NO_APLICA, forzar a 0 sin importar el valor guardado
+        const viaticoFinal = tipoViatico === 'NO_APLICA' ? 0 : (a.viatico || defaultViatico || 0)
+
         return {
           id: a.id,
           hp: (a.hp || data.periodo?.tabulador || 50).toString(),
-          viatico: (a.viatico || defaultViatico || 0).toString()
+          viatico: viaticoFinal.toString()
         }
       }))
       setAulaCostos({

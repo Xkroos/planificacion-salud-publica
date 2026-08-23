@@ -317,19 +317,19 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
         <tbody>
 
           {docentesData.map((d: any, idx: number) => {
-            const tabulador = d.hp + d.viatico
+            const tabulador = d.hp
             return (
               <tr key={idx}>
                 <td style={{ textAlign: 'left', textTransform: 'uppercase' }}>DOCENTE {idx+1} ({d.zona})</td>
                 <td style={{ textTransform: 'uppercase', fontSize: '8px' }}>{d.nombre}</td>
                 <td>${tabulador.toFixed(2)}</td>
-                <td>${d.viatico.toFixed(2)}</td>
+                <td>${d.hasViatico ? d.viatico.toFixed(2) : '0.00'}</td>
                 <td>${d.hp.toFixed(2)}</td>
                 {[0,1,2,3,4,5].map(i => {
                   const hasEncuentro = i < d.encuentros
                   return (
                     <React.Fragment key={i}>
-                      <td>{hasEncuentro ? `$${d.viatico.toFixed(2)}` : '$0.00'}</td>
+                      <td>{hasEncuentro && d.hasViatico ? `$${d.viatico.toFixed(2)}` : '$0.00'}</td>
                       <td>{hasEncuentro ? `$${d.hp.toFixed(2)}` : '$0.00'}</td>
                     </React.Fragment>
                   )
@@ -399,7 +399,7 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
               let colHp = 0
               docentesData.forEach((d: any) => {
                 if (i < d.encuentros) {
-                  colViatico += d.viatico
+                  if (d.hasViatico) colViatico += d.viatico
                   colHp += d.hp
                 }
               })
@@ -422,7 +422,7 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
               let colTotal = 0
               docentesData.forEach((d: any) => {
                 if (i < d.encuentros) {
-                  colTotal += d.viatico + d.hp
+                  colTotal += (d.hasViatico ? d.viatico : 0) + d.hp
                 }
               })
               const perParticipant = hasParticipantes ? (colTotal / participantesTotal) : 0

@@ -282,7 +282,7 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
     modalidad: editing?.modalidad || 'MULTIMODAL',
     fechaInicioEstimada: editing?.fechaInicioEstimada ? new Date(editing.fechaInicioEstimada).toISOString().split('T')[0] : '',
     fechaFinEstimada: editing?.fechaFinEstimada ? new Date(editing.fechaFinEstimada).toISOString().split('T')[0] : '',
-    trimestres: editing?.trimestres || [] as string[],
+    trimestres: editing?.trimestres || [...TRIMESTRE_OPTS],
     tabulador: editing?.tabulador?.toString() || '50',
     resolucion: editing?.resolucion || ''
   })
