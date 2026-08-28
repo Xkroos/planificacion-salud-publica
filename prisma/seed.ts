@@ -100,6 +100,59 @@ async function main() {
 
   console.log('✅ Unidades curriculares creadas')
   
+  // ============================================================================
+  // CARGA DE REGIONES Y AULAS TERRITORIALES
+  // ============================================================================
+  console.log('🌱 Creando Regiones y Aulas Territoriales con viáticos y costos...')
+  const regionesPath = path.join(__dirname, 'regiones_aulas.json');
+  if (fs.existsSync(regionesPath)) {
+    const regionesData = JSON.parse(fs.readFileSync(regionesPath, 'utf8'));
+    for (const r of regionesData) {
+      const region = await prisma.region.upsert({
+        where: { nombre: r.nombre },
+        update: {},
+        create: { nombre: r.nombre },
+      });
+      
+      for (const aula of r.aulas) {
+        // Upsert by nombre and regionId
+        const existingAula = await prisma.aulaTerritorial.findFirst({
+          where: { nombre: aula.nombre, regionId: region.id }
+        });
+        
+        const aulaData = {
+          nombre: aula.nombre,
+          coordinador: aula.coordinador,
+          enlace: aula.enlace,
+          costo: aula.costo || 0,
+          preinscripcion: aula.preinscripcion || 0,
+          inscripcion: aula.inscripcion || 0,
+          gastosAdministrativos: aula.gastosAdministrativos || 0,
+          limpieza: aula.limpieza || 0,
+          vigilancia: aula.vigilancia || 0,
+          aporteCoordinacion: aula.aporteCoordinacion || 0,
+          viatico: aula.viatico || 0,
+          viaticoZona: aula.viaticoZona || 0,
+          regionId: region.id
+        };
+
+        if (existingAula) {
+          await prisma.aulaTerritorial.update({
+            where: { id: existingAula.id },
+            data: aulaData
+          });
+        } else {
+          await prisma.aulaTerritorial.create({
+            data: aulaData
+          });
+        }
+      }
+    }
+    console.log('✅ Regiones y Aulas Territoriales creadas');
+  } else {
+    console.log('⚠️ Archivo regiones_aulas.json no encontrado, omitiendo carga de regiones.');
+  }
+
   // Helpers para caché
   let aulasCache: Record<string, string> = {}; 
   let regionesCache: Record<string, string> = {}; 
