@@ -21,6 +21,11 @@ export async function POST(req: NextRequest) {
     const session = await auth()
     if (!session || session.user.role !== 'ADMIN') return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
 
+    const activeCount = await prisma.periodo.count({ where: { estado: 'ACTIVO' } })
+    if (activeCount > 0) {
+      return NextResponse.json({ error: 'No se puede crear un nuevo periodo mientras exista uno activo. Debe finalizar el periodo actual primero.' }, { status: 400 })
+    }
+
     const body = await req.json()
     const periodo = await prisma.periodo.create({
       data: {

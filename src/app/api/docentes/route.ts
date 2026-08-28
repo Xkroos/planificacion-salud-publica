@@ -3,9 +3,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { logAction } from '@/lib/bitacora'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url)
+    const regionId = searchParams.get('regionId') || ''
+    const aulaTerritorialId = searchParams.get('aulaTerritorialId') || ''
+
+    const where: any = {}
+    if (regionId && regionId !== 'undefined') where.regionId = regionId
+    if (aulaTerritorialId && aulaTerritorialId !== 'undefined') where.aulaOrigenId = aulaTerritorialId
+
     const docentes = await prisma.docente.findMany({
+      where,
       orderBy: { nombre: 'asc' },
       include: {
         _count: { select: { asignaciones: true } },
@@ -43,6 +52,9 @@ export async function POST(req: NextRequest) {
     if (body.cedula) {
       const existente = await prisma.docente.findFirst({ where: { cedula: body.cedula } })
       if (existente) return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
+      
+      const estudianteExistente = await prisma.participante.findFirst({ where: { cedula: body.cedula } })
+      if (estudianteExistente) return NextResponse.json({ error: 'La cédula ya está registrada como un estudiante' }, { status: 409 })
     }
 
     if (body.email) {

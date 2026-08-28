@@ -25,7 +25,9 @@ export default function EstadisticasPage() {
   const [cargando, setCargando] = useState(true)
   const [estadisticas, setEstadisticas] = useState<any>(null)
   const [generandoPDF, setGenerandoPDF] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
   const reporteRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const [periodos, setPeriodos] = useState<Periodo[]>([])
   const [regiones, setRegiones] = useState<Region[]>([])
@@ -41,6 +43,16 @@ export default function EstadisticasPage() {
 
   useEffect(() => { cargarFiltros() }, [])
   useEffect(() => { cargarEstadisticas() }, [filtros])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAbierto(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const cargarFiltros = async () => {
     try {
@@ -279,6 +291,149 @@ export default function EstadisticasPage() {
     }
   }
 
+  const exportarParticipantesPDF = async () => {
+    setGenerandoPDF(true)
+    try {
+      const params = new URLSearchParams()
+      if (filtros.periodoId) params.append('periodoId', filtros.periodoId)
+      if (filtros.regionId) params.append('regionId', filtros.regionId)
+      if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
+
+      const res = await fetch(`/api/participantes?${params.toString()}`)
+      if (!res.ok) throw new Error('Error al cargar participantes')
+      const data = await res.json()
+
+      const { default: jsPDF } = await import('jspdf')
+      const autoTable = (await import('jspdf-autotable')).default
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+      const pageH = doc.internal.pageSize.getHeight()
+
+      doc.setFillColor(26, 58, 107)
+      doc.rect(0, 0, pageW, 32, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Salud Publica, Listado de Participantes', 14, 14)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Filtros: ${filtroTexto()}`, 14, 22)
+      doc.text(`Total: ${data.length} registrados`, 14, 28)
+
+      const tableData = data.map((p: any) => [
+        p.cedula,
+        `${p.nombre} ${p.apellido || ''}`.trim(),
+        p.genero,
+        p.trimestre || 'N/A',
+        p.telefono || 'N/A',
+        p.email || 'N/A'
+      ])
+
+      autoTable(doc, {
+        startY: 42,
+        head: [['Cédula', 'Nombre Completo', 'Género', 'Trimestre', 'Teléfono', 'Correo']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [45, 107, 196], textColor: 255, fontStyle: 'bold', fontSize: 10 },
+        bodyStyles: { fontSize: 9, textColor: [17, 24, 39] },
+        margin: { left: 14, right: 14, bottom: 15 }
+      })
+
+      const totalPages = doc.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        doc.setFillColor(26, 58, 107)
+        doc.rect(0, pageH - 10, pageW, 10, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.text('UNERG — Decanato de Postgrado | Sistema de Planificación Académica', 14, pageH - 4)
+        doc.text(`Página ${i} de ${totalPages}`, pageW - 30, pageH - 4)
+      }
+
+      const fecha = new Date().toISOString().split('T')[0]
+      doc.save(`listado-participantes-${fecha}.pdf`)
+      toast.success('Listado descargado correctamente')
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al generar el listado')
+    } finally {
+      setGenerandoPDF(false)
+    }
+  }
+
+  const exportarDocentesPDF = async () => {
+    setGenerandoPDF(true)
+    try {
+      const params = new URLSearchParams()
+      if (filtros.regionId) params.append('regionId', filtros.regionId)
+      if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
+
+      const res = await fetch(`/api/docentes?${params.toString()}`)
+      if (!res.ok) throw new Error('Error al cargar docentes')
+      const data = await res.json()
+
+      const { default: jsPDF } = await import('jspdf')
+      const autoTable = (await import('jspdf-autotable')).default
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+      const pageW = doc.internal.pageSize.getWidth()
+      const pageH = doc.internal.pageSize.getHeight()
+
+      doc.setFillColor(26, 58, 107)
+      doc.rect(0, 0, pageW, 32, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Salud Publica, Listado de Docentes', 14, 14)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Filtros: ${filtroTexto()}`, 14, 22)
+      doc.text(`Total: ${data.length} registrados`, 14, 28)
+
+      const tableData = data.map((d: any) => [
+        d.cedula,
+        d.nombre,
+        d.categoria,
+        d.dedicacion,
+        d.contacto || 'N/A',
+        d.email || 'N/A'
+      ])
+
+      autoTable(doc, {
+        startY: 42,
+        head: [['Cédula', 'Nombre Completo', 'Categoría', 'Dedicación', 'Teléfono', 'Correo']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 10 },
+        bodyStyles: { fontSize: 9, textColor: [17, 24, 39] },
+        margin: { left: 14, right: 14, bottom: 15 }
+      })
+
+      const totalPages = doc.getNumberOfPages()
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i)
+        doc.setFillColor(26, 58, 107)
+        doc.rect(0, pageH - 10, pageW, 10, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.text('UNERG — Decanato de Postgrado | Sistema de Planificación Académica', 14, pageH - 4)
+        doc.text(`Página ${i} de ${totalPages}`, pageW - 30, pageH - 4)
+      }
+
+      const fecha = new Date().toISOString().split('T')[0]
+      doc.save(`listado-docentes-${fecha}.pdf`)
+      toast.success('Listado descargado correctamente')
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al generar el listado')
+    } finally {
+      setGenerandoPDF(false)
+    }
+  }
+
   return (
     <div ref={reporteRef} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
@@ -292,32 +447,70 @@ export default function EstadisticasPage() {
           <p style={{ color: '#6b7280', marginTop: '6px', fontSize: '14px' }}>Indicadores y métricas clave del sistema</p>
         </div>
 
-        {/* Botón PDF */}
-        <button
-          onClick={exportarPDF}
-          disabled={generandoPDF || cargando}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '10px 20px', borderRadius: '10px', border: 'none', cursor: generandoPDF || cargando ? 'not-allowed' : 'pointer',
-            background: generandoPDF || cargando ? '#93c5fd' : '#1d4ed8',
-            color: '#ffffff', fontSize: '14px', fontWeight: 600,
-            boxShadow: '0 2px 8px rgba(29, 78, 216, 0.3)',
-            transition: 'all 0.2s', opacity: generandoPDF || cargando ? 0.7 : 1
-          }}
-          title="Exportar reporte en PDF según los filtros activos"
-        >
-          {generandoPDF ? (
-            <>
-              <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-              Generando...
-            </>
-          ) : (
-            <>
-              <Download style={{ width: '18px', height: '18px' }} />
-              Exportar PDF
-            </>
+        {/* Botón PDF Dropdown */}
+        <div style={{ position: 'relative' }} ref={menuRef}>
+          <button
+            onClick={() => setMenuAbierto(!menuAbierto)}
+            disabled={generandoPDF || cargando}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px',
+              padding: '10px 20px', borderRadius: '10px', border: 'none', cursor: generandoPDF || cargando ? 'not-allowed' : 'pointer',
+              background: generandoPDF || cargando ? '#93c5fd' : '#1d4ed8',
+              color: '#ffffff', fontSize: '14px', fontWeight: 600,
+              boxShadow: '0 2px 8px rgba(29, 78, 216, 0.3)',
+              transition: 'all 0.2s', opacity: generandoPDF || cargando ? 0.7 : 1
+            }}
+            title="Opciones de exportación"
+          >
+            {generandoPDF ? (
+              <>
+                <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                Generando...
+              </>
+            ) : (
+              <>
+                <Download style={{ width: '18px', height: '18px' }} />
+                Exportar Reportes
+              </>
+            )}
+          </button>
+          
+          {menuAbierto && (
+            <div style={{ 
+              position: 'absolute', right: 0, top: '48px', width: '260px', 
+              background: '#fff', borderRadius: '8px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', 
+              border: '1px solid #e5e7eb', zIndex: 50, overflow: 'hidden'
+            }}>
+              <button 
+                onClick={() => { setMenuAbierto(false); exportarPDF(); }}
+                style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: 'none', fontSize: '14px', color: '#374151', cursor: 'pointer', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <BarChartIcon style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                Resumen de Estadísticas
+              </button>
+              <button 
+                onClick={() => { setMenuAbierto(false); exportarParticipantesPDF(); }}
+                style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: 'none', fontSize: '14px', color: '#374151', cursor: 'pointer', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <Users style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                Listado de Participantes
+              </button>
+              <button 
+                onClick={() => { setMenuAbierto(false); exportarDocentesPDF(); }}
+                style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', background: 'none', fontSize: '14px', color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#f9fafb'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <UserCheck style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                Listado de Docentes
+              </button>
+            </div>
           )}
-        </button>
+        </div>
       </div>
 
       {/* Panel de Filtros */}

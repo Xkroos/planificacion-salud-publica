@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
 
 type Periodo = {
   id: string
@@ -320,8 +321,11 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
       ])
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
+      
+      toast.success(editing ? 'Periodo actualizado correctamente' : 'Periodo creado exitosamente')
       onSaved()
     } catch (e: any) {
+      toast.error(e.message || 'Error al guardar')
       setError(e.message || 'Error al guardar')
     } finally {
       setSaving(false)

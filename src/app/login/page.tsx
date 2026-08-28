@@ -68,7 +68,7 @@ export default function LoginPage() {
               id="email"
               type="email"
               className="form-input"
-              placeholder="usuario@unerg.edu.ve"
+              placeholder="Ingrese su correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -86,7 +86,7 @@ export default function LoginPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-input"
-                placeholder="••••••••"
+                placeholder="Ingrese su contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

@@ -4,9 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Users, Pencil, Trash2, X, Search,
   Phone, Mail, GraduationCap, Loader2, UserPlus,
-  ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight, AlertCircle
+  ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight, AlertCircle, Download
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import toast from 'react-hot-toast'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 type UnidadCurricular = { id: string; nombre: string; creditos: number; trimestre: string | null }
 type Seccion = { id: string; nombre: string }
@@ -258,6 +261,36 @@ export default function ParticipantesPage() {
 
   const groupedOldPeriods = Object.entries(groupedOld).sort(([a], [b]) => b.localeCompare(a))
 
+  const displayParticipantes = selectedPeriodView === 'ACTUAL' ? currentParticipantes : (groupedOld[selectedPeriodView] || [])
+
+  const exportToPDF = () => {
+    const doc = new jsPDF()
+    const title = selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : `Participantes del Periodo ${selectedPeriodView}`
+    doc.text(title, 14, 15)
+    
+    const tableData = displayParticipantes.map((p, index) => [
+      index + 1,
+      `${p.apellido}, ${p.nombre}`,
+      p.cedula || 'N/A',
+      p.telefono || 'N/A',
+      p.email || 'N/A',
+      p.genero === 'FEMENINO' ? 'Femenino' : 'Masculino',
+      formatTrimestre(p.trimestre)
+    ])
+
+    ;(doc as any).autoTable({
+      startY: 20,
+      head: [['#', 'Participante', 'Cédula', 'Teléfono', 'Email', 'Género', 'Nivel Actual']],
+      body: tableData,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [26, 58, 107] }
+    })
+
+    doc.save(`participantes-${selectedPeriodView.toLowerCase()}.pdf`)
+    toast.success('PDF descargado exitosamente')
+  }
+
   return (
     <div className="fade-in">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
@@ -273,6 +306,9 @@ export default function ParticipantesPage() {
                <AlertCircle size={14} style={{ marginRight: '4px' }} /> No hay Periodo academico activo
              </span>
           )}
+          <button className="btn btn-secondary" onClick={exportToPDF} disabled={displayParticipantes.length === 0}>
+            <Download size={16} /> Descargar PDF
+          </button>
           {canRegister && (
             <button className="btn btn-primary" onClick={openCreate} disabled={!activePeriodo}>
               <UserPlus size={16} /> Registrar Participante
@@ -389,8 +425,6 @@ export default function ParticipantesPage() {
                 Cargando participantes...
               </div>
             ) : (() => {
-              const displayParticipantes = selectedPeriodView === 'ACTUAL' ? currentParticipantes : (groupedOld[selectedPeriodView] || [])
-
               if (displayParticipantes.length === 0) {
                 return (
                   <div className="empty-state" style={{ padding: '60px 20px' }}>

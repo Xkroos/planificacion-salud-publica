@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { UserCheck, Plus, Pencil, Trash2, Search, X, AlertCircle, Mail, Phone } from 'lucide-react'
+import { UserCheck, Plus, Pencil, Trash2, Search, X, AlertCircle, Mail, Phone, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 type AulaTerritorial = {
   id: string
@@ -259,6 +261,36 @@ export default function DocentesPage() {
     return matchSearch && matchEstado && matchAula
   })
 
+  const exportToPDF = () => {
+    const doc = new jsPDF()
+    doc.text('Listado de Docentes', 14, 15)
+    
+    const tableData = filtered.map((d, index) => [
+      index + 1,
+      d.nombre,
+      d.cedula,
+      d.email || 'N/A',
+      d.contacto || 'N/A',
+      categoriaLabels[d.categoria],
+      dedicacionLabels[d.dedicacion],
+      d.region?.nombre || 'N/A',
+      d.activo ? 'Activo' : 'Inactivo',
+      d._count?.asignaciones || 0
+    ])
+
+    ;(doc as any).autoTable({
+      startY: 20,
+      head: [['#', 'Nombre', 'Cédula', 'Email', 'Teléfono', 'Categoría', 'Dedicación', 'Región', 'Estado', 'Asignaciones']],
+      body: tableData,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [26, 58, 107] }
+    })
+
+    doc.save('listado-docentes.pdf')
+    toast.success('PDF descargado exitosamente')
+  }
+
   return (
     <div className="fade-in">
       {/* Header */}
@@ -281,6 +313,9 @@ export default function DocentesPage() {
               <AlertCircle size={14} style={{ marginRight: '4px' }} /> Registro Cerrado
             </span>
           )}
+          <button className="btn btn-secondary" onClick={exportToPDF} disabled={filtered.length === 0}>
+            <Download size={16} /> Descargar PDF
+          </button>
           <button className="btn btn-primary" onClick={openCreate} disabled={!canCreate || !activePeriodo}>
             <Plus size={16} /> Nuevo Docente
           </button>

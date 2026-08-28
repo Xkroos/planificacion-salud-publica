@@ -19,6 +19,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.cedula) {
       const existente = await prisma.docente.findFirst({ where: { cedula: body.cedula, NOT: { id } } })
       if (existente) return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
+
+      const estudianteExistente = await prisma.participante.findFirst({ where: { cedula: body.cedula } })
+      if (estudianteExistente) return NextResponse.json({ error: 'La cédula ya está registrada como un estudiante' }, { status: 409 })
     }
 
     if (body.email) {

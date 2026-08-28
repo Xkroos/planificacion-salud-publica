@@ -97,6 +97,11 @@ export async function POST(req: NextRequest) {
       if (existente) {
         return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
       }
+      
+      const docenteExistente = await prisma.docente.findFirst({ where: { cedula: cedulaStr } })
+      if (docenteExistente) {
+        return NextResponse.json({ error: 'La cédula ya está registrada como un docente' }, { status: 409 })
+      }
     }
 
     // Verificar email único
