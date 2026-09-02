@@ -8,10 +8,26 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const regionId = searchParams.get('regionId') || ''
     const aulaTerritorialId = searchParams.get('aulaTerritorialId') || ''
+    const search = searchParams.get('search') || ''
+    const estado = searchParams.get('estado') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     const where: any = {}
     if (regionId && regionId !== 'undefined') where.regionId = regionId
     if (aulaTerritorialId && aulaTerritorialId !== 'undefined') where.aulaOrigenId = aulaTerritorialId
+    if (search) {
+      where.OR = [
+        { nombre: { contains: search, mode: 'insensitive' } },
+        { cedula: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+    if (estado && estado !== 'TODOS') {
+      where.activo = estado === 'ACTIVO'
+    }
+
+    const total = await prisma.docente.count({ where })
 
     const docentes = await prisma.docente.findMany({
       where,
@@ -21,8 +37,17 @@ export async function GET(req: NextRequest) {
         aulaOrigen: { include: { region: true } },
         region: true,
       },
+      skip,
+      take: limit,
     })
-    return NextResponse.json(docentes)
+    
+    return NextResponse.json({
+      data: docentes,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    })
   } catch {
     return NextResponse.json({ error: 'Error al obtener docentes' }, { status: 500 })
   }

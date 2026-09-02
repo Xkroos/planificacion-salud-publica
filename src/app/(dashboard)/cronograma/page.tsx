@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ClipboardList, Plus, Eye, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users } from 'lucide-react'
+import { ClipboardList, Plus, Eye, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 
@@ -35,20 +35,59 @@ export default function CronogramaListPage() {
 
   const [config, setConfig] = useState<any>(null)
 
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalRecords, setTotalRecords] = useState(0)
+
+  const [filterRegion, setFilterRegion] = useState('')
+  const [filterAula, setFilterAula] = useState('')
+  const [filterTrimestre, setFilterTrimestre] = useState('')
+  const [regionesList, setRegionesList] = useState<any[]>([])
+
   const fetch_ = async () => {
-    const [resCr, resConf, resPer] = await Promise.all([
-      fetch('/api/cronograma'),
-      fetch('/api/configuracion'),
-      fetch('/api/periodos')
-    ])
-    setCronogramas(await resCr.json())
-    setConfig(await resConf.json())
-    const per = await resPer.json()
-    setActivePeriodo(per.find((p: any) => p.estado === 'ACTIVO') || null)
-    setLoading(false)
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (filterRegion) params.set('regionId', filterRegion)
+    if (filterAula) params.set('aulaTerritorialId', filterAula)
+    if (filterTrimestre) params.set('trimestre', filterTrimestre)
+    params.set('page', page.toString())
+    params.set('limit', '10')
+
+    try {
+      const [resCr, resConf, resPer, resReg] = await Promise.all([
+        fetch(`/api/cronograma?${params}`),
+        fetch('/api/configuracion'),
+        fetch('/api/periodos'),
+        fetch('/api/regiones')
+      ])
+      
+      const crData = await resCr.json()
+      if (crData && Array.isArray(crData.data)) {
+        setCronogramas(crData.data)
+        setTotalPages(crData.totalPages || 1)
+        setTotalRecords(crData.total || 0)
+      } else {
+        setCronogramas([])
+        setTotalPages(1)
+        setTotalRecords(0)
+      }
+
+      setConfig(await resConf.json())
+      const per = await resPer.json()
+      setActivePeriodo(per.find((p: any) => p.estado === 'ACTIVO') || null)
+      setRegionesList(await resReg.json())
+    } catch {
+      setCronogramas([])
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { fetch_() }, [])
+  useEffect(() => { fetch_() }, [page, search, filterRegion, filterAula, filterTrimestre])
+
+  // Reset page to 1 when search changes
+  useEffect(() => { setPage(1) }, [search, filterRegion, filterAula, filterTrimestre])
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/cronograma/${id}`, { method: 'DELETE' })
@@ -56,73 +95,9 @@ export default function CronogramaListPage() {
     setDeleteConfirm(null)
   }
 
-  const filtered = cronogramas.filter(c =>
-    `${c.periodo.anio}-${c.periodo.numero} ${c.aulaTerritorial.nombre} ${c.aulaTerritorial.region.nombre} ${c.trimestre}`
-      .toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = cronogramas // Filtering is now server-side
 
-  const toggle = (key: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
-  }
 
-  // Nivel 1: Agrupar por Región
-  const buildRegionGroups = () => {
-    const regMap = filtered.reduce((acc, c) => {
-      const rKey = c.aulaTerritorial.region.nombre
-      if (!acc[rKey]) {
-        acc[rKey] = { key: rKey, regionNombre: rKey, cronogramas: [] }
-      }
-      acc[rKey].cronogramas.push(c)
-      return acc
-    }, {} as Record<string, any>)
-    return Object.values(regMap).sort((a: any, b: any) => a.regionNombre.localeCompare(b.regionNombre, 'es'))
-  }
-
-  // Nivel 2: Dentro de una región, agrupar por Aula Territorial
-  const getAulaGroups = (cronogramasRegion: Cronograma[]) => {
-    const aulaMap = cronogramasRegion.reduce((acc, c) => {
-      const aKey = c.aulaTerritorial.nombre
-      if (!acc[aKey]) {
-        acc[aKey] = { key: aKey, aulaNombre: c.aulaTerritorial.nombre, coordinador: c.aulaTerritorial.coordinador, cronogramas: [] }
-      }
-      acc[aKey].cronogramas.push(c)
-      return acc
-    }, {} as Record<string, any>)
-    return Object.values(aulaMap).sort((a: any, b: any) => a.aulaNombre.localeCompare(b.aulaNombre, 'es'))
-  }
-
-  // Nivel 3: Dentro de un aula, agrupar por Trimestre
-  const getTrimestreGroups = (cronogramasAula: Cronograma[]) => {
-    const groups = cronogramasAula.reduce((acc, c) => {
-      const triKey = `${c.periodo.anio}-${c.periodo.numero}__${c.trimestre}`
-      if (!acc[triKey]) {
-        acc[triKey] = { key: triKey, periodo: c.periodo, trimestre: c.trimestre, modalidad: c.modalidad, cronogramas: [] }
-      }
-      acc[triKey].cronogramas.push(c)
-      return acc
-    }, {} as Record<string, any>)
-    return Object.values(groups).sort((a: any, b: any) => {
-      const orderA = a.trimestre === 'Introductorio' ? '0' : a.trimestre
-      const orderB = b.trimestre === 'Introductorio' ? '0' : b.trimestre
-      const periodoCompare = `${a.periodo.anio}-${a.periodo.numero}`.localeCompare(`${b.periodo.anio}-${b.periodo.numero}`)
-      if (periodoCompare !== 0) return periodoCompare
-      return orderA.localeCompare(orderB, 'es', { numeric: true })
-    })
-  }
-
-  // Calcular totales
-  const getTotals = (items: Cronograma[]) => {
-    let totalDocentes = 0, totalFem = 0, totalMasc = 0, totalExtra = 0
-    items.forEach(c => {
-      totalDocentes += c.asignaciones.filter((a: any) => a.docente).length
-      totalFem += c.participantesFem
-      totalMasc += c.participantesMasc
-      totalExtra += (c._count?.participantes || 0)
-    })
-    return { totalDocentes, totalFem, totalMasc, totalPart: totalFem + totalMasc + totalExtra }
-  }
-
-  const regionGroups = buildRegionGroups()
 
   return (
     <div className="fade-in">
@@ -131,7 +106,7 @@ export default function CronogramaListPage() {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a3a6b', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <ClipboardList size={24} color="#2d6bc4" /> Cronogramas de Planificación
           </h1>
-          <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>{cronogramas.length} cronograma(s) registrado(s)</p>
+          <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>{totalRecords} cronograma(s) registrado(s)</p>
         </div>
         {(!activePeriodo && !loading) ? (
           <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
@@ -149,9 +124,33 @@ export default function CronogramaListPage() {
       </div>
 
       <div className="card" style={{ marginBottom: '20px', padding: '12px 16px' }}>
-        <div style={{ position: 'relative', maxWidth: '400px' }}>
-          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a0aec0' }} />
-          <input className="form-input" style={{ paddingLeft: '36px' }} placeholder="Buscar por período, sede, región o trimestre..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 250px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a0aec0' }} />
+            <input className="form-input" style={{ paddingLeft: '36px' }} placeholder="Buscar por período, sede, región..." value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <div style={{ flex: '1 1 150px' }}>
+            <select className="form-select" value={filterRegion} onChange={e => { setFilterRegion(e.target.value); setFilterAula('') }}>
+              <option value="">Todas las Regiones</option>
+              {regionesList.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: '1 1 150px' }}>
+            <select className="form-select" value={filterAula} onChange={e => setFilterAula(e.target.value)} disabled={!filterRegion}>
+              <option value="">Todas las Sedes</option>
+              {regionesList.find(r => r.id === filterRegion)?.aulas?.map((a: any) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: '1 1 150px' }}>
+            <select className="form-select" value={filterTrimestre} onChange={e => setFilterTrimestre(e.target.value)}>
+              <option value="">Todos los Trimestres</option>
+              <option value="Introductorio">Introductorio</option>
+              <option value="1">1° Trimestre</option>
+              <option value="2">2° Trimestre</option>
+              <option value="3">3° Trimestre</option>
+              <option value="4">4° Trimestre</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -162,257 +161,104 @@ export default function CronogramaListPage() {
               <div className="empty-state">
                 <ClipboardList size={48} />
                 <p style={{ marginTop: '12px', fontWeight: 600, fontSize: '16px' }}>
-                  {!activePeriodo ? 'No hay Periodo academico activo en este momento' : (search ? 'Sin resultados' : 'No hay cronogramas')}
+                  {!activePeriodo ? 'No hay Periodo academico activo en este momento' : (search || filterRegion || filterTrimestre ? 'Sin resultados' : 'No hay cronogramas')}
                 </p>
                 {!search && activePeriodo && (isAdmin || (config && config.asignacionCargaAbierta)) && (
                   <button className="btn btn-primary btn-sm" style={{ marginTop: '16px' }} onClick={() => setShowModal(true)}>Generar primer cronograma</button>
                 )}
               </div>
             </div>
-          ) : regionGroups.map((region: any) => {
-            const isRegionExpanded = expandedRegions.includes(region.key)
-            const regionTotals = getTotals(region.cronogramas)
-            const aulaGroups = getAulaGroups(region.cronogramas)
-
-            return (
-              <div key={region.key} className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                {/* ═══════ NIVEL 1: REGIÓN ═══════ */}
-                <div
-                  onClick={() => toggle(region.key, setExpandedRegions)}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '16px 20px', cursor: 'pointer',
-                    background: isRegionExpanded ? '#f0f5ff' : '#fff',
-                    borderLeft: '4px solid #2d6bc4',
-                    transition: 'background 0.2s ease',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-                    <div style={{
-                      width: '42px', height: '42px', borderRadius: '10px',
-                      background: 'linear-gradient(135deg, #2d6bc4, #1a3a6b)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      <MapPin size={20} color="white" />
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '16px', color: '#1a3a6b' }}>
-                        {region.regionNombre.toUpperCase()}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#718096', marginTop: '2px' }}>
-                        {aulaGroups.length} aula(s) territorial(es) · {region.cronogramas.length} sección(es) total(es)
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#2d6bc4' }}>{regionTotals.totalDocentes}</div>
-                      <div style={{ fontSize: '10px', color: '#718096', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Docentes</div>
-                    </div>
-                    <div style={{ width: '1px', height: '30px', background: '#e2e8f0' }} />
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '8px', fontSize: '13px' }}>
-                        <span style={{ color: '#d53f8c', fontWeight: 600 }}>♀ {regionTotals.totalFem}</span>
-                        <span style={{ color: '#3182ce', fontWeight: 600 }}>♂ {regionTotals.totalMasc}</span>
-                      </div>
-                      <div style={{ fontSize: '10px', color: '#718096', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Participantes ({regionTotals.totalPart})</div>
-                    </div>
-                    <div style={{
-                      transform: isRegionExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease', color: '#4a5568'
-                    }}>
-                      <ChevronDown size={20} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* ═══════ NIVEL 2: AULAS TERRITORIALES ═══════ */}
-                {isRegionExpanded && (
-                  <div style={{ borderTop: '1px solid #e2e8f0', animation: 'slideDown 0.25s ease-out' }}>
-                    {aulaGroups.map((aula: any) => {
-                      const aulaFullKey = `${region.key}__${aula.key}`
-                      const isAulaExpanded = expandedAulas.includes(aulaFullKey)
-                      const aulaTotals = getTotals(aula.cronogramas)
-                      const trimestreGroups = getTrimestreGroups(aula.cronogramas)
-
-                      return (
-                        <div key={aulaFullKey}>
-                          <div
-                            onClick={() => toggle(aulaFullKey, setExpandedAulas)}
-                            style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                              padding: '12px 20px 12px 32px', cursor: 'pointer',
-                              background: isAulaExpanded ? '#f7f9fe' : '#f8fafc',
-                              borderBottom: '1px solid #edf2f7',
-                              transition: 'background 0.15s ease',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              <div style={{
-                                width: '34px', height: '34px', borderRadius: '8px',
-                                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0
-                              }}>
-                                <Users size={16} color="white" />
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: 600, fontSize: '14px', color: '#2d3748' }}>
-                                  {aula.aulaNombre.toUpperCase()}
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#a0aec0', marginTop: '1px' }}>
-                                  {aula.coordinador || 'Sin coordinador'} · {trimestreGroups.length} contenido(s) académico(s) · {aula.cronogramas.length} sección(es)
-                                </div>
-                              </div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                              <span className="badge badge-blue" style={{ fontSize: '11px' }}>{aulaTotals.totalDocentes} doc.</span>
-                              <div style={{ fontSize: '12px', display: 'flex', gap: '6px' }}>
-                                <span style={{ color: '#d53f8c' }}>♀ {aulaTotals.totalFem}</span>
-                                <span style={{ color: '#3182ce' }}>♂ {aulaTotals.totalMasc}</span>
-                              </div>
-                              <div style={{
-                                transform: isAulaExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                                transition: 'transform 0.2s ease', color: '#a0aec0'
-                              }}>
-                                <ChevronRight size={16} />
-                              </div>
-                            </div>
+          ) : (
+            <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '50px' }}>#</th>
+                    <th>Período</th>
+                    <th>Sede y Región</th>
+                    <th>Trimestre y Sección</th>
+                    <th>Participantes</th>
+                    <th>Docentes</th>
+                    <th style={{ textAlign: 'right' }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((c, i) => {
+                    const totalDocentes = c.asignaciones.filter((a: any) => a.docente).length
+                    const totalMaterias = c.asignaciones.length
+                    return (
+                      <tr key={c.id}>
+                        <td style={{ color: '#a0aec0', fontWeight: 500 }}>{(page - 1) * 10 + i + 1}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{c.periodo.anio}-{c.periodo.numero}</div>
+                          <span className="badge badge-orange" style={{ fontSize: '10px' }}>{c.modalidad}</span>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#2d3748' }}>{c.aulaTerritorial.nombre}</div>
+                          <div style={{ fontSize: '12px', color: '#718096' }}>{c.aulaTerritorial.region.nombre}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#1a3a6b' }}>{c.trimestre === 'Introductorio' ? c.trimestre : `${c.trimestre}° Trimestre`}</div>
+                          <div style={{ fontSize: '12px', color: '#718096' }}>Sección {c.seccion}</div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px', fontSize: '13px' }}>
+                            <span style={{ color: '#d53f8c', fontWeight: 600 }}>♀ {c.participantesFem}</span>
+                            <span style={{ color: '#3182ce', fontWeight: 600 }}>♂ {c.participantesMasc}</span>
                           </div>
-
-                          {/* ═══════ NIVEL 3: TRIMESTRES ═══════ */}
-                          {isAulaExpanded && (
-                            <div style={{ animation: 'slideDown 0.2s ease-out' }}>
-                              {trimestreGroups.map((tri: any) => {
-                                const triFullKey = `${aulaFullKey}__${tri.key}`
-                                const isTriExpanded = expandedTrimestres.includes(triFullKey)
-                                const triDocentes = tri.cronogramas.reduce((sum: number, c: Cronograma) => sum + c.asignaciones.filter((a: any) => a.docente).length, 0)
-                                const triFem = tri.cronogramas.reduce((sum: number, c: Cronograma) => sum + c.participantesFem, 0)
-                                const triMasc = tri.cronogramas.reduce((sum: number, c: Cronograma) => sum + c.participantesMasc, 0)
-                                const sortedSecciones = [...tri.cronogramas].sort((a: Cronograma, b: Cronograma) => a.seccion.localeCompare(b.seccion, 'es', { numeric: true }))
-
-                                return (
-                                  <div key={triFullKey}>
-                                    <div
-                                      onClick={() => toggle(triFullKey, setExpandedTrimestres)}
-                                      style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        padding: '10px 20px 10px 56px', cursor: 'pointer',
-                                        background: isTriExpanded ? '#fafbfe' : '#fdfdfe',
-                                        borderBottom: '1px solid #f1f5f9',
-                                        transition: 'background 0.15s ease',
-                                      }}
-                                    >
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{
-                                          width: '28px', height: '28px', borderRadius: '6px',
-                                          background: tri.trimestre === 'Introductorio' ? 'linear-gradient(135deg, #ed8936, #dd6b20)' : 'linear-gradient(135deg, #38a169, #276749)',
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                          flexShrink: 0
-                                        }}>
-                                          <BookOpen size={14} color="white" />
-                                        </div>
-                                        <div>
-                                          <div style={{ fontWeight: 600, fontSize: '13px', color: '#2d3748' }}>
-                                            {tri.trimestre === 'Introductorio' ? 'Curso Introductorio' : `${tri.trimestre}° Trimestre`}
-                                          </div>
-                                          <div style={{ fontSize: '10px', color: '#a0aec0' }}>
-                                            {tri.periodo.anio}-{tri.periodo.numero} · {tri.cronogramas.length} sección(es) · {tri.modalidad || 'PRESENCIAL'}
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                        <span className="badge badge-blue" style={{ fontSize: '10px', padding: '2px 6px' }}>{triDocentes} doc.</span>
-                                        <div style={{ fontSize: '11px', display: 'flex', gap: '5px' }}>
-                                          <span style={{ color: '#d53f8c' }}>♀ {triFem}</span>
-                                          <span style={{ color: '#3182ce' }}>♂ {triMasc}</span>
-                                        </div>
-                                        <span className="badge badge-orange" style={{ fontSize: '9px', padding: '2px 6px' }}>{tri.modalidad || 'PRESENCIAL'}</span>
-                                        <div style={{
-                                          transform: isTriExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                                          transition: 'transform 0.2s ease', color: '#cbd5e0'
-                                        }}>
-                                          <ChevronRight size={14} />
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* ═══════ NIVEL 4: SECCIONES ═══════ */}
-                                    {isTriExpanded && (
-                                      <div style={{ animation: 'slideDown 0.15s ease-out' }}>
-                                        {sortedSecciones.map((c: Cronograma) => (
-                                          <div
-                                            key={c.id}
-                                            style={{
-                                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                              padding: '8px 20px 8px 86px',
-                                              borderBottom: '1px solid #f7fafc',
-                                              background: '#fff',
-                                              transition: 'background 0.15s ease',
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#f7fafc'}
-                                            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-                                          >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                              <div style={{
-                                                width: '24px', height: '24px', borderRadius: '5px',
-                                                background: '#edf2f7',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                fontSize: '10px', fontWeight: 700, color: '#4a5568'
-                                              }}>
-                                                {c.seccion}
-                                              </div>
-                                              <div>
-                                                <div style={{ fontSize: '12px', fontWeight: 600, color: '#2d3748' }}>
-                                                  Sección {c.seccion}
-                                                </div>
-                                                <div style={{ fontSize: '10px', color: '#a0aec0' }}>
-                                                  Vocero: {c.vocero || '—'}
-                                                </div>
-                                              </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                              <span className="badge" style={{ background: '#e2e8f0', color: '#4a5568', fontSize: '10px', padding: '2px 6px' }}>
-                                                {c.asignaciones.filter((a: any) => a.docente).length} doc.
-                                              </span>
-                                              <div style={{ fontSize: '11px', display: 'flex', gap: '5px' }}>
-                                                <span style={{ color: '#d53f8c' }}>♀ {c.participantesFem}</span>
-                                                <span style={{ color: '#3182ce' }}>♂ {c.participantesMasc}</span>
-                                              </div>
-                                              <div style={{ display: 'flex', gap: '4px' }}>
-                                                <Link href={`/cronograma/${c.id}`} className="btn-icon" style={{ padding: '5px' }} onClick={(e) => e.stopPropagation()}>
-                                                  <Eye size={14} />
-                                                </Link>
-                                                {isAdmin && (
-                                                  <button className="btn-icon" style={{ color: '#dc2626', padding: '5px' }} onClick={(e) => { e.stopPropagation(); setDeleteConfirm(c.id) }}>
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                )}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })
+                        </td>
+                        <td>
+                          <span className="badge badge-blue">{totalDocentes} asignados</span>
+                          <div style={{ fontSize: '11px', color: '#718096', marginTop: '2px' }}>de {totalMaterias} materias</div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                            <Link href={`/cronograma/${c.id}`} className="btn-icon">
+                              <Eye size={16} />
+                            </Link>
+                            {isAdmin && (
+                              <button className="btn-icon" style={{ color: '#dc2626' }} onClick={() => setDeleteConfirm(c.id)}>
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
         }
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px' }}>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>
+              Mostrando {(page - 1) * 10 + 1} - {Math.min(page * 10, totalRecords)} de {totalRecords}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                <ChevronLeft size={16} /> Anterior
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '13px', fontWeight: 600 }}>
+                Página {page} de {totalPages}
+              </div>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Siguiente <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {showModal && <CronogramaGeneratorModal onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); fetch_(); }} existingCronogramas={cronogramas} />}

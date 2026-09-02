@@ -7,6 +7,13 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const periodoId = searchParams.get('periodoId')
+    const search = searchParams.get('search') || ''
+    const regionId = searchParams.get('regionId') || ''
+    const aulaTerritorialId = searchParams.get('aulaTerritorialId') || ''
+    const trimestre = searchParams.get('trimestre') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const skip = (page - 1) * limit
 
     const where: any = {}
     if (periodoId && periodoId !== 'undefined') {
@@ -20,6 +27,28 @@ export async function GET(req: NextRequest) {
         return NextResponse.json([])
       }
     }
+
+    if (regionId && regionId !== 'undefined') {
+      where.aulaTerritorial = { regionId }
+    }
+    if (aulaTerritorialId && aulaTerritorialId !== 'undefined') {
+      where.aulaTerritorialId = aulaTerritorialId
+    }
+    if (trimestre && trimestre !== 'undefined' && trimestre !== 'TODOS') {
+      where.trimestre = trimestre
+    }
+
+    if (search) {
+      where.OR = [
+        { aulaTerritorial: { nombre: { contains: search, mode: 'insensitive' } } },
+        { aulaTerritorial: { region: { nombre: { contains: search, mode: 'insensitive' } } } },
+        { trimestre: { contains: search, mode: 'insensitive' } },
+        { periodo: { anio: { equals: parseInt(search) || -1 } } },
+        { periodo: { numero: { equals: parseInt(search) || -1 } } }
+      ]
+    }
+
+    const total = await prisma.cronograma.count({ where })
 
     const cronogramas = await prisma.cronograma.findMany({
       where,
@@ -37,8 +66,17 @@ export async function GET(req: NextRequest) {
         },
         _count: { select: { participantes: true } },
       },
+      skip,
+      take: limit,
     })
-    return NextResponse.json(cronogramas)
+    
+    return NextResponse.json({
+      data: cronogramas,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    })
   } catch (error) {
     console.error('Error fetching cronogramas:', error)
     return NextResponse.json({ error: 'Error al obtener cronogramas' }, { status: 500 })

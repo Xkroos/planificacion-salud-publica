@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { UserCheck, Plus, Pencil, Trash2, Search, X, AlertCircle, Mail, Phone, Download } from 'lucide-react'
+import { UserCheck, Plus, Pencil, Trash2, Search, X, AlertCircle, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
-import jsPDF from 'jspdf'
-import 'jspdf-autotable'
 
 type AulaTerritorial = {
   id: string
@@ -95,11 +93,36 @@ export default function DocentesPage() {
   const [configOpen, setConfigOpen] = useState<boolean | null>(null)
   const [activePeriodo, setActivePeriodo] = useState<any>(null)
 
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalRecords, setTotalRecords] = useState(0)
+
   const fetchDocentes = async () => {
-    const res = await fetch('/api/docentes')
-    const data = await res.json()
-    setDocentes(data)
-    setLoading(false)
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (filterEstado !== 'TODOS') params.set('estado', filterEstado)
+    if (filterAula) params.set('aulaTerritorialId', filterAula)
+    params.set('page', page.toString())
+    params.set('limit', '10')
+
+    try {
+      const res = await fetch(`/api/docentes?${params}`)
+      const data = await res.json()
+      if (data && Array.isArray(data.data)) {
+        setDocentes(data.data)
+        setTotalPages(data.totalPages || 1)
+        setTotalRecords(data.total || 0)
+      } else {
+        setDocentes([])
+        setTotalPages(1)
+        setTotalRecords(0)
+      }
+    } catch {
+      setDocentes([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const fetchAulas = async () => {
@@ -136,6 +159,14 @@ export default function DocentesPage() {
 
   useEffect(() => {
     fetchDocentes()
+  }, [page, search, filterEstado, filterAula])
+
+  // Reset page on filter changes
+  useEffect(() => {
+    setPage(1)
+  }, [search, filterEstado, filterAula])
+
+  useEffect(() => {
     fetchAulas()
     fetchConfig()
     fetchPeriodos()
@@ -254,42 +285,7 @@ export default function DocentesPage() {
     }
   }
 
-  const filtered = docentes.filter(d => {
-    const matchSearch = d.nombre.toLowerCase().includes(search.toLowerCase()) || d.cedula.includes(search)
-    const matchEstado = filterEstado === 'TODOS' ? true : (filterEstado === 'ACTIVO' ? d.activo : !d.activo)
-    const matchAula = filterAula === '' ? true : d.aulaOrigenId === filterAula
-    return matchSearch && matchEstado && matchAula
-  })
-
-  const exportToPDF = () => {
-    const doc = new jsPDF()
-    doc.text('Listado de Docentes', 14, 15)
-    
-    const tableData = filtered.map((d, index) => [
-      index + 1,
-      d.nombre,
-      d.cedula,
-      d.email || 'N/A',
-      d.contacto || 'N/A',
-      categoriaLabels[d.categoria],
-      dedicacionLabels[d.dedicacion],
-      d.region?.nombre || 'N/A',
-      d.activo ? 'Activo' : 'Inactivo',
-      d._count?.asignaciones || 0
-    ])
-
-    ;(doc as any).autoTable({
-      startY: 20,
-      head: [['#', 'Nombre', 'Cédula', 'Email', 'Teléfono', 'Categoría', 'Dedicación', 'Región', 'Estado', 'Asignaciones']],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [26, 58, 107] }
-    })
-
-    doc.save('listado-docentes.pdf')
-    toast.success('PDF descargado exitosamente')
-  }
+  // Client-side filtering and PDF export removed in favor of server-side
 
   return (
     <div className="fade-in">
@@ -300,7 +296,7 @@ export default function DocentesPage() {
             <UserCheck size={24} color="#2d6bc4" /> Docentes
           </h1>
           <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>
-            {docentes.length} docente{docentes.length !== 1 ? 's' : ''} registrado{docentes.length !== 1 ? 's' : ''}
+            {totalRecords} docente{totalRecords !== 1 ? 's' : ''} registrado{totalRecords !== 1 ? 's' : ''}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -313,9 +309,6 @@ export default function DocentesPage() {
               <AlertCircle size={14} style={{ marginRight: '4px' }} /> Registro Cerrado
             </span>
           )}
-          <button className="btn btn-secondary" onClick={exportToPDF} disabled={filtered.length === 0}>
-            <Download size={16} /> Descargar PDF
-          </button>
           <button className="btn btn-primary" onClick={openCreate} disabled={!canCreate || !activePeriodo}>
             <Plus size={16} /> Nuevo Docente
           </button>
@@ -361,7 +354,7 @@ export default function DocentesPage() {
         <div style={{ overflowX: 'auto' }}>
           {loading ? (
             <div style={{ padding: '60px', textAlign: 'center', color: '#718096' }}>Cargando...</div>
-          ) : filtered.length === 0 ? (
+          ) : docentes.length === 0 ? (
             <div className="empty-state">
               <UserCheck size={48} />
               <p style={{ marginTop: '12px', fontWeight: 600, fontSize: '16px' }}>
@@ -393,9 +386,9 @@ export default function DocentesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((d, i) => (
+                {docentes.map((d, i) => (
                   <tr key={d.id}>
-                    <td style={{ color: '#a0aec0', fontWeight: 500 }}>{i + 1}</td>
+                    <td style={{ color: '#a0aec0', fontWeight: 500 }}>{(page - 1) * 10 + i + 1}</td>
                     <td>
                       <div style={{ fontWeight: 600, color: '#1a3a6b' }}>{d.nombre}</div>
                       {d.email && (
@@ -489,6 +482,34 @@ export default function DocentesPage() {
             </table>
           )}
         </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ fontSize: '13px', color: '#64748b' }}>
+              Mostrando {(page - 1) * 10 + 1} - {Math.min(page * 10, totalRecords)} de {totalRecords}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >
+                <ChevronLeft size={16} /> Anterior
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '13px', fontWeight: 600 }}>
+                Página {page} de {totalPages}
+              </div>
+              <button 
+                className="btn btn-secondary btn-sm" 
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Siguiente <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Create/Edit Modal */}

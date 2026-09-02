@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
     const regionId = searchParams.get('regionId') || ''
     const aulaTerritorialId = searchParams.get('aulaTerritorialId') || ''
     const periodoId = searchParams.get('periodoId') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const skip = (page - 1) * limit
 
     const where: any = {}
     if (nombre) {
@@ -36,6 +39,8 @@ export async function GET(req: NextRequest) {
     // Sin filtro de periodoId → mostrar TODOS los participantes de todos los periodos
 
 
+    const total = await prisma.participante.count({ where })
+
     const participantes = await prisma.participante.findMany({
       where,
       include: {
@@ -53,8 +58,17 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: [{ apellido: 'asc' }, { nombre: 'asc' }],
+      skip,
+      take: limit,
     })
-    return NextResponse.json(participantes)
+
+    return NextResponse.json({
+      data: participantes,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    })
   } catch (error: any) {
     console.error("GET /api/participantes error:", error)
     return NextResponse.json({ error: 'Error al obtener participantes', details: error?.message }, { status: 500 })

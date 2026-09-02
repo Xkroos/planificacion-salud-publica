@@ -4,12 +4,11 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Users, Pencil, Trash2, X, Search,
   Phone, Mail, GraduationCap, Loader2, UserPlus,
-  ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight, AlertCircle, Download
+  ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight, AlertCircle,
+  ChevronLeft
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
-import jsPDF from 'jspdf'
-import 'jspdf-autotable'
 
 type UnidadCurricular = { id: string; nombre: string; creditos: number; trimestre: string | null }
 type Seccion = { id: string; nombre: string }
@@ -98,6 +97,20 @@ export default function ParticipantesPage() {
   const [filterTrimestre, setFilterTrimestre] = useState('')
 
   const [selectedPeriodView, setSelectedPeriodView] = useState<string>('ACTUAL')
+  
+  // Pagination and Stats
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalRecords, setTotalRecords] = useState(0)
+  
+  const [stats, setStats] = useState<{
+    total: number, 
+    femenino: number, 
+    masculino: number, 
+    periodStats: { label: string, count: number, id: string | null, activo: boolean }[]
+  }>({ total: 0, femenino: 0, masculino: 0, periodStats: [] })
+  
+  const [loadingStats, setLoadingStats] = useState(true)
 
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Participante | null>(null)
@@ -121,6 +134,24 @@ export default function ParticipantesPage() {
   const [trayectoParticipante, setTrayectoParticipante] = useState<Participante | null>(null)
   const [loadingTrayecto, setLoadingTrayecto] = useState(false)
 
+  const aulasFiltradas = form.regionId ? regiones.find((r: any) => r.id === form.regionId)?.aulas || [] : []
+
+  const fetchStats = useCallback(async () => {
+    setLoadingStats(true)
+    const params = new URLSearchParams()
+    if (searchNombre) params.set('nombre', searchNombre)
+    if (filterUnidad) params.set('unidadId', filterUnidad)
+    if (filterGenero) params.set('genero', filterGenero)
+    if (filterTrimestre) params.set('trimestre', filterTrimestre)
+    
+    try {
+      const res = await fetch(`/api/participantes/stats?${params}`)
+      const data = await res.json()
+      setStats(data)
+    } catch { /* ignore */ }
+    setLoadingStats(false)
+  }, [searchNombre, filterUnidad, filterGenero, filterTrimestre])
+
   const fetchData = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams()
@@ -128,6 +159,15 @@ export default function ParticipantesPage() {
     if (filterUnidad) params.set('unidadId', filterUnidad)
     if (filterGenero) params.set('genero', filterGenero)
     if (filterTrimestre) params.set('trimestre', filterTrimestre)
+    params.set('page', page.toString())
+    params.set('limit', '10')
+    
+    if (selectedPeriodView === 'ACTUAL' && activePeriodo) {
+      params.set('periodoId', activePeriodo.id)
+    } else if (selectedPeriodView !== 'ACTUAL' && selectedPeriodView !== 'TODOS') {
+      const pId = stats.periodStats.find(p => p.label === selectedPeriodView)?.id
+      if (pId) params.set('periodoId', pId)
+    }
 
     const [partRes, unidRes, configRes, seccRes, regRes, perRes] = await Promise.all([
       fetch(`/api/participantes?${params}`),
@@ -141,17 +181,36 @@ export default function ParticipantesPage() {
       partRes.json(), unidRes.json(), configRes.json(), seccRes.json(), regRes.json(), perRes.json()
     ])
 
-    setParticipantes(Array.isArray(partData) ? partData : [])
+    if (partData && Array.isArray(partData.data)) {
+      setParticipantes(partData.data)
+      setTotalPages(partData.totalPages || 1)
+      setTotalRecords(partData.total || 0)
+    } else {
+      setParticipantes([])
+      setTotalPages(1)
+      setTotalRecords(0)
+    }
+    
     setUnidades(Array.isArray(unidData) ? unidData : [])
     setSecciones(Array.isArray(seccData) ? seccData : [])
     setRegiones(Array.isArray(regData) ? regData : [])
-    setPeriodos(Array.isArray(perData) ? perData.filter((p: any) => p.estado !== 'CERRADO') : [])
-    setActivePeriodo(Array.isArray(perData) ? perData.find((p: any) => p.estado === 'ACTIVO') || null : null)
+    const perArr = Array.isArray(perData) ? perData : []
+    setPeriodos(perArr.filter((p: any) => p.estado !== 'CERRADO'))
+    const active = perArr.find((p: any) => p.estado === 'ACTIVO') || null
+    
+    if (!activePeriodo && active) {
+       setActivePeriodo(active)
+    }
+    
     setCanRegister(isAdmin || configData?.inscripcionParticipantesAbierta)
     setLoading(false)
-  }, [searchNombre, filterUnidad, filterGenero, filterTrimestre, isAdmin])
+  }, [searchNombre, filterUnidad, filterGenero, filterTrimestre, page, selectedPeriodView, activePeriodo, isAdmin, stats.periodStats])
 
+  useEffect(() => { fetchStats() }, [fetchStats])
   useEffect(() => { fetchData() }, [fetchData])
+  
+  // Reset page when filters change
+  useEffect(() => { setPage(1) }, [searchNombre, filterUnidad, filterGenero, filterTrimestre, selectedPeriodView])
 
   const openCreate = () => {
     setEditing(null)
@@ -242,54 +301,7 @@ export default function ParticipantesPage() {
     }
   }
 
-  const fem = participantes.filter(p => p.genero === 'FEMENINO').length
-  const masc = participantes.filter(p => p.genero === 'MASCULINO').length
-  const selectedRegion = regiones.find(r => r.id === form.regionId)
-  const aulasFiltradas = selectedRegion?.aulas || []
-
-  const activePeriodoIds = periodos.map(p => p.id)
-
-  const currentParticipantes = participantes.filter(p => !p.periodoId || activePeriodoIds.includes(p.periodoId))
-  const oldParticipantes = participantes.filter(p => p.periodoId && !activePeriodoIds.includes(p.periodoId))
-
-  const groupedOld = oldParticipantes.reduce((acc, p) => {
-    const key = p.periodo ? `${p.periodo.anio}-${p.periodo.numero}` : 'Sin periodo'
-    if (!acc[key]) acc[key] = []
-    acc[key].push(p)
-    return acc
-  }, {} as Record<string, Participante[]>)
-
-  const groupedOldPeriods = Object.entries(groupedOld).sort(([a], [b]) => b.localeCompare(a))
-
-  const displayParticipantes = selectedPeriodView === 'ACTUAL' ? currentParticipantes : (groupedOld[selectedPeriodView] || [])
-
-  const exportToPDF = () => {
-    const doc = new jsPDF()
-    const title = selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : `Participantes del Periodo ${selectedPeriodView}`
-    doc.text(title, 14, 15)
-    
-    const tableData = displayParticipantes.map((p, index) => [
-      index + 1,
-      `${p.apellido}, ${p.nombre}`,
-      p.cedula || 'N/A',
-      p.telefono || 'N/A',
-      p.email || 'N/A',
-      p.genero === 'FEMENINO' ? 'Femenino' : 'Masculino',
-      formatTrimestre(p.trimestre)
-    ])
-
-    ;(doc as any).autoTable({
-      startY: 20,
-      head: [['#', 'Participante', 'Cédula', 'Teléfono', 'Email', 'Género', 'Nivel Actual']],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [26, 58, 107] }
-    })
-
-    doc.save(`participantes-${selectedPeriodView.toLowerCase()}.pdf`)
-    toast.success('PDF descargado exitosamente')
-  }
+  // Replaced local filtering with stats from server
 
   return (
     <div className="fade-in">
@@ -306,9 +318,6 @@ export default function ParticipantesPage() {
                <AlertCircle size={14} style={{ marginRight: '4px' }} /> No hay Periodo academico activo
              </span>
           )}
-          <button className="btn btn-secondary" onClick={exportToPDF} disabled={displayParticipantes.length === 0}>
-            <Download size={16} /> Descargar PDF
-          </button>
           {canRegister && (
             <button className="btn btn-primary" onClick={openCreate} disabled={!activePeriodo}>
               <UserPlus size={16} /> Registrar Participante
@@ -319,12 +328,16 @@ export default function ParticipantesPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
         {[
-          { label: 'Total', value: participantes.length, color: '#2d6bc4' },
-          { label: 'Femenino', value: fem, color: '#7c3aed' },
-          { label: 'Masculino', value: masc, color: '#16a34a' },
+          { label: 'Total', value: stats.total, color: '#2d6bc4' },
+          { label: 'Femenino', value: stats.femenino, color: '#7c3aed' },
+          { label: 'Masculino', value: stats.masculino, color: '#16a34a' },
         ].map(s => (
           <div key={s.label} className="card" style={{ padding: '14px', textAlign: 'center' }}>
-            <div style={{ fontSize: '26px', fontWeight: 800, color: s.color }}>{s.value}</div>
+            {loadingStats ? (
+              <div style={{ height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 size={20} className="animate-spin text-gray-400" /></div>
+            ) : (
+              <div style={{ fontSize: '26px', fontWeight: 800, color: s.color }}>{s.value}</div>
+            )}
             <div style={{ fontSize: '12px', color: '#718096', marginTop: '2px' }}>{s.label}</div>
           </div>
         ))}
@@ -384,32 +397,48 @@ export default function ParticipantesPage() {
               <Users size={16} /> Periodo Actual
             </div>
             <span style={{ fontSize: '11px', background: selectedPeriodView === 'ACTUAL' ? '#bfdbfe' : '#e2e8f0', color: selectedPeriodView === 'ACTUAL' ? '#1e3a8a' : '#64748b', padding: '2px 8px', borderRadius: '10px' }}>
-              {currentParticipantes.length}
+              {stats.periodStats.find(p => p.id === activePeriodo?.id)?.count || 0}
             </span>
           </button>
 
-          {groupedOldPeriods.length > 0 && (
+          {stats.periodStats.filter(p => p.id !== activePeriodo?.id).length > 0 && (
             <>
               <div style={{ height: '1px', background: '#e2e8f0', margin: '8px 0' }} />
-              {groupedOldPeriods.map(([periodoStr, parts]) => (
+              <button
+                onClick={() => setSelectedPeriodView('TODOS')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                  background: selectedPeriodView === 'TODOS' ? '#f8fafc' : 'white',
+                  color: selectedPeriodView === 'TODOS' ? '#0f172a' : '#475569',
+                  fontWeight: selectedPeriodView === 'TODOS' ? 700 : 500,
+                  boxShadow: selectedPeriodView === 'TODOS' ? '0 0 0 1px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.05)',
+                  transition: 'all 0.2s', marginBottom: '4px'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Users size={16} /> Todos los Históricos
+                </div>
+              </button>
+              {stats.periodStats.filter(p => p.id !== activePeriodo?.id).map((pStat) => (
                 <button
-                  key={periodoStr}
-                  onClick={() => setSelectedPeriodView(periodoStr)}
+                  key={pStat.label}
+                  onClick={() => setSelectedPeriodView(pStat.label)}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '12px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-                    background: selectedPeriodView === periodoStr ? '#f8fafc' : 'white',
-                    color: selectedPeriodView === periodoStr ? '#0f172a' : '#475569',
-                    fontWeight: selectedPeriodView === periodoStr ? 700 : 500,
-                    boxShadow: selectedPeriodView === periodoStr ? '0 0 0 1px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.05)',
+                    background: selectedPeriodView === pStat.label ? '#f8fafc' : 'white',
+                    color: selectedPeriodView === pStat.label ? '#0f172a' : '#475569',
+                    fontWeight: selectedPeriodView === pStat.label ? 700 : 500,
+                    boxShadow: selectedPeriodView === pStat.label ? '0 0 0 1px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.05)',
                     transition: 'all 0.2s'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Calendar size={16} /> {periodoStr}
+                    <Calendar size={16} /> {pStat.label}
                   </div>
-                  <span style={{ fontSize: '11px', background: selectedPeriodView === periodoStr ? '#e2e8f0' : '#f1f5f9', color: selectedPeriodView === periodoStr ? '#334155' : '#94a3b8', padding: '2px 8px', borderRadius: '10px' }}>
-                    {parts.length}
+                  <span style={{ fontSize: '11px', background: selectedPeriodView === pStat.label ? '#e2e8f0' : '#f1f5f9', color: selectedPeriodView === pStat.label ? '#334155' : '#94a3b8', padding: '2px 8px', borderRadius: '10px' }}>
+                    {pStat.count}
                   </span>
                 </button>
               ))}
@@ -425,7 +454,7 @@ export default function ParticipantesPage() {
                 Cargando participantes...
               </div>
             ) : (() => {
-              if (displayParticipantes.length === 0) {
+              if (participantes.length === 0) {
                 return (
                   <div className="empty-state" style={{ padding: '60px 20px' }}>
                     <Users size={48} style={{ margin: '0 auto', opacity: 0.3 }} />
@@ -442,30 +471,32 @@ export default function ParticipantesPage() {
               }
 
               return (
-                <div style={{ overflowX: 'auto' }}>
-                  <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {selectedPeriodView === 'ACTUAL' ? <Users size={18} color="#2d6bc4" /> : <Calendar size={18} color="#64748b" />}
-                    <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1a3a6b', margin: 0 }}>
-                      {selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : `Participantes del Periodo ${selectedPeriodView}`}
-                    </h3>
-                  </div>
-                  <table className="data-table" style={{ margin: 0, border: 'none' }}>
-                    <thead>
-                      <tr>
-                        <th>Participante</th>
-                        <th>Cedula</th>
-                        <th>Contacto</th>
-                        <th>Genero</th>
-                        <th>Nivel Actual</th>
-                        <th>Inscrito en</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayParticipantes.map(p => {
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {selectedPeriodView === 'ACTUAL' ? <Users size={18} color="#2d6bc4" /> : <Calendar size={18} color="#64748b" />}
+                      <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1a3a6b', margin: 0 }}>
+                        {selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : (selectedPeriodView === 'TODOS' ? 'Todos los Históricos' : `Participantes del Periodo ${selectedPeriodView}`)}
+                      </h3>
+                    </div>
+                    <table className="data-table" style={{ margin: 0, border: 'none' }}>
+                      <thead>
+                        <tr>
+                          <th>Participante</th>
+                          <th>Cedula</th>
+                          <th>Contacto</th>
+                          <th>Genero</th>
+                          <th>Nivel Actual</th>
+                          <th>Inscrito en</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {participantes.map((p, i) => {
                         const tc = trimColors[p.trimestre || ''] || { bg: '#f8fafc', color: '#64748b', border: '#cbd5e1' }
                         return (
                           <tr key={p.id}>
+                            <td style={{ color: '#a0aec0', fontWeight: 500 }}>{(page - 1) * 10 + i + 1}</td>
                             <td><div style={{ fontWeight: 600, color: '#1a3a6b' }}>{p.apellido}, {p.nombre}</div></td>
                             <td><span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{p.cedula || '\u2014'}</span></td>
                             <td>
@@ -519,8 +550,37 @@ export default function ParticipantesPage() {
                           </tr>
                         )
                       })}
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderTop: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>
+                        Mostrando {(page - 1) * 10 + 1} - {Math.min(page * 10, totalRecords)} de {totalRecords}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          className="btn btn-secondary btn-sm" 
+                          disabled={page === 1}
+                          onClick={() => setPage(page - 1)}
+                        >
+                          <ChevronLeft size={16} /> Anterior
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '13px', fontWeight: 600 }}>
+                          Página {page} de {totalPages}
+                        </div>
+                        <button 
+                          className="btn btn-secondary btn-sm" 
+                          disabled={page >= totalPages}
+                          onClick={() => setPage(page + 1)}
+                        >
+                          Siguiente <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })()}

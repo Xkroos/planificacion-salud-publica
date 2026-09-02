@@ -53,7 +53,7 @@ async function getStats() {
 async function getRecentCronogramas(activePeriodId: string) {
   if (activePeriodId === 'none') return []
   return prisma.cronograma.findMany({
-    take: 5,
+    take: 3,
     where: { periodoId: activePeriodId },
     orderBy: { createdAt: 'desc' },
     include: {

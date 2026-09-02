@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  basePath: '/sistema',
   devIndicators: false,
   allowedDevOrigins: ['192.168.1.130'],
   async headers() {
