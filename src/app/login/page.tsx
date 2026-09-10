@@ -1,36 +1,27 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { BookOpen, Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { loginAction } from './actions'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
+    startTransition(async () => {
+      const result = await loginAction(email, password)
+      if (result?.error) {
+        setError(result.error)
+      }
+      // Si no hay error, next-auth redirige automáticamente (redirectTo: '/')
     })
-
-    if (result?.error) {
-      setError('Credenciales incorrectas. Verifique su email y contraseña.')
-      setLoading(false)
-    } else {
-      router.push('/')
-      router.refresh()
-    }
   }
 
   return (
@@ -110,10 +101,10 @@ export default function LoginPage() {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={loading}
+            disabled={isPending}
             style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '15px', marginTop: '8px', background: '#0d6efd', color: '#FFFFFF', border: '1px solid #0d6efd' }}
           >
-            {loading ? (
+            {isPending ? (
               <>
                 <span style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />
                 Iniciando sesión...
