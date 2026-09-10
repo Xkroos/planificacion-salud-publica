@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { signOutAction } from '@/app/actions/auth'
 import {
   LayoutDashboard, Users, Calendar, MapPin, UserCheck,
   BookOpen, ClipboardList, FileText, CheckSquare,
@@ -386,6 +387,7 @@ function UserProfileModal({ onClose }: { onClose: () => void }) {
 export default function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const [isPendingSignOut, startSignOut] = useTransition()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -499,7 +501,7 @@ export default function Sidebar() {
         )}
 
         <button
-          onClick={() => signOut({ callbackUrl: '/sistema/login' })}
+          onClick={() => startSignOut(() => signOutAction())}
           className="nav-item"
           style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', justifyContent: collapsed ? 'center' : 'flex-start', color: '#dc2626' }}
           title={collapsed ? 'Cerrar sesión' : undefined}
