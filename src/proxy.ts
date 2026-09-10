@@ -11,7 +11,9 @@ export default auth((req) => {
 
   if (isPublic) {
     if (isLoggedIn && isAuthRoute) {
-      return NextResponse.redirect(new URL('/', req.url))
+      const url = req.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
     }
     return NextResponse.next()
   }
@@ -20,13 +22,17 @@ export default auth((req) => {
     if (nextUrl.pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
-    return NextResponse.redirect(new URL('/login', req.url))
+    const url = req.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 
   // Proteger rutas solo de admin
   const isAdminRoute = nextUrl.pathname.startsWith('/usuarios')
   if (isAdminRoute && req.auth?.user?.role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/', req.url))
+    const url = req.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
   }
 
   return NextResponse.next()

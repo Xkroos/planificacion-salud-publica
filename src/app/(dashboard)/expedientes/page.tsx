@@ -25,7 +25,7 @@ export default function ExpedientesPage() {
   const fetchPeriodos = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/periodos')
+      const res = await fetch('/sistema/api/periodos')
       const data = await res.json()
       // Filtrar solo los cerrados
       setPeriodos(data.filter((p: Periodo) => p.estado === 'CERRADO'))
@@ -133,9 +133,9 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
       setLoading(true)
       try {
         const [resCr, resPa, resConf, resBcv] = await Promise.all([
-          fetch(`/api/cronograma?periodoId=${periodo.id}`),
-          fetch(`/api/participantes?periodoId=${periodo.id}`),
-          fetch('/api/configuracion'),
+          fetch(`/sistema/api/cronograma?periodoId=${periodo.id}`),
+          fetch(`/sistema/api/participantes?periodoId=${periodo.id}`),
+          fetch('/sistema/api/configuracion'),
           fetch('https://ve.dolarapi.com/v1/dolares/oficial').catch(() => null)
         ])
         

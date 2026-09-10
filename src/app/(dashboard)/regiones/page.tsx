@@ -24,7 +24,7 @@ export default function RegionesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'region' | 'aula'; id: string } | null>(null)
 
   const fetch_ = async () => {
-    const res = await fetch('/api/regiones')
+    const res = await fetch('/sistema/api/regiones')
     setRegiones(await res.json())
     setLoading(false)
   }

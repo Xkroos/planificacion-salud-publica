@@ -57,9 +57,9 @@ export default function EstadisticasPage() {
   const cargarFiltros = async () => {
     try {
       const [resPeriodos, resRegiones, resAulas] = await Promise.all([
-        fetch('/api/periodos'),
-        fetch('/api/regiones'),
-        fetch('/api/aulas')
+        fetch('/sistema/api/periodos'),
+        fetch('/sistema/api/regiones'),
+        fetch('/sistema/api/aulas')
       ])
       if (resPeriodos.ok) setPeriodos(await resPeriodos.json())
       if (resRegiones.ok) setRegiones(await resRegiones.json())
@@ -77,7 +77,7 @@ export default function EstadisticasPage() {
       if (filtros.regionId) params.append('regionId', filtros.regionId)
       if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
 
-      const res = await fetch(`/api/estadisticas?${params.toString()}`)
+      const res = await fetch(`/sistema/api/estadisticas?${params.toString()}`)
       if (res.ok) {
         setEstadisticas(await res.json())
       } else {
@@ -299,7 +299,7 @@ export default function EstadisticasPage() {
       if (filtros.regionId) params.append('regionId', filtros.regionId)
       if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
 
-      const res = await fetch(`/api/participantes?${params.toString()}`)
+      const res = await fetch(`/sistema/api/participantes?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar participantes')
       const data = await res.json()
 
@@ -370,7 +370,7 @@ export default function EstadisticasPage() {
       if (filtros.regionId) params.append('regionId', filtros.regionId)
       if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
 
-      const res = await fetch(`/api/docentes?${params.toString()}`)
+      const res = await fetch(`/sistema/api/docentes?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar docentes')
       const data = await res.json()
 

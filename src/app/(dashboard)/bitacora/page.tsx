@@ -26,7 +26,7 @@ export default function BitacoraPage() {
   const fetchLogs = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/bitacora')
+      const res = await fetch('/sistema/api/bitacora')
       if (res.ok) {
         const data = await res.json()
         setLogs(data)

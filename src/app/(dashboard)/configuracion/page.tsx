@@ -21,7 +21,7 @@ export default function ConfiguracionPage() {
 
   const fetchConfig = async () => {
     try {
-      const configRes = await fetch('/api/configuracion')
+      const configRes = await fetch('/sistema/api/configuracion')
       setConfig(await configRes.json())
     } catch {
       setMessage({ type: 'error', text: 'Error al cargar la configuración' })
@@ -37,7 +37,7 @@ export default function ConfiguracionPage() {
     setSaving(true)
     setMessage(null)
     try {
-      const res = await fetch('/api/configuracion', {
+      const res = await fetch('/sistema/api/configuracion', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...config, [field]: !config[field] }),

@@ -60,9 +60,9 @@ export default function AgregarDocentePage() {
     const asigId = searchParams.get('asignacionId')
 
     Promise.all([
-      fetch(`/api/cronograma/${id}`).then(r => r.json()),
-      fetch('/api/docentes').then(r => r.json()),
-      fetch('/api/unidades').then(r => r.json()),
+      fetch(`/sistema/api/cronograma/${id}`).then(r => r.json()),
+      fetch('/sistema/api/docentes').then(r => r.json()),
+      fetch('/sistema/api/unidades').then(r => r.json()),
     ]).then(([cron, docs, unis]) => {
       if (cron.error) {
         setError(cron.error)

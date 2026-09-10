@@ -145,7 +145,7 @@ function UserProfileModal({ onClose }: { onClose: () => void }) {
 
     setLoading(true)
     try {
-      const res = await fetch('/api/profile', {
+      const res = await fetch('/sistema/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo: 'password', passwordActual: pwActual, passwordNueva: pwNueva }),
@@ -171,7 +171,7 @@ function UserProfileModal({ onClose }: { onClose: () => void }) {
 
     setLoading(true)
     try {
-      const res = await fetch('/api/profile', {
+      const res = await fetch('/sistema/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo: 'email', passwordActual: pwParaEmail, emailNuevo }),

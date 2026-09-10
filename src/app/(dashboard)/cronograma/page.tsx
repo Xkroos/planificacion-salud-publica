@@ -56,10 +56,10 @@ export default function CronogramaListPage() {
 
     try {
       const [resCr, resConf, resPer, resReg] = await Promise.all([
-        fetch(`/api/cronograma?${params}`),
-        fetch('/api/configuracion'),
-        fetch('/api/periodos'),
-        fetch('/api/regiones')
+        fetch(`/sistema/api/cronograma?${params}`),
+        fetch('/sistema/api/configuracion'),
+        fetch('/sistema/api/periodos'),
+        fetch('/sistema/api/regiones')
       ])
       
       const crData = await resCr.json()
@@ -90,7 +90,7 @@ export default function CronogramaListPage() {
   useEffect(() => { setPage(1) }, [search, filterRegion, filterAula, filterTrimestre])
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/cronograma/${id}`, { method: 'DELETE' })
+    await fetch(`/sistema/api/cronograma/${id}`, { method: 'DELETE' })
     await fetch_()
     setDeleteConfirm(null)
   }
@@ -315,9 +315,9 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/periodos').then(r => r.json()),
-      fetch('/api/regiones').then(r => r.json()),
-      fetch('/api/unidades').then(r => r.json())
+      fetch('/sistema/api/periodos').then(r => r.json()),
+      fetch('/sistema/api/regiones').then(r => r.json()),
+      fetch('/sistema/api/unidades').then(r => r.json())
     ]).then(([per, reg, uni]) => {
       setPeriodos(per.filter((p: any) => p.estado !== 'CERRADO'))
       setRegiones(reg)
@@ -354,7 +354,7 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
     setError('')
     setSaving(true)
     try {
-      const res = await fetch('/api/cronograma', {
+      const res = await fetch('/sistema/api/cronograma', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, materias })

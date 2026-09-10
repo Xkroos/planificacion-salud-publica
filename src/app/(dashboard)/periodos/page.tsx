@@ -45,7 +45,7 @@ export default function PeriodosPage() {
 
   const fetchPeriodos = useCallback(async () => {
     setLoading(true)
-    const res = await fetch('/api/periodos')
+    const res = await fetch('/sistema/api/periodos')
     setPeriodos(await res.json())
     setLoading(false)
   }, [])
@@ -65,7 +65,7 @@ export default function PeriodosPage() {
   const handleDelete = async (id: string) => {
     setDeleteError('')
     try {
-      const res = await fetch(`/api/periodos/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/sistema/api/periodos/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
         setDeleteError(data.error || 'Error al eliminar el periodo')
@@ -81,7 +81,7 @@ export default function PeriodosPage() {
   const handleFinalizar = async (id: string) => {
     setFinalizarError('')
     try {
-      const res = await fetch(`/api/periodos/${id}/finalizar`, { method: 'PATCH' })
+      const res = await fetch(`/sistema/api/periodos/${id}/finalizar`, { method: 'PATCH' })
       if (!res.ok) {
         const data = await res.json()
         setFinalizarError(data.error || 'Error al finalizar el periodo')
@@ -293,7 +293,7 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
   // Cargar resolución global si el periodo no tiene una
   useEffect(() => {
     if (!editing?.resolucion) {
-      fetch('/api/configuracion')
+      fetch('/sistema/api/configuracion')
         .then(r => r.json())
         .then(d => { if (d.resolucion) setForm(prev => ({ ...prev, resolucion: d.resolucion })) })
         .catch(() => {})
@@ -313,7 +313,7 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         }),
-        fetch('/api/configuracion', {
+        fetch('/sistema/api/configuracion', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ resolucion: form.resolucion || null }),

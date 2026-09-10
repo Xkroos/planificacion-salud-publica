@@ -21,7 +21,7 @@ export default function UnidadesPage() {
   const [error, setError] = useState('')
 
   const fetch_ = async () => {
-    const res = await fetch('/api/unidades')
+    const res = await fetch('/sistema/api/unidades')
     setUnidades(await res.json())
     setLoading(false)
   }
@@ -44,7 +44,7 @@ export default function UnidadesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/unidades/${id}`, { method: 'DELETE' })
+    await fetch(`/sistema/api/unidades/${id}`, { method: 'DELETE' })
     await fetch_()
     setDeleteConfirm(null)
   }

@@ -39,7 +39,7 @@ export default function ReportesPage() {
   const [profSeccion, setProfSeccion] = useState('')
 
   useEffect(() => {
-    fetch('/api/cronograma').then(r => r.json()).then(d => {
+    fetch('/sistema/api/cronograma').then(r => r.json()).then(d => {
       if (Array.isArray(d)) {
         setCronogramas(d)
       } else {
@@ -90,7 +90,7 @@ export default function ReportesPage() {
       const { jsPDF } = await import('jspdf')
       const autoTable = (await import('jspdf-autotable')).default
 
-      const res = await fetch(`/api/participantes?aulaTerritorialId=${cronograma.aulaTerritorial.id}&periodoId=${cronograma.periodo.id}`)
+      const res = await fetch(`/sistema/api/participantes?aulaTerritorialId=${cronograma.aulaTerritorial.id}&periodoId=${cronograma.periodo.id}`)
       const allParts = await res.json()
       
       const enrolled = allParts.filter((p: any) => p.cronogramas?.some((cp: any) => cp.cronogramaId === cronograma.id))

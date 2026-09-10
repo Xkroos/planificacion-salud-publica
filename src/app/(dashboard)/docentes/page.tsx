@@ -107,7 +107,7 @@ export default function DocentesPage() {
     params.set('limit', '10')
 
     try {
-      const res = await fetch(`/api/docentes?${params}`)
+      const res = await fetch(`/sistema/api/docentes?${params}`)
       const data = await res.json()
       if (data && Array.isArray(data.data)) {
         setDocentes(data.data)
@@ -127,7 +127,7 @@ export default function DocentesPage() {
 
   const fetchAulas = async () => {
     try {
-      const res = await fetch('/api/regiones')
+      const res = await fetch('/sistema/api/regiones')
       const regionesData = await res.json()
       setRegiones(regionesData)
       
@@ -143,7 +143,7 @@ export default function DocentesPage() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('/api/configuracion')
+      const res = await fetch('/sistema/api/configuracion')
       const data = await res.json()
       setConfigOpen(data.registroDocentesAbierto)
     } catch { /* ignore */ }
@@ -151,7 +151,7 @@ export default function DocentesPage() {
 
   const fetchPeriodos = async () => {
     try {
-      const res = await fetch('/api/periodos')
+      const res = await fetch('/sistema/api/periodos')
       const data = await res.json()
       setActivePeriodo(data.find((p: any) => p.estado === 'ACTIVO') || null)
     } catch { /* ignore */ }
@@ -237,7 +237,7 @@ export default function DocentesPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/docentes/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/sistema/api/docentes/${id}`, { method: 'DELETE' })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error)
@@ -258,7 +258,7 @@ export default function DocentesPage() {
       // Optimistic update
       setDocentes(prev => prev.map(doc => doc.id === d.id ? { ...doc, activo: !doc.activo } : doc))
       
-      const res = await fetch(`/api/docentes/${d.id}`, {
+      const res = await fetch(`/sistema/api/docentes/${d.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

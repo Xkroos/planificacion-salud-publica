@@ -9,6 +9,7 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const BLOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutos
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  basePath: '/sistema/api/auth',
   trustHost: true,
   providers: [
     Credentials({

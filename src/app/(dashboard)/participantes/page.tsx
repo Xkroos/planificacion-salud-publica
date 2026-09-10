@@ -145,7 +145,7 @@ export default function ParticipantesPage() {
     if (filterTrimestre) params.set('trimestre', filterTrimestre)
     
     try {
-      const res = await fetch(`/api/participantes/stats?${params}`)
+      const res = await fetch(`/sistema/api/participantes/stats?${params}`)
       const data = await res.json()
       setStats(data)
     } catch { /* ignore */ }
@@ -170,12 +170,12 @@ export default function ParticipantesPage() {
     }
 
     const [partRes, unidRes, configRes, seccRes, regRes, perRes] = await Promise.all([
-      fetch(`/api/participantes?${params}`),
-      fetch('/api/unidades'),
-      fetch('/api/configuracion'),
-      fetch('/api/secciones'),
-      fetch('/api/regiones'),
-      fetch('/api/periodos'),
+      fetch(`/sistema/api/participantes?${params}`),
+      fetch('/sistema/api/unidades'),
+      fetch('/sistema/api/configuracion'),
+      fetch('/sistema/api/secciones'),
+      fetch('/sistema/api/regiones'),
+      fetch('/sistema/api/periodos'),
     ])
     const [partData, unidData, configData, seccData, regData, perData] = await Promise.all([
       partRes.json(), unidRes.json(), configRes.json(), seccRes.json(), regRes.json(), perRes.json()
@@ -252,7 +252,7 @@ export default function ParticipantesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/participantes/${id}`, { method: 'DELETE' })
+    await fetch(`/sistema/api/participantes/${id}`, { method: 'DELETE' })
     setDeleteConfirm(null)
     await fetchData()
   }
@@ -269,7 +269,7 @@ export default function ParticipantesPage() {
     setErrorEstatus('')
     setSavingEstatus(true)
     try {
-      const res = await fetch(`/api/participantes/${estatusParticipante.id}/estatus`, {
+      const res = await fetch(`/sistema/api/participantes/${estatusParticipante.id}/estatus`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trimestreNuevo: nuevoTrimestre }),
@@ -291,7 +291,7 @@ export default function ParticipantesPage() {
     setLoadingTrayecto(true)
     setTrayectoParticipante(p)
     try {
-      const res = await fetch(`/api/participantes/${p.id}`)
+      const res = await fetch(`/sistema/api/participantes/${p.id}`)
       const data = await res.json()
       setTrayectoParticipante(data)
     } catch {

@@ -29,8 +29,8 @@ export default function FinanzasSelectorPage() {
     const fetchData = async () => {
       try {
         const [regRes, croRes] = await Promise.all([
-          fetch('/api/regiones'),
-          fetch('/api/cronograma')
+          fetch('/sistema/api/regiones'),
+          fetch('/sistema/api/cronograma')
         ])
         if (regRes.ok) setRegiones(await regRes.json())
         if (croRes.ok) setCronogramas(await croRes.json())

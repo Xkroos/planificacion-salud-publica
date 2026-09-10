@@ -83,7 +83,7 @@ export default function EstructuraCostosPage() {
 
   const fetchResolucion = async () => {
     try {
-      const res = await fetch('/api/configuracion')
+      const res = await fetch('/sistema/api/configuracion')
       if (res.ok) {
         const data = await res.json()
         if (data.resolucion) setResolucion(data.resolucion)
@@ -110,7 +110,7 @@ export default function EstructuraCostosPage() {
 
   const fetchCronograma = async () => {
     try {
-      const res = await fetch(`/api/cronograma/${id}`)
+      const res = await fetch(`/sistema/api/cronograma/${id}`)
       if (!res.ok) throw new Error('Error al cargar')
       const data = await res.json()
       setCronograma(data)
@@ -158,7 +158,7 @@ export default function EstructuraCostosPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const res = await fetch(`/api/cronograma/${id}/costos`, {
+      const res = await fetch(`/sistema/api/cronograma/${id}/costos`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ asignaciones: asignaciones.map(a => ({ id: a.id, hp: parseFloat(a.hp) || 0, viatico: parseFloat(a.viatico) || 0 })), aulaCostos, resolucion })

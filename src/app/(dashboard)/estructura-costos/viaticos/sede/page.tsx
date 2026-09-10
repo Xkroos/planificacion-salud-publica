@@ -17,7 +17,7 @@ export default function ViaticosPage() {
 
   const fetchRegiones = async () => {
     try {
-      const res = await fetch('/api/regiones')
+      const res = await fetch('/sistema/api/regiones')
       const data = await res.json()
       setRegiones(data)
 
@@ -61,7 +61,7 @@ export default function ViaticosPage() {
         regionId: aula.regionId
       }
 
-      const res = await fetch(`/api/aulas/${aula.id}`, {
+      const res = await fetch(`/sistema/api/aulas/${aula.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

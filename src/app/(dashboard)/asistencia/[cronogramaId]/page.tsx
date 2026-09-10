@@ -35,14 +35,14 @@ export default function AsistenciaPage() {
 
 
   useEffect(() => {
-    fetch(`/api/cronograma/${cronogramaId}`)
+    fetch(`/sistema/api/cronograma/${cronogramaId}`)
       .then(r => r.json())
       .then(d => { setCronograma(d); setLoading(false) })
   }, [cronogramaId])
 
   useEffect(() => {
     if (selectedFecha && cronograma) {
-      fetch(`/api/asistencia?cronogramaId=${cronogramaId}&fechaId=${selectedFecha}`)
+      fetch(`/sistema/api/asistencia?cronogramaId=${cronogramaId}&fechaId=${selectedFecha}`)
         .then(r => r.json())
         .then(d => {
           const map: Record<string, string> = {}
@@ -58,7 +58,7 @@ export default function AsistenciaPage() {
     const registros = Object.entries(asistencias).map(([participanteId, estado]) => ({
       participanteId, fechaEncuentroId: selectedFecha, estado
     }))
-    await fetch('/api/asistencia', {
+    await fetch('/sistema/api/asistencia', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ registros })
     })

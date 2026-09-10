@@ -17,7 +17,7 @@ export default function UsuariosPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const fetch_ = async () => {
-    const res = await fetch('/api/usuarios')
+    const res = await fetch('/sistema/api/usuarios')
     setUsuarios(await res.json())
     setLoading(false)
   }
@@ -46,7 +46,7 @@ export default function UsuariosPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/usuarios/${id}`, { method: 'DELETE' })
+    await fetch(`/sistema/api/usuarios/${id}`, { method: 'DELETE' })
     await fetch_()
     setDeleteConfirm(null)
   }

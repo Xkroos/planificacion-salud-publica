@@ -74,7 +74,7 @@ export default function CronogramaDetailPage() {
     }
     setGenerandoFechas(true)
     try {
-      const res = await fetch(`/api/cronograma/${id}/generar-fechas`, {
+      const res = await fetch(`/sistema/api/cronograma/${id}/generar-fechas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fechaInicio, horaInicio: horaInicioBase })
@@ -117,7 +117,7 @@ export default function CronogramaDetailPage() {
     e.preventDefault()
     setSavingSimple(true)
     try {
-      const res = await fetch(`/api/cronograma/${id}/cantidad-simple`, {
+      const res = await fetch(`/sistema/api/cronograma/${id}/cantidad-simple`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ participantesFem: simpleFem, participantesMasc: simpleMasc })
@@ -136,8 +136,8 @@ export default function CronogramaDetailPage() {
   const fetch_ = async () => {
     try {
       const [res, uRes] = await Promise.all([
-        fetch(`/api/cronograma/${id}`),
-        fetch(`/api/unidades`)
+        fetch(`/sistema/api/cronograma/${id}`),
+        fetch(`/sistema/api/unidades`)
       ])
       const d = await res.json()
       const uList = await uRes.json()
@@ -158,7 +158,7 @@ export default function CronogramaDetailPage() {
   useEffect(() => { fetch_() }, [id])
 
   const handleDeleteAsign = async (asignId: string) => {
-    await fetch(`/api/asignaciones/${asignId}`, { method: 'DELETE' })
+    await fetch(`/sistema/api/asignaciones/${asignId}`, { method: 'DELETE' })
     await fetch_()
     setDeleteAsign(null)
   }
@@ -173,7 +173,7 @@ export default function CronogramaDetailPage() {
         viatico: 0,
         fechas: asign.fechas.map(f => f.fecha.split('T')[0])
       };
-      const res = await fetch(`/api/asignaciones/${asignId}`, {
+      const res = await fetch(`/sistema/api/asignaciones/${asignId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -188,7 +188,7 @@ export default function CronogramaDetailPage() {
 
   const handleUpdateAsign = async () => {
     setSavingAsign(true)
-    await fetch(`/api/asignaciones/${editAsign.id}`, {
+    await fetch(`/sistema/api/asignaciones/${editAsign.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editAsign)
@@ -230,8 +230,8 @@ export default function CronogramaDetailPage() {
       const aulaTerritorialId = data?.aulaTerritorial.id
       const periodoId = data?.periodo.id
       const [partsRes, unitsRes] = await Promise.all([
-        fetch(`/api/participantes?regionId=${regionId}&aulaTerritorialId=${aulaTerritorialId}&periodoId=${periodoId}`),
-        fetch(`/api/unidades`)
+        fetch(`/sistema/api/participantes?regionId=${regionId}&aulaTerritorialId=${aulaTerritorialId}&periodoId=${periodoId}`),
+        fetch(`/sistema/api/unidades`)
       ])
       const parts = await partsRes.json()
       const units = await unitsRes.json()
@@ -267,7 +267,7 @@ export default function CronogramaDetailPage() {
         return
       }
 
-      const res = await fetch(`/api/cronograma/${id}/participantes`, {
+      const res = await fetch(`/sistema/api/cronograma/${id}/participantes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ participantesIds: pIds, unidadesIds })
@@ -289,7 +289,7 @@ export default function CronogramaDetailPage() {
 
   const handleDesinscribir = async (participanteId: string) => {
     try {
-      const res = await fetch(`/api/cronograma/${id}/participantes?participanteId=${participanteId}`, {
+      const res = await fetch(`/sistema/api/cronograma/${id}/participantes?participanteId=${participanteId}`, {
         method: 'DELETE'
       })
       if (!res.ok) throw new Error('Error al desinscribir')

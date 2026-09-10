@@ -11,7 +11,7 @@ export default function EstructuraCostosHub() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    fetch('/api/configuracion')
+    fetch('/sistema/api/configuracion')
       .then(r => r.json())
       .then(d => { if (d.resolucion) setResolucion(d.resolucion) })
       .catch(() => { })
@@ -21,7 +21,7 @@ export default function EstructuraCostosHub() {
     setSaving(true)
     setSaved(false)
     try {
-      const res = await fetch('/api/configuracion', {
+      const res = await fetch('/sistema/api/configuracion', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resolucion: resolucion || null })
