@@ -39,7 +39,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="login-logo">
           <div style={{ width: '280px', height: 'auto', margin: '-40px auto -50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/logo-unerg.png" alt="Logo UNERG" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
+            <img src="/sistema/logo-unerg.png" alt="Logo UNERG" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
           </div>
           <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#000000', marginBottom: '8px', marginTop: '0' }}>
             Salud Publica
@@ -126,7 +126,7 @@ export default function LoginPage() {
 
         {/* Footer Logo */}
         <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'center' }}>
-          <img src="/plan-unerg.png" alt="Plan UNERG" style={{ width: '100%', maxWidth: '240px', height: 'auto', objectFit: 'contain' }} />
+          <img src="/sistema/plan-unerg.png" alt="Plan UNERG" style={{ width: '100%', maxWidth: '240px', height: 'auto', objectFit: 'contain' }} />
         </div>
       </div>
 

@@ -111,7 +111,7 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
           <div style={{ width: '180px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/logo-caminos.png" alt="Caminos y Horizontes" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            <img src="/sistema/logo-caminos.png" alt="Caminos y Horizontes" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           </div>
           
           <div style={{ textAlign: 'center', flex: 1, fontSize: '9px', fontWeight: 'bold', lineHeight: '1.2' }}>
@@ -128,7 +128,7 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
 
         {/* Absolute UNERG Logo */}
         <div style={{ position: 'absolute', top: '-30px', right: '110px', width: '160px', height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <img src="/logo-unerg.png" alt="UNERG" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src="/sistema/logo-unerg.png" alt="UNERG" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
 
         <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 'bold', textDecoration: 'underline', marginTop: '10px' }}>

@@ -410,7 +410,7 @@ export default function Sidebar() {
       {/* Mobile Top Header (only visible on small screens) */}
       <div className="mobile-header">
         <div className="mobile-header-logo">
-          <img src="/logo-unerg.png" alt="Logo UNERG" style={{ width: '32px', height: '32px', objectFit: 'contain', background: 'transparent', transform: 'scale(1.8)', filter: 'drop-shadow(0px 0px 2px rgba(255,255,255,0.8))' }} />
+          <img src="/sistema/logo-unerg.png" alt="Logo UNERG" style={{ width: '32px', height: '32px', objectFit: 'contain', background: 'transparent', transform: 'scale(1.8)', filter: 'drop-shadow(0px 0px 2px rgba(255,255,255,0.8))' }} />
           <span style={{ fontSize: '14px', fontWeight: 700, color: '#000000', marginLeft: '12px' }}>UNERG Postgrado</span>
         </div>
         <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)}>
@@ -431,7 +431,7 @@ export default function Sidebar() {
         {/* Logo */}
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon" style={{ background: 'transparent', width: '48px', height: '48px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/logo-unerg.png" alt="Logo UNERG" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.8)', filter: 'drop-shadow(0px 0px 2px rgba(255,255,255,0.8))' }} />
+          <img src="/sistema/logo-unerg.png" alt="Logo UNERG" style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.8)', filter: 'drop-shadow(0px 0px 2px rgba(255,255,255,0.8))' }} />
         </div>
         {!collapsed && (
           <div className="sidebar-logo-text">
