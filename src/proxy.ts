@@ -5,14 +5,14 @@ export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
 
-  const isAuthRoute = nextUrl.pathname.startsWith('/login')
+  const isAuthRoute = nextUrl.pathname === '/login' || nextUrl.pathname === '/sistema/login'
   const isApiAuth = nextUrl.pathname.startsWith('/api/auth')
   const isPublic = isAuthRoute || isApiAuth
 
   if (isPublic) {
     if (isLoggedIn && isAuthRoute) {
       const url = req.nextUrl.clone()
-      url.pathname = '/'
+      url.pathname = '/sistema'
       return NextResponse.redirect(url)
     }
     return NextResponse.next()
@@ -23,7 +23,7 @@ export default auth((req) => {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
     const url = req.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/sistema/login'
     return NextResponse.redirect(url)
   }
 
@@ -31,7 +31,7 @@ export default auth((req) => {
   const isAdminRoute = nextUrl.pathname.startsWith('/usuarios')
   if (isAdminRoute && req.auth?.user?.role !== 'ADMIN') {
     const url = req.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/sistema'
     return NextResponse.redirect(url)
   }
 
