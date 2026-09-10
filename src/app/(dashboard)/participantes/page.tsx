@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -236,7 +236,7 @@ export default function ParticipantesPage() {
     setError('')
     setSaving(true)
     try {
-      const url = editing ? `/api/participantes/${editing.id}` : '/api/participantes'
+      const url = editing ? `/sistema/api/participantes/${editing.id}` : '/sistema/api/participantes'
       const method = editing ? 'PUT' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const data = await res.json()

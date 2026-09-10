@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { MapPin, Plus, Pencil, Trash2, X, Building2, ChevronDown, ChevronRight } from 'lucide-react'
@@ -34,7 +34,7 @@ export default function RegionesPage() {
   const saveRegion = async () => {
     setSaving(true)
     try {
-      const url = editingRegion ? `/api/regiones/${editingRegion.id}` : '/api/regiones'
+      const url = editingRegion ? `/sistema/api/regiones/${editingRegion.id}` : '/sistema/api/regiones'
       await fetch(url, { method: editingRegion ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(regionForm) })
       await fetch_()
       setShowRegionModal(false)
@@ -44,7 +44,7 @@ export default function RegionesPage() {
   const saveAula = async () => {
     setSaving(true)
     try {
-      const url = editingAula ? `/api/aulas/${editingAula.id}` : '/api/aulas'
+      const url = editingAula ? `/sistema/api/aulas/${editingAula.id}` : '/sistema/api/aulas'
       await fetch(url, { method: editingAula ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(aulaForm) })
       await fetch_()
       setShowAulaModal(false)
@@ -53,7 +53,7 @@ export default function RegionesPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return
-    const url = deleteConfirm.type === 'region' ? `/api/regiones/${deleteConfirm.id}` : `/api/aulas/${deleteConfirm.id}`
+    const url = deleteConfirm.type === 'region' ? `/sistema/api/regiones/${deleteConfirm.id}` : `/sistema/api/aulas/${deleteConfirm.id}`
     await fetch(url, { method: 'DELETE' })
     await fetch_()
     setDeleteConfirm(null)

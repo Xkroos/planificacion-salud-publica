@@ -32,7 +32,7 @@ export default function UsuariosPage() {
     if (!editing && !form.password) { setError('La contraseña es requerida para nuevos usuarios'); return }
     setSaving(true)
     try {
-      const url = editing ? `/api/usuarios/${editing.id}` : '/api/usuarios'
+      const url = editing ? `/sistema/api/usuarios/${editing.id}` : '/sistema/api/usuarios'
       const res = await fetch(url, {
         method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },

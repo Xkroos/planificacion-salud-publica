@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
@@ -215,7 +215,7 @@ export default function DocentesPage() {
     setSaving(true)
     setError('')
     try {
-      const url = editing ? `/api/docentes/${editing.id}` : '/api/docentes'
+      const url = editing ? `/sistema/api/docentes/${editing.id}` : '/sistema/api/docentes'
       const method = editing ? 'PUT' : 'POST'
       const res = await fetch(url, {
         method,

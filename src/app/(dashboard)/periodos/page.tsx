@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Plus, Pencil, Trash2, X, Loader2 } from 'lucide-react'
@@ -304,7 +304,7 @@ function PeriodoModal({ editing, latestPeriodo, onClose, onSaved }: { editing: P
     setError('')
     setSaving(true)
     try {
-      const url = editing ? `/api/periodos/${editing.id}` : '/api/periodos'
+      const url = editing ? `/sistema/api/periodos/${editing.id}` : '/sistema/api/periodos'
       const method = editing ? 'PUT' : 'POST'
       // Guardar periodo y resolución global en paralelo
       const [res] = await Promise.all([

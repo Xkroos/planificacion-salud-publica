@@ -175,7 +175,7 @@ const handleSave = async (e: React.FormEvent) => {
     setError('')
 
     try {
-      const url = asignacionId ? `/api/asignaciones/${asignacionId}` : '/api/asignaciones'
+      const url = asignacionId ? `/sistema/api/asignaciones/${asignacionId}` : '/sistema/api/asignaciones'
       const method = asignacionId ? 'PUT' : 'POST'
       
       const res = await fetch(url, {

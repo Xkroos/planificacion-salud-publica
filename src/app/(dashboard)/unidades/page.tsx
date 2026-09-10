@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
@@ -35,7 +35,7 @@ export default function UnidadesPage() {
     if (!form.nombre.trim()) { setError('El nombre es requerido'); return }
     setSaving(true)
     try {
-      const url = editing ? `/api/unidades/${editing.id}` : '/api/unidades'
+      const url = editing ? `/sistema/api/unidades/${editing.id}` : '/sistema/api/unidades'
       const res = await fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       if (!res.ok) throw new Error()
       await fetch_()
