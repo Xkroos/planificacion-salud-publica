@@ -499,7 +499,7 @@ export default function Sidebar() {
         )}
 
         <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
+          onClick={() => signOut({ callbackUrl: '/sistema/login' })}
           className="nav-item"
           style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', justifyContent: collapsed ? 'center' : 'flex-start', color: '#dc2626' }}
           title={collapsed ? 'Cerrar sesión' : undefined}
