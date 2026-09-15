@@ -46,6 +46,8 @@ export async function GET(req: NextRequest) {
       include: {
         unidad: true,
         periodo: true,
+        region: true,
+        aulaTerritorial: true,
         cronogramas: {
           include: {
             cronograma: {

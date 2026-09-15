@@ -115,7 +115,6 @@ async function main() {
       });
       
       for (const aula of r.aulas) {
-        // Upsert by nombre and regionId
         const existingAula = await prisma.aulaTerritorial.findFirst({
           where: { nombre: aula.nombre, regionId: region.id }
         });
@@ -154,10 +153,11 @@ async function main() {
   }
 
   // Helpers para caché
-  let aulasCache: Record<string, string> = {}; 
-  let regionesCache: Record<string, string> = {}; 
+  const aulasCache: Record<string, string> = {}; 
+  const regionesCache: Record<string, string> = {}; 
 
   const getRegionId = async (nombre: string) => {
+    if (!nombre) return undefined;
     if (regionesCache[nombre]) return regionesCache[nombre];
     const r = await prisma.region.findUnique({ where: { nombre } });
     if (r) regionesCache[nombre] = r.id;
@@ -165,6 +165,7 @@ async function main() {
   }
 
   const getAulaId = async (nombre: string, regionId: string) => {
+    if (!nombre || !regionId) return undefined;
     const cacheKey = `${nombre}-${regionId}`;
     if (aulasCache[cacheKey]) return aulasCache[cacheKey];
     const a = await prisma.aulaTerritorial.findFirst({ where: { nombre, regionId } });
@@ -178,7 +179,6 @@ async function main() {
   // ============================================================================
   console.log('🌱 Creando periodo 2026-1 y participantes...')
 
-  // Obtener región y aula para el excel inicial
   const regionAnzoategui = await prisma.region.findUnique({ where: { nombre: 'ANZOATEGUI' } })
   let aulaElTigre = null
   if (regionAnzoategui) {
@@ -187,10 +187,9 @@ async function main() {
     })
   }
 
-  // Crear Periodo 2026-1 (se crea CERRADO para que no choque con 2026-2)
   const periodo1 = await prisma.periodo.upsert({
     where: { anio_numero: { anio: 2026, numero: 1 } },
-    update: { estado: 'CERRADO' }, // Asegurar que esté finalizado
+    update: { estado: 'CERRADO' },
     create: {
       anio: 2026,
       numero: 1,
@@ -248,12 +247,25 @@ async function main() {
         data: {
           nombre: p.nombre, apellido: p.apellido, cedula: p.cedula,
           email: p.email, telefono: p.telefono, genero: p.genero as 'MASCULINO' | 'FEMENINO',
-          trimestre: 'I', // Avanzado a Trimestre I si corresponde
+          trimestre: 'I',
           periodoId: periodo1.id,
-          regionId: regionAnzoategui?.id, aulaTerritorialId: aulaElTigre?.id
+          regionId: regionAnzoategui?.id,
+          aulaTerritorialId: aulaElTigre?.id,
         }
       })
       participantesCreados2026_1++;
+    } else {
+      // Actualizar campos vacíos en registros existentes
+      if (!existe.trimestre || !existe.regionId) {
+        await prisma.participante.update({
+          where: { id: existe.id },
+          data: {
+            trimestre: existe.trimestre || 'I',
+            regionId: existe.regionId || regionAnzoategui?.id,
+            aulaTerritorialId: existe.aulaTerritorialId || aulaElTigre?.id,
+          }
+        })
+      }
     }
   }
 
@@ -273,12 +285,27 @@ async function main() {
             data: {
               nombre: p.nombre, apellido: p.apellido, cedula: p.cedula,
               email: p.email || null, telefono: p.telefono || null, genero: p.genero as 'MASCULINO' | 'FEMENINO',
-              trimestre: 'I', // Avanzan a I trimestre
+              trimestre: 'I',
               periodoId: periodo1.id,
-              regionId: rId, aulaTerritorialId: aId
+              regionId: rId,
+              aulaTerritorialId: aId,
             }
           })
           participantesCreados2026_1++;
+        } else {
+          // Corregir campos vacíos en existentes
+          if (!existe.trimestre || !existe.regionId) {
+            const rId = await getRegionId(p.region);
+            const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+            await prisma.participante.update({
+              where: { id: existe.id },
+              data: {
+                trimestre: existe.trimestre || 'I',
+                regionId: existe.regionId || rId,
+                aulaTerritorialId: existe.aulaTerritorialId || aId,
+              }
+            })
+          }
         }
       }
     }
@@ -291,10 +318,9 @@ async function main() {
   // ============================================================================
   console.log('🌱 Creando periodo 2026-2 y participantes (Nuevos Ingresos)...')
 
-  // Crear Periodo 2026-2 (ACTIVO)
   const periodo2 = await prisma.periodo.upsert({
     where: { anio_numero: { anio: 2026, numero: 2 } },
-    update: { estado: 'ACTIVO' }, // Actual activo
+    update: { estado: 'ACTIVO' },
     create: {
       anio: 2026,
       numero: 2,
@@ -303,7 +329,6 @@ async function main() {
     }
   })
 
-  // Archivos JSON correspondientes al 2026-2
   const archivos2026_2 = [
     'participantes_lote5_2026_2.json', 
     'participantes_lote6_2026_2.json', 
@@ -328,12 +353,27 @@ async function main() {
             data: {
               nombre: p.nombre, apellido: p.apellido, cedula: p.cedula,
               email: p.email || null, telefono: p.telefono || null, genero: p.genero as 'MASCULINO' | 'FEMENINO',
-              trimestre: 'INTRODUCTORIO', // Nuevos ingresos al introductorio
+              trimestre: 'Introductorio', // ← valor correcto que coincide con el filtro de la UI
               periodoId: periodo2.id,
-              regionId: rId, aulaTerritorialId: aId
+              regionId: rId,
+              aulaTerritorialId: aId,
             }
           })
           participantesCreados2026_2++;
+        } else {
+          // Corregir case incorrecto ('INTRODUCTORIO' → 'Introductorio') y campos vacíos
+          if (existe.trimestre === 'INTRODUCTORIO' || !existe.aulaTerritorialId) {
+            const rId = await getRegionId(p.region);
+            const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+            await prisma.participante.update({
+              where: { id: existe.id },
+              data: {
+                trimestre: (existe.trimestre === 'INTRODUCTORIO') ? 'Introductorio' : existe.trimestre,
+                regionId: existe.regionId || rId,
+                aulaTerritorialId: existe.aulaTerritorialId || aId,
+              }
+            })
+          }
         }
       }
     } else {
