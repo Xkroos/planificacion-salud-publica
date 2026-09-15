@@ -298,10 +298,12 @@ export default function EstadisticasPage() {
       if (filtros.periodoId) params.append('periodoId', filtros.periodoId)
       if (filtros.regionId) params.append('regionId', filtros.regionId)
       if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
+      params.append('limit', '10000') // Export all records
 
       const res = await fetch(`/sistema/api/participantes?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar participantes')
-      const data = await res.json()
+      const resData = await res.json()
+      const data = Array.isArray(resData) ? resData : (resData.data || [])
 
       const { default: jsPDF } = await import('jspdf')
       const autoTable = (await import('jspdf-autotable')).default
@@ -369,10 +371,12 @@ export default function EstadisticasPage() {
       const params = new URLSearchParams()
       if (filtros.regionId) params.append('regionId', filtros.regionId)
       if (filtros.aulaTerritorialId) params.append('aulaTerritorialId', filtros.aulaTerritorialId)
+      params.append('limit', '10000') // Export all records
 
       const res = await fetch(`/sistema/api/docentes?${params.toString()}`)
       if (!res.ok) throw new Error('Error al cargar docentes')
-      const data = await res.json()
+      const resData = await res.json()
+      const data = Array.isArray(resData) ? resData : (resData.data || [])
 
       const { default: jsPDF } = await import('jspdf')
       const autoTable = (await import('jspdf-autotable')).default
