@@ -58,7 +58,7 @@ async function main() {
     { id: 'uc-politicas-publicas', nombre: 'POLITICAS PUBLICAS Y DESARROLLO ECONOMICO', creditos: 2, horas: 32, trimestre: 'Introductorio' },
     { id: 'uc-bases-eticas', nombre: 'BASES ETICAS Y EPISTEMOLOGICAS DE LA SALUD', creditos: 2, horas: 32, trimestre: 'Introductorio' },
     { id: 'uc-metodologia', nombre: 'METODOLOGIA DE LA INVESTIGACION', creditos: 2, horas: 32, trimestre: 'Introductorio' },
-    
+
     // I TRIMESTRE
     { id: 'uc-economia-salud', nombre: 'ECONOMIA DE LA SALUD', creditos: 2, horas: 32, trimestre: 'I' },
     { id: 'uc-legislacion', nombre: 'LEGISLACION EN SALUD', creditos: 2, horas: 32, trimestre: 'I' },
@@ -99,7 +99,7 @@ async function main() {
   }
 
   console.log('✅ Unidades curriculares creadas')
-  
+
   // ============================================================================
   // CARGA DE REGIONES Y AULAS TERRITORIALES
   // ============================================================================
@@ -113,12 +113,12 @@ async function main() {
         update: {},
         create: { nombre: r.nombre },
       });
-      
+
       for (const aula of r.aulas) {
         const existingAula = await prisma.aulaTerritorial.findFirst({
           where: { nombre: aula.nombre, regionId: region.id }
         });
-        
+
         const aulaData = {
           nombre: aula.nombre,
           coordinador: aula.coordinador,
@@ -152,25 +152,84 @@ async function main() {
     console.log('⚠️ Archivo regiones_aulas.json no encontrado, omitiendo carga de regiones.');
   }
 
+  // Helper para normalizar texto (sin tildes, mayúsculas y sin espacios extra)
+  const normalizeText = (text?: string | null) =>
+    (text || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase();
+
   // Helpers para caché
-  const aulasCache: Record<string, string> = {}; 
-  const regionesCache: Record<string, string> = {}; 
+  const aulasCache: Record<string, string> = {};
+  const regionesCache: Record<string, string> = {};
 
   const getRegionId = async (nombre: string) => {
     if (!nombre) return undefined;
-    if (regionesCache[nombre]) return regionesCache[nombre];
-    const r = await prisma.region.findUnique({ where: { nombre } });
-    if (r) regionesCache[nombre] = r.id;
-    return r?.id;
+    const clean = normalizeText(nombre);
+    if (regionesCache[clean]) return regionesCache[clean];
+
+    // Alias conocidos para regiones
+    let searchName = clean;
+    if (clean === 'DISTRITO CAPITAL') searchName = 'CARACAS';
+
+    // 1. Búsqueda directa o insensible a mayúsculas
+    let r = await prisma.region.findFirst({
+      where: { nombre: { equals: nombre, mode: 'insensitive' } }
+    });
+
+    // 2. Búsqueda normalizada en caso de diferencias de tildes
+    if (!r) {
+      const allRegiones = await prisma.region.findMany();
+      r = allRegiones.find(reg => normalizeText(reg.nombre) === searchName) || null;
+    }
+
+    if (r) {
+      regionesCache[clean] = r.id;
+      regionesCache[nombre] = r.id;
+      return r.id;
+    }
+    return undefined;
   }
 
   const getAulaId = async (nombre: string, regionId: string) => {
     if (!nombre || !regionId) return undefined;
-    const cacheKey = `${nombre}-${regionId}`;
+    const clean = normalizeText(nombre);
+    const cacheKey = `${clean}-${regionId}`;
     if (aulasCache[cacheKey]) return aulasCache[cacheKey];
-    const a = await prisma.aulaTerritorial.findFirst({ where: { nombre, regionId } });
-    if (a) aulasCache[cacheKey] = a.id;
-    return a?.id;
+
+    // Alias conocidos para aulas
+    let searchName = clean;
+    if (clean === 'SAN JUAN') searchName = 'SAN JUAN DE LOS MORROS';
+    if (clean === 'MARGARITA') searchName = 'PORLAMAR';
+
+    // 1. Búsqueda directa o insensible a mayúsculas
+    let a = await prisma.aulaTerritorial.findFirst({
+      where: {
+        regionId,
+        nombre: { equals: searchName, mode: 'insensitive' }
+      }
+    });
+
+    // 2. Búsqueda normalizada o por inclusión
+    if (!a) {
+      const allAulas = await prisma.aulaTerritorial.findMany({ where: { regionId } });
+      a = allAulas.find(aula => {
+        const aulaNorm = normalizeText(aula.nombre);
+        return (
+          aulaNorm === searchName ||
+          aulaNorm === clean ||
+          (clean === 'SAN JUAN' && aulaNorm.includes('SAN JUAN'))
+        );
+      }) || null;
+    }
+
+    if (a) {
+      aulasCache[cacheKey] = a.id;
+      aulasCache[`${nombre}-${regionId}`] = a.id;
+      return a.id;
+    }
+    return undefined;
   }
 
 
@@ -182,8 +241,8 @@ async function main() {
   const regionAnzoategui = await prisma.region.findUnique({ where: { nombre: 'ANZOATEGUI' } })
   let aulaElTigre = null
   if (regionAnzoategui) {
-    aulaElTigre = await prisma.aulaTerritorial.findFirst({ 
-      where: { nombre: 'EL TIGRE', regionId: regionAnzoategui.id } 
+    aulaElTigre = await prisma.aulaTerritorial.findFirst({
+      where: { nombre: 'EL TIGRE', regionId: regionAnzoategui.id }
     })
   }
 
@@ -271,7 +330,7 @@ async function main() {
 
   // Archivos JSON correspondientes al 2026-1
   const archivos2026_1 = ['participantes_lote2.json', 'participantes_lote3.json', 'participantes_lote4.json'];
-  
+
   for (const archivo of archivos2026_1) {
     const filePath = path.join(__dirname, archivo);
     if (fs.existsSync(filePath)) {
@@ -294,15 +353,15 @@ async function main() {
           participantesCreados2026_1++;
         } else {
           // Corregir campos vacíos en existentes
-          if (!existe.trimestre || !existe.regionId) {
+          if (!existe.trimestre || !existe.regionId || !existe.aulaTerritorialId) {
             const rId = await getRegionId(p.region);
             const aId = rId ? await getAulaId(p.aula, rId) : undefined;
             await prisma.participante.update({
               where: { id: existe.id },
               data: {
                 trimestre: existe.trimestre || 'I',
-                regionId: existe.regionId || rId,
-                aulaTerritorialId: existe.aulaTerritorialId || aId,
+                regionId: rId || existe.regionId,
+                aulaTerritorialId: aId || existe.aulaTerritorialId,
               }
             })
           }
@@ -330,11 +389,11 @@ async function main() {
   })
 
   const archivos2026_2 = [
-    'participantes_lote5_2026_2.json', 
-    'participantes_lote6_2026_2.json', 
-    'participantes_lote7_2026_2.json', 
-    'participantes_lote8_2026_2.json', 
-    'participantes_lote9_2026_2.json', 
+    'participantes_lote5_2026_2.json',
+    'participantes_lote6_2026_2.json',
+    'participantes_lote7_2026_2.json',
+    'participantes_lote8_2026_2.json',
+    'participantes_lote9_2026_2.json',
     'participantes_lote10_2026_2.json'
   ];
 
@@ -361,16 +420,23 @@ async function main() {
           })
           participantesCreados2026_2++;
         } else {
-          // Corregir case incorrecto ('INTRODUCTORIO' → 'Introductorio') y campos vacíos
-          if (existe.trimestre === 'INTRODUCTORIO' || !existe.aulaTerritorialId) {
-            const rId = await getRegionId(p.region);
-            const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+          // Corregir case incorrecto y actualizar aula/región si faltaba o cambió
+          const rId = await getRegionId(p.region);
+          const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+          const needsUpdate =
+            existe.trimestre === 'INTRODUCTORIO' ||
+            !existe.aulaTerritorialId ||
+            !existe.regionId ||
+            (aId && existe.aulaTerritorialId !== aId) ||
+            (rId && existe.regionId !== rId);
+
+          if (needsUpdate) {
             await prisma.participante.update({
               where: { id: existe.id },
               data: {
                 trimestre: (existe.trimestre === 'INTRODUCTORIO') ? 'Introductorio' : existe.trimestre,
-                regionId: existe.regionId || rId,
-                aulaTerritorialId: existe.aulaTerritorialId || aId,
+                regionId: rId || existe.regionId,
+                aulaTerritorialId: aId || existe.aulaTerritorialId,
               }
             })
           }
@@ -380,9 +446,50 @@ async function main() {
       console.error(`❌ No se encontró el archivo: ${filePath}`);
     }
   }
-  
+
   console.log(`✅ ${participantesCreados2026_2} nuevos participantes creados en el Periodo 2026-2.`)
-  
+
+  // ============================================================================
+  // SINCRONIZACIÓN DE SEGURIDAD: AULA SAN JUAN DE LOS MORROS (GUARICO)
+  // ============================================================================
+  console.log('🔄 Sincronizando y verificando participantes de San Juan de los Morros...')
+  const rGuarico = await prisma.region.findFirst({
+    where: { nombre: { in: ['GUARICO', 'GUÁRICO'], mode: 'insensitive' } }
+  });
+  if (rGuarico) {
+    const aSanJuan = await prisma.aulaTerritorial.findFirst({
+      where: {
+        regionId: rGuarico.id,
+        nombre: { contains: 'SAN JUAN', mode: 'insensitive' }
+      }
+    });
+
+    if (aSanJuan) {
+      const cedulasSanJuan = [
+        "26680223", "19472503", "26051054", "19725322", "21574002", "20588924", "18972883",
+        "28482996", "19985484", "28482417", "17353724", "28531232", "20233797", "27238538",
+        "25887930", "20876287", "27238875", "10665343", "23564799", "22262963", "19461976",
+        "15038349", "17251811", "17252776", "24237097", "21337857", "16098565", "27665428",
+        "20587403", "22447656", "17271729", "27665403", "10668550", "26920246", "17272807",
+        "20586003", "11683200", "18519777", "25480159", "17582790", "11117607", "13144756",
+        "14146762", "16363102", "16804782", "15711551", "15081719", "25717399", "21335177",
+        "26378002", "18617018", "19942258", "12842897", "10666999", "13152316", "12153754",
+        "10674560", "27463347", "29761240", "26100506", "11119138"
+      ];
+
+      const resSj = await prisma.participante.updateMany({
+        where: {
+          cedula: { in: cedulasSanJuan }
+        },
+        data: {
+          regionId: rGuarico.id,
+          aulaTerritorialId: aSanJuan.id
+        }
+      });
+      console.log(`✅ ${resSj.count} participantes vinculados correctamente al aula ${aSanJuan.nombre} (Región ${rGuarico.nombre}).`);
+    }
+  }
+
   // ============================================================================
   // FIN
   // ============================================================================
