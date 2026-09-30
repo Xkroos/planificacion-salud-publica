@@ -420,13 +420,16 @@ async function main() {
           })
           participantesCreados2026_2++;
         } else {
-          // Corregir case incorrecto y actualizar aula/región si faltaba o cambió
+          // Corregir case incorrecto y actualizar aula/región/periodo si faltaba o cambió
           const rId = await getRegionId(p.region);
           const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+
+          // Solo actualizamos si tenemos IDs válidos o si hay valores incorrectos que corregir
           const needsUpdate =
             existe.trimestre === 'INTRODUCTORIO' ||
-            !existe.aulaTerritorialId ||
-            !existe.regionId ||
+            (!existe.periodoId) ||
+            (!existe.aulaTerritorialId && aId) ||
+            (!existe.regionId && rId) ||
             (aId && existe.aulaTerritorialId !== aId) ||
             (rId && existe.regionId !== rId);
 
@@ -435,8 +438,10 @@ async function main() {
               where: { id: existe.id },
               data: {
                 trimestre: (existe.trimestre === 'INTRODUCTORIO') ? 'Introductorio' : existe.trimestre,
-                regionId: rId || existe.regionId,
-                aulaTerritorialId: aId || existe.aulaTerritorialId,
+                periodoId: periodo2.id,
+                // Solo sobreescribir region/aula si tenemos un valor válido nuevo
+                ...(rId ? { regionId: rId } : {}),
+                ...(aId ? { aulaTerritorialId: aId } : {}),
               }
             })
           }
@@ -453,9 +458,18 @@ async function main() {
   // SINCRONIZACIÓN DE SEGURIDAD: AULA SAN JUAN DE LOS MORROS (GUARICO)
   // ============================================================================
   console.log('🔄 Sincronizando y verificando participantes de San Juan de los Morros...')
+
+  // NOTA: No usar mode:'insensitive' con operador 'in' — no está soportado por Prisma.
+  // Buscar la región con OR explícito.
   const rGuarico = await prisma.region.findFirst({
-    where: { nombre: { in: ['GUARICO', 'GUÁRICO'], mode: 'insensitive' } }
+    where: {
+      OR: [
+        { nombre: { equals: 'GUARICO', mode: 'insensitive' } },
+        { nombre: { equals: 'GUÁRICO', mode: 'insensitive' } },
+      ]
+    }
   });
+
   if (rGuarico) {
     const aSanJuan = await prisma.aulaTerritorial.findFirst({
       where: {
@@ -465,6 +479,7 @@ async function main() {
     });
 
     if (aSanJuan) {
+      // Lista completa de todos los participantes de San Juan de los Morros del lote 9
       const cedulasSanJuan = [
         "26680223", "19472503", "26051054", "19725322", "21574002", "20588924", "18972883",
         "28482996", "19985484", "28482417", "17353724", "28531232", "20233797", "27238538",
@@ -477,17 +492,22 @@ async function main() {
         "10674560", "27463347", "29761240", "26100506", "11119138"
       ];
 
+      // Sincronización forzada: asignar región, aula y periodo a TODOS los participantes de SJM
       const resSj = await prisma.participante.updateMany({
-        where: {
-          cedula: { in: cedulasSanJuan }
-        },
+        where: { cedula: { in: cedulasSanJuan } },
         data: {
           regionId: rGuarico.id,
-          aulaTerritorialId: aSanJuan.id
+          aulaTerritorialId: aSanJuan.id,
+          periodoId: periodo2.id,
+          trimestre: 'Introductorio',
         }
       });
-      console.log(`✅ ${resSj.count} participantes vinculados correctamente al aula ${aSanJuan.nombre} (Región ${rGuarico.nombre}).`);
+      console.log(`✅ ${resSj.count} participantes vinculados correctamente al aula ${aSanJuan.nombre} (Región: ${rGuarico.nombre}, Periodo: 2026-2).`);
+    } else {
+      console.warn('⚠️  No se encontró el aula SAN JUAN DE LOS MORROS en la región GUARICO.');
     }
+  } else {
+    console.warn('⚠️  No se encontró la región GUARICO en la base de datos.');
   }
 
   // ============================================================================
