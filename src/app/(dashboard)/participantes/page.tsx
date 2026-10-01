@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -195,7 +195,9 @@ export default function ParticipantesPage() {
     setSecciones(Array.isArray(seccData) ? seccData : [])
     setRegiones(Array.isArray(regData) ? regData : [])
     const perArr = Array.isArray(perData) ? perData : []
-    setPeriodos(perArr.filter((p: any) => p.estado !== 'CERRADO'))
+    // Admin ve todos los periodos (incluyendo cerrados) para poder asignar participantes históricos
+    // Operador solo ve periodos no cerrados
+    setPeriodos(isAdmin ? perArr : perArr.filter((p: any) => p.estado !== 'CERRADO'))
     const active = perArr.find((p: any) => p.estado === 'ACTIVO') || null
     
     if (!activePeriodo && active) {
@@ -313,13 +315,18 @@ export default function ParticipantesPage() {
           <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>Registro global de participantes</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {!activePeriodo && !loading && (
+          {!activePeriodo && !loading && !isAdmin && (
              <span className="badge badge-red" style={{ fontSize: '12px', padding: '6px 12px' }}>
                <AlertCircle size={14} style={{ marginRight: '4px' }} /> No hay Periodo academico activo
              </span>
           )}
+          {!activePeriodo && !loading && isAdmin && (
+             <span className="badge badge-orange" style={{ fontSize: '12px', padding: '6px 12px', background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
+               <AlertCircle size={14} style={{ marginRight: '4px' }} /> Sin periodo activo — modo admin
+             </span>
+          )}
           {canRegister && (
-            <button className="btn btn-primary" onClick={openCreate} disabled={!activePeriodo}>
+            <button className="btn btn-primary" onClick={openCreate} disabled={isAdmin ? false : !activePeriodo}>
               <UserPlus size={16} /> Registrar Participante
             </button>
           )}
@@ -376,68 +383,65 @@ export default function ParticipantesPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-        <div style={{ width: '250px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px', paddingLeft: '4px' }}>
-            Periodos Académicos
-          </h3>
+      {/* Selección de Periodos Académicos - barra horizontal compacta */}
+      <div style={{ marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', marginRight: '4px' }}>
+            Periodo:
+          </span>
           <button
             onClick={() => setSelectedPeriodView('ACTUAL')}
             style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
               background: selectedPeriodView === 'ACTUAL' ? '#eff6ff' : 'white',
               color: selectedPeriodView === 'ACTUAL' ? '#1d4ed8' : '#475569',
               fontWeight: selectedPeriodView === 'ACTUAL' ? 700 : 500,
-              boxShadow: selectedPeriodView === 'ACTUAL' ? '0 0 0 1px #bfdbfe' : '0 1px 2px rgba(0,0,0,0.05)',
+              fontSize: '13px',
+              boxShadow: selectedPeriodView === 'ACTUAL' ? '0 0 0 2px #bfdbfe' : '0 1px 2px rgba(0,0,0,0.08)',
               transition: 'all 0.2s'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Users size={16} /> Periodo Actual
-            </div>
-            <span style={{ fontSize: '11px', background: selectedPeriodView === 'ACTUAL' ? '#bfdbfe' : '#e2e8f0', color: selectedPeriodView === 'ACTUAL' ? '#1e3a8a' : '#64748b', padding: '2px 8px', borderRadius: '10px' }}>
+            <Users size={14} /> Periodo Actual
+            <span style={{ fontSize: '11px', background: selectedPeriodView === 'ACTUAL' ? '#bfdbfe' : '#e2e8f0', color: selectedPeriodView === 'ACTUAL' ? '#1e3a8a' : '#64748b', padding: '1px 7px', borderRadius: '10px', marginLeft: '2px' }}>
               {stats.periodStats.find(p => p.id === activePeriodo?.id)?.count || 0}
             </span>
           </button>
 
           {stats.periodStats.filter(p => p.id !== activePeriodo?.id).length > 0 && (
             <>
-              <div style={{ height: '1px', background: '#e2e8f0', margin: '8px 0' }} />
               <button
                 onClick={() => setSelectedPeriodView('TODOS')}
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
                   background: selectedPeriodView === 'TODOS' ? '#f8fafc' : 'white',
                   color: selectedPeriodView === 'TODOS' ? '#0f172a' : '#475569',
                   fontWeight: selectedPeriodView === 'TODOS' ? 700 : 500,
-                  boxShadow: selectedPeriodView === 'TODOS' ? '0 0 0 1px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.05)',
-                  transition: 'all 0.2s', marginBottom: '4px'
+                  fontSize: '13px',
+                  boxShadow: selectedPeriodView === 'TODOS' ? '0 0 0 2px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Users size={16} /> Todos los Históricos
-                </div>
+                <Users size={14} /> Todos los Históricos
               </button>
               {stats.periodStats.filter(p => p.id !== activePeriodo?.id).map((pStat) => (
                 <button
                   key={pStat.label}
                   onClick={() => setSelectedPeriodView(pStat.label)}
                   style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '12px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
                     background: selectedPeriodView === pStat.label ? '#f8fafc' : 'white',
                     color: selectedPeriodView === pStat.label ? '#0f172a' : '#475569',
                     fontWeight: selectedPeriodView === pStat.label ? 700 : 500,
-                    boxShadow: selectedPeriodView === pStat.label ? '0 0 0 1px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.05)',
+                    fontSize: '13px',
+                    boxShadow: selectedPeriodView === pStat.label ? '0 0 0 2px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.08)',
                     transition: 'all 0.2s'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Calendar size={16} /> {pStat.label}
-                  </div>
-                  <span style={{ fontSize: '11px', background: selectedPeriodView === pStat.label ? '#e2e8f0' : '#f1f5f9', color: selectedPeriodView === pStat.label ? '#334155' : '#94a3b8', padding: '2px 8px', borderRadius: '10px' }}>
+                  <Calendar size={14} /> {pStat.label}
+                  <span style={{ fontSize: '11px', background: selectedPeriodView === pStat.label ? '#e2e8f0' : '#f1f5f9', color: selectedPeriodView === pStat.label ? '#334155' : '#94a3b8', padding: '1px 7px', borderRadius: '10px', marginLeft: '2px' }}>
                     {pStat.count}
                   </span>
                 </button>
@@ -445,8 +449,10 @@ export default function ParticipantesPage() {
             </>
           )}
         </div>
+      </div>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
+      {/* Tabla de participantes - ocupa todo el ancho */}
+      <div style={{ width: '100%' }}>
           <div className="card">
             {loading ? (
               <div style={{ padding: '60px', textAlign: 'center', color: '#718096' }}>
@@ -479,16 +485,27 @@ export default function ParticipantesPage() {
                         {selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : (selectedPeriodView === 'TODOS' ? 'Todos los Históricos' : `Participantes del Periodo ${selectedPeriodView}`)}
                       </h3>
                     </div>
-                    <table className="data-table" style={{ margin: 0, border: 'none' }}>
+                    <table className="data-table" style={{ margin: 0, border: 'none', tableLayout: 'fixed', width: '100%' }}>
+                      <colgroup>
+                        <col style={{ width: '40px' }} />
+                        <col style={{ width: '22%' }} />
+                        <col style={{ width: '110px' }} />
+                        <col style={{ width: '18%' }} />
+                        <col style={{ width: '100px' }} />
+                        <col style={{ width: '130px' }} />
+                        <col style={{ width: '18%' }} />
+                        <col style={{ width: '130px' }} />
+                      </colgroup>
                       <thead>
                         <tr>
+                          <th style={{ padding: '12px 8px 12px 16px' }}>#</th>
                           <th>Participante</th>
-                          <th>Cedula</th>
+                          <th>Cédula</th>
                           <th>Contacto</th>
-                          <th>Genero</th>
+                          <th>Género</th>
                           <th>Nivel Actual</th>
                           <th>Inscrito en</th>
-                          <th>Acciones</th>
+                          <th style={{ textAlign: 'center' }}>Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -496,14 +513,14 @@ export default function ParticipantesPage() {
                         const tc = trimColors[p.trimestre || ''] || { bg: '#f8fafc', color: '#64748b', border: '#cbd5e1' }
                         return (
                           <tr key={p.id}>
-                            <td style={{ color: '#a0aec0', fontWeight: 500 }}>{(page - 1) * 10 + i + 1}</td>
-                            <td><div style={{ fontWeight: 600, color: '#1a3a6b' }}>{p.apellido}, {p.nombre}</div></td>
-                            <td><span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{p.cedula || '\u2014'}</span></td>
+                            <td style={{ color: '#a0aec0', fontWeight: 500, padding: '12px 8px 12px 16px' }}>{(page - 1) * 10 + i + 1}</td>
+                            <td><div style={{ fontWeight: 600, color: '#1a3a6b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.apellido}, {p.nombre}</div></td>
+                            <td><span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{p.cedula || '—'}</span></td>
                             <td>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                {p.telefono && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4a5568' }}><Phone size={11} /> {p.telefono}</div>}
-                                {p.email && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4a5568' }}><Mail size={11} /> {p.email}</div>}
-                                {!p.telefono && !p.email && <span style={{ color: '#a0aec0', fontSize: '12px' }}>\u2014</span>}
+                                {p.telefono && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4a5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><Phone size={11} /> {p.telefono}</div>}
+                                {p.email && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4a5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><Mail size={11} /> {p.email}</div>}
+                                {!p.telefono && !p.email && <span style={{ color: '#a0aec0', fontSize: '12px' }}>—</span>}
                               </div>
                             </td>
                             <td>
@@ -513,7 +530,7 @@ export default function ParticipantesPage() {
                             </td>
                             <td>
                               {p.trimestre ? (
-                                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: tc.bg, color: tc.color, border: `1px solid ${tc.border}` }}>
+                                <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`, whiteSpace: 'nowrap' }}>
                                   {formatTrimestre(p.trimestre)}
                                 </span>
                               ) : <span style={{ color: '#a0aec0', fontSize: '12px' }}>Sin nivel</span>}
@@ -522,15 +539,15 @@ export default function ParticipantesPage() {
                               {p.cronogramas && p.cronogramas.length > 0 ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                   {p.cronogramas.map((rel: any, i: number) => (
-                                    <span key={i} className="badge badge-gray" style={{ fontSize: '11px' }}>
-                                      {rel.cronograma.periodo.anio}-{rel.cronograma.periodo.numero} \u00b7 {rel.cronograma.aulaTerritorial?.nombre || 'Sin aula'}
+                                    <span key={i} className="badge badge-gray" style={{ fontSize: '11px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {rel.cronograma.periodo.anio}-{rel.cronograma.periodo.numero} · {rel.cronograma.aulaTerritorial?.nombre || 'Sin aula'}
                                     </span>
                                   ))}
                                 </div>
                               ) : <span style={{ color: '#a0aec0', fontSize: '12px' }}>No inscrito</span>}
                             </td>
                             <td>
-                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center' }}>
                                 <button className="btn-icon" style={{ color: '#7c3aed', borderColor: '#e9d5ff' }} onClick={() => openTrayecto(p)} title="Ver trayecto academico">
                                   <BookOpen size={14} />
                                 </button>
@@ -586,7 +603,6 @@ export default function ParticipantesPage() {
             })()}
           </div>
         </div>
-      </div>
 
       {!canRegister && !isAdmin && (
         <div className="alert alert-warning" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -824,11 +840,20 @@ export default function ParticipantesPage() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Periodo Academico</label>
+                  <label className="form-label">Periodo Academico{isAdmin && !activePeriodo ? ' *' : ''}</label>
                   <select className="form-select" value={form.periodoId} onChange={e => setForm({ ...form, periodoId: e.target.value })}>
                     <option value="">— Seleccionar —</option>
-                    {periodos.map(p => <option key={p.id} value={p.id}>{p.anio}-{p.numero}</option>)}
+                    {periodos.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {(p as any).anio}-{(p as any).numero}{(p as any).estado === 'CERRADO' ? ' (Cerrado)' : (p as any).estado === 'ACTIVO' ? ' (Activo)' : ''}
+                      </option>
+                    ))}
                   </select>
+                  {isAdmin && !activePeriodo && !form.periodoId && (
+                    <span style={{ fontSize: '12px', color: '#c2410c', marginTop: '4px', display: 'block' }}>
+                      Seleccione un periodo para asociar este participante.
+                    </span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Estado</label>

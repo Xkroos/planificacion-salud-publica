@@ -139,8 +139,10 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
           fetch('https://ve.dolarapi.com/v1/dolares/oficial').catch(() => null)
         ])
         
-        setCronogramas(await resCr.json())
-        setParticipantes(await resPa.json())
+        const crData = await resCr.json()
+        setCronogramas(Array.isArray(crData) ? crData : (Array.isArray(crData?.data) ? crData.data : []))
+        const paData = await resPa.json()
+        setParticipantes(Array.isArray(paData) ? paData : (Array.isArray(paData?.data) ? paData.data : []))
         
         const conf = await resConf.json()
         if (conf.resolucion) setResolucion(conf.resolucion)

@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
       if (!config?.registroDocentesAbierto) {
         return NextResponse.json({ error: 'El registro de docentes está cerrado actualmente' }, { status: 403 })
       }
+      // El operador requiere un periodo activo
+      const activePeriodo = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
+      if (!activePeriodo) {
+        return NextResponse.json({ error: 'No hay un periodo académico activo' }, { status: 403 })
+      }
     }
-
-    const activePeriodo = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
-    if (!activePeriodo) {
-      return NextResponse.json({ error: 'No hay un periodo académico activo' }, { status: 403 })
-    }
+    // El ADMIN puede registrar docentes en cualquier momento (con o sin periodo activo)
 
     const body = await req.json()
 

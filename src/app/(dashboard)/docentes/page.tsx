@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
@@ -80,6 +80,7 @@ export default function DocentesPage() {
   const [docentes, setDocentes] = useState<Docente[]>([])
   const [aulas, setAulas] = useState<AulaTerritorial[]>([])
   const [regiones, setRegiones] = useState<{id: string, nombre: string}[]>([])
+  const [periodos, setPeriodos] = useState<{id: string, anio: number, numero: number, estado: string}[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterEstado, setFilterEstado] = useState('TODOS')
@@ -153,7 +154,9 @@ export default function DocentesPage() {
     try {
       const res = await fetch('/sistema/api/periodos')
       const data = await res.json()
-      setActivePeriodo(data.find((p: any) => p.estado === 'ACTIVO') || null)
+      const arr = Array.isArray(data) ? data : []
+      setPeriodos(arr)
+      setActivePeriodo(arr.find((p: any) => p.estado === 'ACTIVO') || null)
     } catch { /* ignore */ }
   }
 
@@ -175,6 +178,8 @@ export default function DocentesPage() {
   const canCreate = isAdmin || configOpen === true
   const canEdit = isAdmin
   const canDelete = isAdmin
+  // Admin puede operar independiente del estado del periodo
+  const canCreateNow = isAdmin ? canCreate : (canCreate && !!activePeriodo)
 
   const openCreate = () => {
     if (!canCreate) {
@@ -300,16 +305,20 @@ export default function DocentesPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {!activePeriodo && !loading ? (
+          {!activePeriodo && !loading && !isAdmin ? (
              <span className="badge badge-red" style={{ fontSize: '12px', padding: '6px 12px' }}>
                <AlertCircle size={14} style={{ marginRight: '4px' }} /> No hay Periodo academico activo
+             </span>
+          ) : !activePeriodo && !loading && isAdmin ? (
+             <span className="badge badge-orange" style={{ fontSize: '12px', padding: '6px 12px', background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
+               <AlertCircle size={14} style={{ marginRight: '4px' }} /> Sin periodo activo — modo admin
              </span>
           ) : !isAdmin && configOpen === false && (
             <span className="badge badge-red" style={{ fontSize: '12px', padding: '6px 12px' }}>
               <AlertCircle size={14} style={{ marginRight: '4px' }} /> Registro Cerrado
             </span>
           )}
-          <button className="btn btn-primary" onClick={openCreate} disabled={!canCreate || !activePeriodo}>
+          <button className="btn btn-primary" onClick={openCreate} disabled={!canCreateNow}>
             <Plus size={16} /> Nuevo Docente
           </button>
         </div>
@@ -363,7 +372,7 @@ export default function DocentesPage() {
               <p style={{ fontSize: '13px', marginTop: '4px' }}>
                 {!activePeriodo ? '' : (search ? 'No se encontraron resultados' : 'Comienza agregando el primer docente')}
               </p>
-              {!search && canCreate && activePeriodo && (
+              {!search && canCreateNow && (
                 <button className="btn btn-primary btn-sm" style={{ marginTop: '16px' }} onClick={openCreate}>
                   <Plus size={14} /> Agregar Docente
                 </button>

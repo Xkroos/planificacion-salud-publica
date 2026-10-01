@@ -61,7 +61,7 @@ export default function AgregarDocentePage() {
 
     Promise.all([
       fetch(`/sistema/api/cronograma/${id}`).then(r => r.json()),
-      fetch('/sistema/api/docentes').then(r => r.json()),
+      fetch('/sistema/api/docentes?limit=500').then(r => r.json()),
       fetch('/sistema/api/unidades').then(r => r.json()),
     ]).then(([cron, docs, unis]) => {
       if (cron.error) {
@@ -86,8 +86,10 @@ export default function AgregarDocentePage() {
           }
         }
       }
-      if (Array.isArray(docs)) {
-        const activeDocs = docs.filter(d => d.activo !== false)
+      // La API de docentes retorna { data: [...], total, ... } con paginación
+      const docsArray = Array.isArray(docs) ? docs : (Array.isArray(docs?.data) ? docs.data : [])
+      if (docsArray.length >= 0) {
+        const activeDocs = docsArray.filter((d: any) => d.activo !== false)
         setDocentes(activeDocs)
         
         if (asigId && cron.asignaciones) {

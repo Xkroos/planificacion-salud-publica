@@ -83,18 +83,18 @@ export async function POST(req: NextRequest) {
     const session = await auth()
     if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-    // Solo admin puede registrar cuando el proceso está cerrado
     if (session.user.role === 'OPERADOR') {
       const config = await prisma.configuracionSistema.findFirst()
       if (!config?.inscripcionParticipantesAbierta) {
         return NextResponse.json({ error: 'El proceso de inscripción de participantes está cerrado' }, { status: 403 })
       }
+      // El operador requiere un periodo activo
+      const activePeriodo = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
+      if (!activePeriodo) {
+        return NextResponse.json({ error: 'No hay un periodo académico activo' }, { status: 403 })
+      }
     }
-
-    const activePeriodo = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
-    if (!activePeriodo) {
-      return NextResponse.json({ error: 'No hay un periodo académico activo' }, { status: 403 })
-    }
+    // El ADMIN puede registrar participantes en cualquier momento (incluso en periodos cerrados)
 
     const body = await req.json()
 
