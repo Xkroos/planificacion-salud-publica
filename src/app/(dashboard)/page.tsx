@@ -132,7 +132,7 @@ export default async function DashboardPage() {
                   {stats.activePeriodId === 'none' ? 'No hay Periodo academico activo en este momento' : 'No hay cronogramas aún'}
                 </p>
                 {stats.activePeriodId !== 'none' && (
-                  <Link href="/cronograma/nuevo" className="btn btn-primary btn-sm" style={{ marginTop: '12px', display: 'inline-flex', background: '#FFFF5C', color: '#000000' }}>
+                  <Link href="/cronograma?nuevo=true" className="btn btn-primary btn-sm" style={{ marginTop: '12px', display: 'inline-flex', background: '#FFFF5C', color: '#000000' }}>
                     Crear primer cronograma
                   </Link>
                 )}
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {stats.activePeriodId !== 'none' ? (
-              <Link href="/cronograma/nuevo" className="btn btn-primary" style={{ justifyContent: 'center', background: '#FFFF5C', color: '#000000' }}>
+              <Link href="/cronograma?nuevo=true" className="btn btn-primary" style={{ justifyContent: 'center', background: '#FFFF5C', color: '#000000' }}>
                 <ClipboardList size={16} /> Nuevo Cronograma
               </Link>
             ) : (

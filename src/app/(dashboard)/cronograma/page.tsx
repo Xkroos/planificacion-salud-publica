@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { ClipboardList, Plus, Eye, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
 type Cronograma = {
@@ -19,7 +20,7 @@ type Cronograma = {
   _count: { participantes: number }
 }
 
-export default function CronogramaListPage() {
+function CronogramaListContent() {
   const [cronogramas, setCronogramas] = useState<Cronograma[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -32,6 +33,31 @@ export default function CronogramaListPage() {
   const [showModal, setShowModal] = useState(false)
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'ADMIN'
+
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const nuevoParam = searchParams.get('nuevo')
+
+  useEffect(() => {
+    if (nuevoParam === 'true' || nuevoParam === '1') {
+      setShowModal(true)
+    }
+  }, [nuevoParam])
+
+  const handleCloseModal = () => {
+    setShowModal(false)
+    if (nuevoParam) {
+      router.replace('/cronograma')
+    }
+  }
+
+  const handleSavedModal = () => {
+    setShowModal(false)
+    if (nuevoParam) {
+      router.replace('/cronograma')
+    }
+    fetch_()
+  }
 
   const [config, setConfig] = useState<any>(null)
 
@@ -261,7 +287,13 @@ export default function CronogramaListPage() {
         )}
       </div>
 
-      {showModal && <CronogramaGeneratorModal onClose={() => setShowModal(false)} onSaved={() => { setShowModal(false); fetch_(); }} existingCronogramas={cronogramas} />}
+      {showModal && (
+        <CronogramaGeneratorModal
+          onClose={handleCloseModal}
+          onSaved={handleSavedModal}
+          existingCronogramas={cronogramas}
+        />
+      )}
 
       {deleteConfirm && (
         <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
@@ -288,6 +320,14 @@ export default function CronogramaListPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function CronogramaListPage() {
+  return (
+    <Suspense fallback={<div className="card" style={{ padding: '60px', textAlign: 'center', color: '#718096' }}>Cargando...</div>}>
+      <CronogramaListContent />
+    </Suspense>
   )
 }
 

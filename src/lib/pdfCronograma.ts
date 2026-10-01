@@ -23,8 +23,8 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
       })
 
     const [logoUnerg, logoCaminos] = await Promise.all([
-      loadImg('/logo-unerg.png'),
-      loadImg('/logo-caminos.png'),
+      loadImg('/sistema/logo-unerg.png'),
+      loadImg('/sistema/logo-caminos.png'),
     ])
 
     // ─── drawCell segura ───────────────────────────────────────────────────────

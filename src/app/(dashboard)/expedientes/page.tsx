@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { FolderArchive, ArrowLeft, Loader2, BookOpen, Users, FileText, ChevronRight, ChevronDown, MapPin, Building, DollarSign, Download, Search } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  FolderArchive, ArrowLeft, Loader2, BookOpen, Users, FileText,
+  ChevronRight, ChevronDown, MapPin, Building, DollarSign, Search,
+  Phone, Mail, GraduationCap, X, ChevronLeft, User, Calendar,
+  ArrowUpCircle, Clock
+} from 'lucide-react'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -91,14 +96,13 @@ export default function ExpedientesPage() {
   )
 }
 
-function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () => void }) {
+function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo; onBack: () => void }) {
   const [tab, setTab] = useState<'cronogramas' | 'participantes'>('cronogramas')
   const [cronogramas, setCronogramas] = useState<any[]>([])
-  const [participantes, setParticipantes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
 
-  // Acordeones
+  // Acordeones secciones
   const [expandedRegiones, setExpandedRegiones] = useState<Record<string, boolean>>({})
   const [expandedAulas, setExpandedAulas] = useState<Record<string, boolean>>({})
   const [expandedTrimestres, setExpandedTrimestres] = useState<Record<string, boolean>>({})
@@ -106,6 +110,38 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
   const toggleRegion = (id: string) => setExpandedRegiones(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleAula = (id: string) => setExpandedAulas(prev => ({ ...prev, [id]: !prev[id] }))
   const toggleTrimestre = (key: string) => setExpandedTrimestres(prev => ({ ...prev, [key]: !prev[key] }))
+
+  // Participantes — paginación y búsqueda server-side
+  const [participantes, setParticipantes] = useState<any[]>([])
+  const [loadingPart, setLoadingPart] = useState(false)
+  const [searchPart, setSearchPart] = useState('')
+  const [pagePart, setPagePart] = useState(1)
+  const [totalPartPages, setTotalPartPages] = useState(1)
+  const [totalPart, setTotalPart] = useState(0)
+  const LIMIT = 50
+
+  // Trayectoria modal
+  const [trayectoParticipante, setTrayectoParticipante] = useState<any | null>(null)
+  const [loadingTrayecto, setLoadingTrayecto] = useState(false)
+
+  const trimColors: Record<string, { bg: string; color: string; border: string }> = {
+    'Introductorio': { bg: '#f0f9ff', color: '#0369a1', border: '#7dd3fc' },
+    'I':  { bg: '#f0fdf4', color: '#15803d', border: '#86efac' },
+    'II': { bg: '#fefce8', color: '#a16207', border: '#fde047' },
+    'III':{ bg: '#fff7ed', color: '#c2410c', border: '#fdba74' },
+    'IV': { bg: '#fdf4ff', color: '#9333ea', border: '#d8b4fe' },
+    'V':  { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' },
+    'Comisión Técnica': { bg: '#fdf2f8', color: '#db2777', border: '#fbcfe8' },
+    'Finalizado': { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
+  }
+
+  function formatTrimestre(t: string | null | undefined) {
+    if (!t) return 'Sin nivel'
+    if (t === 'Introductorio') return 'Introductorio'
+    if (t === 'Comisión Técnica') return 'Comisión Técnica'
+    if (t === 'Finalizado') return 'Finalizado'
+    return `${t}° Trimestre`
+  }
 
   // Agrupar cronogramas por región, aula y trimestre
   const groupedData = cronogramas.reduce((acc, c) => {
@@ -126,41 +162,70 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
   const [resolucion, setResolucion] = useState('')
   const [refDocumento, setRefDocumento] = useState('')
   const [activeCronogramaForPDF, setActiveCronogramaForPDF] = useState<any>(null)
-  const pdfRef = React.useRef<HTMLDivElement>(null)
+  const pdfRef = useRef<HTMLDivElement>(null)
 
+  // Carga inicial: solo cronogramas y config
   useEffect(() => {
     async function loadData() {
       setLoading(true)
       try {
-        const [resCr, resPa, resConf, resBcv] = await Promise.all([
+        const [resCr, resConf, resBcv] = await Promise.all([
           fetch(`/sistema/api/cronograma?periodoId=${periodo.id}`),
-          fetch(`/sistema/api/participantes?periodoId=${periodo.id}`),
           fetch('/sistema/api/configuracion'),
           fetch('https://ve.dolarapi.com/v1/dolares/oficial').catch(() => null)
         ])
-        
         const crData = await resCr.json()
         setCronogramas(Array.isArray(crData) ? crData : (Array.isArray(crData?.data) ? crData.data : []))
-        const paData = await resPa.json()
-        setParticipantes(Array.isArray(paData) ? paData : (Array.isArray(paData?.data) ? paData.data : []))
-        
         const conf = await resConf.json()
         if (conf.resolucion) setResolucion(conf.resolucion)
-        
         if (resBcv && resBcv.ok) {
           const bcvData = await resBcv.json()
-          if (bcvData.promedio) {
-            setRefDocumento(bcvData.promedio.toFixed(2).replace('.', ','))
-          }
+          if (bcvData.promedio) setRefDocumento(bcvData.promedio.toFixed(2).replace('.', ','))
         }
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setLoading(false)
-      }
+      } catch (e) { console.error(e) }
+      finally { setLoading(false) }
     }
     loadData()
   }, [periodo.id])
+
+  // Carga paginada de participantes (cuando se cambia a esa tab o cambia búsqueda/página)
+  const fetchParticipantes = useCallback(async () => {
+    setLoadingPart(true)
+    try {
+      const params = new URLSearchParams({
+        periodoId: periodo.id,
+        page: pagePart.toString(),
+        limit: LIMIT.toString(),
+      })
+      if (searchPart) params.set('nombre', searchPart)
+      const res = await fetch(`/sistema/api/participantes?${params}`)
+      const data = await res.json()
+      const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [])
+      setParticipantes(arr)
+      setTotalPartPages(data.totalPages || 1)
+      setTotalPart(data.total || arr.length)
+    } catch (e) { console.error(e) }
+    finally { setLoadingPart(false) }
+  }, [periodo.id, pagePart, searchPart])
+
+  useEffect(() => {
+    if (tab === 'participantes') fetchParticipantes()
+  }, [tab, fetchParticipantes])
+
+  // Reset página al buscar
+  useEffect(() => { setPagePart(1) }, [searchPart])
+
+  // Abrir trayectoria con todos los datos del participante
+  const openTrayecto = async (p: any) => {
+    setTrayectoParticipante(p)
+    setLoadingTrayecto(true)
+    try {
+      const res = await fetch(`/sistema/api/participantes/${p.id}`)
+      const data = await res.json()
+      setTrayectoParticipante(data)
+    } catch { /* mantener datos básicos */ }
+    finally { setLoadingTrayecto(false) }
+  }
 
   const handleGenPDF = async (cronograma: any) => {
     setGenerating(true)
@@ -249,7 +314,7 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
           className={`btn ${tab === 'participantes' ? 'btn-primary' : 'btn-secondary'}`} 
           onClick={() => setTab('participantes')}
         >
-          <Users size={16} /> Estudiantes ({participantes.length})
+          <Users size={16} /> Estudiantes ({totalPart > 0 ? totalPart : '…'})
         </button>
       </div>
 
@@ -353,37 +418,131 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
           )}
 
           {tab === 'participantes' && (
-            <div className="card" style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', color: '#4a5568', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.05em' }}>
-                    <th style={{ padding: '12px 16px' }}>Cédula</th>
-                    <th style={{ padding: '12px 16px' }}>Nombres y Apellidos</th>
-                    <th style={{ padding: '12px 16px' }}>Aula Territorial</th>
-                    <th style={{ padding: '12px 16px' }}>Trimestre/Sección</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {participantes.length === 0 ? (
-                    <tr><td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#718096' }}>No hay estudiantes registrados</td></tr>
-                  ) : participantes.map((p: any) => (
-                    <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
-                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1a3a6b' }}>{p.cedula}</td>
-                      <td style={{ padding: '12px 16px' }}>{p.nombre} {p.apellido}</td>
-                      <td style={{ padding: '12px 16px' }}>{p.aulaTerritorial?.nombre || '-'}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        {p.trimestre || '-'} / {p.seccion ? `Sec ${p.seccion}` : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="card" style={{ overflow: 'hidden' }}>
+              {/* Búsqueda y contador */}
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ position: 'relative', flex: '1 1 280px' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a0aec0' }} />
+                  <input
+                    className="form-input"
+                    style={{ paddingLeft: '36px', borderRadius: '20px' }}
+                    placeholder="Buscar por nombre, apellido o cédula..."
+                    value={searchPart}
+                    onChange={e => setSearchPart(e.target.value)}
+                  />
+                </div>
+                <span style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                  {totalPart} participante{totalPart !== 1 ? 's' : ''} registrado{totalPart !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {/* Tabla */}
+              {loadingPart ? (
+                <div style={{ padding: '60px', textAlign: 'center', color: '#718096' }}>
+                  <Loader2 size={28} style={{ margin: '0 auto 10px', display: 'block', animation: 'spin 1s linear infinite' }} />
+                  Cargando participantes...
+                </div>
+              ) : participantes.length === 0 ? (
+                <div style={{ padding: '48px', textAlign: 'center', color: '#94a3b8' }}>
+                  <Users size={40} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+                  <p style={{ fontWeight: 600 }}>{searchPart ? 'Sin resultados para la búsqueda' : 'No hay participantes en este periodo'}</p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="data-table" style={{ margin: 0, border: 'none', tableLayout: 'fixed', width: '100%' }}>
+                      <colgroup>
+                        <col style={{ width: '42px' }} />
+                        <col style={{ width: '90px' }} />
+                        <col style={{ width: '22%' }} />
+                        <col style={{ width: '14%' }} />
+                        <col style={{ width: '17%' }} />
+                        <col style={{ width: '90px' }} />
+                        <col style={{ width: '120px' }} />
+                        <col style={{ width: '14%' }} />
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th style={{ padding: '11px 8px 11px 16px' }}>#</th>
+                          <th>Cédula</th>
+                          <th>Nombre y Apellido</th>
+                          <th>Contacto</th>
+                          <th>Aula Territorial</th>
+                          <th>Género</th>
+                          <th>Nivel</th>
+                          <th>Inscrito en</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {participantes.map((p: any, i: number) => {
+                          const tc = trimColors[p.trimestre || ''] || { bg: '#f8fafc', color: '#64748b', border: '#cbd5e1' }
+                          return (
+                            <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => openTrayecto(p)} title="Ver trayectoria completa">
+                              <td style={{ color: '#a0aec0', fontWeight: 500, padding: '11px 8px 11px 16px' }}>{(pagePart - 1) * LIMIT + i + 1}</td>
+                              <td><span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: '#1a3a6b' }}>{p.cedula || '—'}</span></td>
+                              <td><div style={{ fontWeight: 600, color: '#1a202c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.apellido}, {p.nombre}</div></td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  {p.telefono && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4a5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><Phone size={11} /> {p.telefono}</div>}
+                                  {p.email && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#4a5568', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><Mail size={11} /> {p.email}</div>}
+                                  {!p.telefono && !p.email && <span style={{ color: '#a0aec0', fontSize: '12px' }}>—</span>}
+                                </div>
+                              </td>
+                              <td><span style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{p.aulaTerritorial?.nombre || <span style={{ color: '#a0aec0' }}>—</span>}</span></td>
+                              <td><span className={`badge ${p.genero === 'FEMENINO' ? 'badge-purple' : 'badge-green'}`}>{p.genero === 'FEMENINO' ? 'Femenino' : 'Masculino'}</span></td>
+                              <td>
+                                {p.trimestre ? (
+                                  <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`, whiteSpace: 'nowrap' }}>
+                                    {formatTrimestre(p.trimestre)}
+                                  </span>
+                                ) : <span style={{ color: '#a0aec0', fontSize: '12px' }}>Sin nivel</span>}
+                              </td>
+                              <td>
+                                {p.cronogramas && p.cronogramas.length > 0 ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                    {p.cronogramas.slice(0, 2).map((rel: any, idx: number) => (
+                                      <span key={idx} className="badge badge-gray" style={{ fontSize: '11px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {rel.cronograma?.aulaTerritorial?.nombre || '—'}
+                                      </span>
+                                    ))}
+                                    {p.cronogramas.length > 2 && <span style={{ fontSize: '11px', color: '#94a3b8' }}>+{p.cronogramas.length - 2} más</span>}
+                                  </div>
+                                ) : <span style={{ color: '#a0aec0', fontSize: '12px' }}>No inscrito</span>}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Paginación */}
+                  {totalPartPages > 1 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderTop: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '13px', color: '#64748b' }}>
+                        Mostrando {(pagePart - 1) * LIMIT + 1}–{Math.min(pagePart * LIMIT, totalPart)} de {totalPart}
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="btn btn-secondary btn-sm" disabled={pagePart === 1} onClick={() => setPagePart(p => p - 1)}>
+                          <ChevronLeft size={15} /> Anterior
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: '13px', fontWeight: 600 }}>
+                          {pagePart} / {totalPartPages}
+                        </div>
+                        <button className="btn btn-secondary btn-sm" disabled={pagePart >= totalPartPages} onClick={() => setPagePart(p => p + 1)}>
+                          Siguiente <ChevronRight size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </>
       )}
 
-      {/* Hidden PDF Template for Estructura de Costos */}
+      {/* PDF oculto */}
       {activeCronogramaForPDF && (
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
           <PlantillaCostosPDF 
@@ -394,6 +553,154 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo, onBack: () =
             resolucion={resolucion}
             coordinadorNacional={(activeCronogramaForPDF as any)._meta?.coordinadorNacional || ''}
           />
+        </div>
+      )}
+
+      {/* ── MODAL TRAYECTORIA ── */}
+      {trayectoParticipante && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setTrayectoParticipante(null)}>
+          <div className="modal" style={{ maxWidth: '660px', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1a3a6b' }}>
+                <User size={18} color="#2d6bc4" /> Expediente del Participante
+              </h3>
+              <button className="btn-icon" onClick={() => setTrayectoParticipante(null)}><X size={18} /></button>
+            </div>
+
+            <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
+              {loadingTrayecto ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
+                  <Loader2 size={28} style={{ margin: '0 auto 10px', display: 'block', animation: 'spin 1s linear infinite' }} />
+                  Cargando trayectoria...
+                </div>
+              ) : (
+                <>
+                  {/* Datos personales */}
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Datos Personales</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Nombre y Apellido</div>
+                        <div style={{ fontWeight: 700, color: '#1a202c', fontSize: '15px' }}>{trayectoParticipante.apellido}, {trayectoParticipante.nombre}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Cédula</div>
+                        <div style={{ fontWeight: 700, color: '#1a3a6b', fontFamily: 'monospace', fontSize: '15px' }}>{trayectoParticipante.cedula || '—'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Género</div>
+                        <span className={`badge ${trayectoParticipante.genero === 'FEMENINO' ? 'badge-purple' : 'badge-green'}`}>
+                          {trayectoParticipante.genero === 'FEMENINO' ? 'Femenino' : 'Masculino'}
+                        </span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Nivel Actual</div>
+                        {trayectoParticipante.trimestre ? (() => {
+                          const tc = trimColors[trayectoParticipante.trimestre] || { bg: '#f8fafc', color: '#64748b', border: '#cbd5e1' }
+                          return <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, background: tc.bg, color: tc.color, border: `1px solid ${tc.border}` }}>{formatTrimestre(trayectoParticipante.trimestre)}</span>
+                        })() : <span style={{ color: '#a0aec0', fontSize: '12px' }}>Sin nivel</span>}
+                      </div>
+                      {trayectoParticipante.telefono && (
+                        <div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Teléfono</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568' }}><Phone size={13} /> {trayectoParticipante.telefono}</div>
+                        </div>
+                      )}
+                      {trayectoParticipante.email && (
+                        <div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Correo</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#4a5568' }}><Mail size={13} /> {trayectoParticipante.email}</div>
+                        </div>
+                      )}
+                      {trayectoParticipante.aulaTerritorial?.nombre && (
+                        <div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Aula Territorial</div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#2d3748' }}>{trayectoParticipante.aulaTerritorial.nombre}</div>
+                        </div>
+                      )}
+                      {trayectoParticipante.periodo && (
+                        <div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '2px' }}>Periodo Inscrito</div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#2d3748' }}>{trayectoParticipante.periodo.anio}-{trayectoParticipante.periodo.numero}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Secciones */}
+                  {trayectoParticipante.cronogramas && trayectoParticipante.cronogramas.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <GraduationCap size={13} /> Secciones en las que participó
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {trayectoParticipante.cronogramas.map((rel: any, i: number) => {
+                          const crono = rel.cronograma
+                          if (!crono) return null
+                          return (
+                            <div key={i} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px' }}>
+                              <div style={{ fontWeight: 600, color: '#1a3a6b', fontSize: '14px', marginBottom: '4px' }}>
+                                {formatTrimestre(crono.trimestre)} — Sección {crono.seccion}
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4a5568' }}><Calendar size={11} /> Periodo {crono.periodo?.anio}-{crono.periodo?.numero}</span>
+                                {crono.aulaTerritorial?.nombre && <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4a5568' }}><MapPin size={11} /> {crono.aulaTerritorial.nombre}</span>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Historial */}
+                  {trayectoParticipante.historial && trayectoParticipante.historial.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ArrowUpCircle size={13} /> Historial de Cambios de Nivel
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: '19px', top: 0, bottom: 0, width: '2px', background: '#e2e8f0', zIndex: 0 }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {trayectoParticipante.historial.map((h: any, i: number) => {
+                            const tc3 = trimColors[h.trimestreNuevo] || { bg: '#f8fafc', color: '#64748b', border: '#cbd5e1' }
+                            return (
+                              <div key={h.id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0, background: tc3.bg, border: `2px solid ${tc3.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: tc3.color }}>{i + 1}</div>
+                                <div style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                                    {h.trimestreAnterior ? <span style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'line-through' }}>{formatTrimestre(h.trimestreAnterior)}</span> : <span style={{ fontSize: '12px', color: '#94a3b8' }}>Inicio</span>}
+                                    <ChevronRight size={12} color="#94a3b8" />
+                                    <span style={{ fontSize: '12px', fontWeight: 700, color: tc3.color, background: tc3.bg, padding: '1px 8px', borderRadius: '10px', border: `1px solid ${tc3.border}` }}>{formatTrimestre(h.trimestreNuevo)}</span>
+                                  </div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '11px', color: '#64748b' }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}><Clock size={10} />{new Date(h.createdAt).toLocaleDateString('es-VE', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                    {h.aulaTerritorial?.nombre && <span><MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} />{h.aulaTerritorial.nombre}</span>}
+                                    {h.cambiadoPor && <span>por: <strong>{h.cambiadoPor}</strong></span>}
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(!trayectoParticipante.cronogramas || trayectoParticipante.cronogramas.length === 0) &&
+                   (!trayectoParticipante.historial || trayectoParticipante.historial.length === 0) && (
+                    <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                      <GraduationCap size={36} style={{ margin: '0 auto 10px', opacity: 0.3 }} />
+                      <p style={{ fontWeight: 600 }}>Sin trayectoria registrada</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setTrayectoParticipante(null)}>Cerrar</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

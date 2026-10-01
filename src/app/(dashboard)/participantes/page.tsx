@@ -56,11 +56,15 @@ const TRIMESTRES = [
   { value: 'III', label: 'III Trimestre' },
   { value: 'IV', label: 'IV Trimestre' },
   { value: 'V', label: 'V Trimestre' },
+  { value: 'Comisión Técnica', label: 'Comisión Técnica' },
+  { value: 'Finalizado', label: 'Finalizado' },
 ]
 
 function formatTrimestre(t: string | null | undefined) {
   if (!t) return 'Sin nivel'
   if (t === 'Introductorio') return 'Introductorio'
+  if (t === 'Comisión Técnica') return 'Comisión Técnica'
+  if (t === 'Finalizado') return 'Finalizado'
   return `${t}\u00b0 Trimestre`
 }
 
@@ -76,6 +80,8 @@ const trimColors: Record<string, { bg: string; color: string; border: string }> 
   'III': { bg: '#fff7ed', color: '#c2410c', border: '#fdba74' },
   'IV': { bg: '#fdf4ff', color: '#9333ea', border: '#d8b4fe' },
   'V': { bg: '#fef2f2', color: '#dc2626', border: '#fca5a5' },
+  'Comisión Técnica': { bg: '#fdf2f8', color: '#db2777', border: '#fbcfe8' },
+  'Finalizado': { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
 }
 
 export default function ParticipantesPage() {
@@ -133,6 +139,10 @@ export default function ParticipantesPage() {
   const [showTrayecto, setShowTrayecto] = useState(false)
   const [trayectoParticipante, setTrayectoParticipante] = useState<Participante | null>(null)
   const [loadingTrayecto, setLoadingTrayecto] = useState(false)
+
+  const [showPromocionModal, setShowPromocionModal] = useState(false)
+  const [savingPromocion, setSavingPromocion] = useState(false)
+  const [errorPromocion, setErrorPromocion] = useState('')
 
   const aulasFiltradas = form.regionId ? regiones.find((r: any) => r.id === form.regionId)?.aulas || [] : []
 
@@ -303,6 +313,28 @@ export default function ParticipantesPage() {
     }
   }
 
+  const handlePromocionMasiva = async () => {
+    if (!activePeriodo) return
+    setErrorPromocion('')
+    setSavingPromocion(true)
+    try {
+      const res = await fetch('/sistema/api/participantes/promocion-masiva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ periodoId: activePeriodo.id })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error en promoción masiva')
+      setSuccess(`Se promovieron automáticamente ${data.promovidos} participantes`)
+      setShowPromocionModal(false)
+      await fetchData()
+    } catch (e: any) {
+      setErrorPromocion(e.message || 'Error al promover')
+    } finally {
+      setSavingPromocion(false)
+    }
+  }
+
   // Replaced local filtering with stats from server
 
   return (
@@ -324,6 +356,11 @@ export default function ParticipantesPage() {
              <span className="badge badge-orange" style={{ fontSize: '12px', padding: '6px 12px', background: '#fff7ed', color: '#c2410c', border: '1px solid #fed7aa' }}>
                <AlertCircle size={14} style={{ marginRight: '4px' }} /> Sin periodo activo — modo admin
              </span>
+          )}
+          {canRegister && activePeriodo && selectedPeriodView === 'ACTUAL' && (
+            <button className="btn btn-secondary" onClick={() => setShowPromocionModal(true)} disabled={isAdmin ? false : !activePeriodo}>
+              <ArrowUpCircle size={16} /> Promoción Masiva
+            </button>
           )}
           {canRegister && (
             <button className="btn btn-primary" onClick={openCreate} disabled={isAdmin ? false : !activePeriodo}>
@@ -908,6 +945,42 @@ export default function ParticipantesPage() {
           <button onClick={() => setSuccess('')} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', marginLeft: '4px' }}><X size={14} /></button>
         </div>
       )}
+
+      {showPromocionModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ArrowUpCircle size={18} color="#2d6bc4" /> Promoción Masiva
+              </h3>
+              <button className="btn-icon" onClick={() => setShowPromocionModal(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body">
+              <p>¿Estás seguro que deseas promover automáticamente a <strong>todos</strong> los participantes del periodo actual al siguiente trimestre?</p>
+              <ul style={{ margin: '12px 0', paddingLeft: '20px', color: '#4a5568', fontSize: '13px' }}>
+                <li>Introductorio → I Trimestre</li>
+                <li>I → II Trimestre</li>
+                <li>II → III Trimestre</li>
+                <li>III → IV Trimestre</li>
+                <li>IV → V Trimestre</li>
+                <li>V → Comisión Técnica</li>
+              </ul>
+              <p style={{ color: '#d97706', fontSize: '13px', fontWeight: 600, background: '#fef3c7', padding: '10px', borderRadius: '8px' }}>
+                Nota: Los participantes en Comisión Técnica deben ser pasados a "Finalizado" de forma manual. 
+              </p>
+              
+              {errorPromocion && <div className="alert alert-error">{errorPromocion}</div>}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowPromocionModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handlePromocionMasiva} disabled={savingPromocion}>
+                {savingPromocion ? <Loader2 size={16} className="spin" /> : 'Confirmar Promoción'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
