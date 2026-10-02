@@ -234,6 +234,82 @@ async function main() {
 
 
   // ============================================================================
+  // CARGA DEL PERIODO 2025-3 (ESTADO CERRADO)
+  // ============================================================================
+  console.log('🌱 Creando periodo 2025-3 (CERRADO) y participantes...')
+
+  const periodo2025_3 = await prisma.periodo.upsert({
+    where: { anio_numero: { anio: 2025, numero: 3 } },
+    update: { estado: 'CERRADO' },
+    create: {
+      anio: 2025,
+      numero: 3,
+      modalidad: 'PRESENCIAL',
+      estado: 'CERRADO',
+    }
+  })
+
+  // Archivos JSON correspondientes al 2025-3 (detecta participantes_lote_2025_3.json y cualquier lote futuro del periodo)
+  const filesInPrisma = fs.readdirSync(__dirname);
+  const archivos2025_3 = filesInPrisma
+    .filter(f => f.startsWith('participantes_') && f.includes('2025_3') && f.endsWith('.json'))
+    .sort();
+
+  let participantesCreados2025_3 = 0;
+
+  for (const archivo of archivos2025_3) {
+    const filePath = path.join(__dirname, archivo);
+    if (fs.existsSync(filePath)) {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      for (const p of data) {
+        const existe = await prisma.participante.findFirst({ where: { cedula: p.cedula } })
+        if (!existe) {
+          const rId = await getRegionId(p.region);
+          const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+          await prisma.participante.create({
+            data: {
+              nombre: p.nombre,
+              apellido: p.apellido,
+              cedula: p.cedula,
+              email: p.email || null,
+              telefono: p.telefono || null,
+              genero: p.genero as 'MASCULINO' | 'FEMENINO',
+              trimestre: 'Introductorio',
+              periodoId: periodo2025_3.id,
+              regionId: rId,
+              aulaTerritorialId: aId,
+            }
+          })
+          participantesCreados2025_3++;
+        } else {
+          const rId = await getRegionId(p.region);
+          const aId = rId ? await getAulaId(p.aula, rId) : undefined;
+          const needsUpdate =
+            existe.trimestre === 'INTRODUCTORIO' ||
+            (!existe.periodoId) ||
+            (!existe.aulaTerritorialId && aId) ||
+            (!existe.regionId && rId);
+
+          if (needsUpdate) {
+            await prisma.participante.update({
+              where: { id: existe.id },
+              data: {
+                trimestre: (existe.trimestre === 'INTRODUCTORIO') ? 'Introductorio' : (existe.trimestre || 'Introductorio'),
+                periodoId: existe.periodoId || periodo2025_3.id,
+                ...(rId && !existe.regionId ? { regionId: rId } : {}),
+                ...(aId && !existe.aulaTerritorialId ? { aulaTerritorialId: aId } : {}),
+              }
+            })
+          }
+        }
+      }
+    }
+  }
+
+  console.log(`✅ ${participantesCreados2025_3} nuevos participantes procesados en el Periodo 2025-3.`)
+
+
+  // ============================================================================
   // CARGA DEL PERIODO 2026-1
   // ============================================================================
   console.log('🌱 Creando periodo 2026-1 y participantes...')

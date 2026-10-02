@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { parseHoraTo24 } from '@/lib/utils'
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -63,14 +64,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         unidadId: body.unidadId,
         viatico: viatico, // Asignar viático calculado
         lugar: body.lugar || null,
-        horaInicio: body.horaInicio,
-        horaFin: body.horaFin,
+        horaInicio: parseHoraTo24(body.horaInicio) || '08:00',
+        horaFin: parseHoraTo24(body.horaFin) || '10:00',
         modalidad: body.modalidad,
         uc: parseInt(body.uc),
         cantHoras: parseInt(body.cantHoras),
         fechas: {
           create: (body.fechas || []).map((f: string) => ({
-            fecha: new Date(f),
+            fecha: new Date(f.includes('T') ? f : `${f}T12:00:00Z`),
             modalidad: body.modalidad,
           })),
         },

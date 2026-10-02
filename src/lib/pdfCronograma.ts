@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf'
+import { formatFechaEncuentro, formatHoraAmPm } from '@/lib/utils'
 
 export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: string) => {
   if (cohortCronogramas.length === 0) return
@@ -269,14 +270,15 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
 
         drawCell((a.docente?.nombre || '').toUpperCase(), tx, y, tDoc, rowH, undefined, black, 6, 'bold', 'center'); tx += tDoc
         drawCell(a.lugar || '', tx, y, tLug, rowH, undefined, black, 6, 'normal', 'center'); tx += tLug
-        drawCell(`${a.horaInicio || ''} -\n${a.horaFin || ''}`, tx, y, tHor, rowH, undefined, black, 6, 'normal', 'center'); tx += tHor
+        const horaInicioStr = formatHoraAmPm(a.horaInicio)
+        const horaFinStr = formatHoraAmPm(a.horaFin)
+        const horaText = (horaInicioStr && horaFinStr) ? `${horaInicioStr} -\n${horaFinStr}` : (horaInicioStr || '')
+        drawCell(horaText, tx, y, tHor, rowH, undefined, black, 5.5, 'normal', 'center'); tx += tHor
 
         if (fechas.length > 0) {
           const dateH = rowH / fechas.length
           fechas.forEach((f: any, fi: number) => {
-            const d = new Date(f.fecha)
-            const dateStr = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
-              .toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            const dateStr = formatFechaEncuentro(f.fecha)
             drawCell(dateStr, tx, y + fi * dateH, tFec, dateH, undefined, black, 6.5, 'normal')
           })
         } else {

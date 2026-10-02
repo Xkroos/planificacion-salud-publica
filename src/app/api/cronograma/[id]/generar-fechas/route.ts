@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { parseHoraTo24 } from '@/lib/utils'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -16,8 +17,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Falta fecha de inicio' }, { status: 400 })
     }
 
-    const baseDate = new Date(`${fechaInicio}T00:00:00Z`)
-
     const asignaciones = await prisma.asignacionDocente.findMany({
       where: { cronogramaId: id },
       orderBy: { id: 'asc' } // Para que el orden sea determinista
@@ -27,10 +26,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'No hay materias asignadas' }, { status: 400 })
     }
 
-    // Parse horaInicio
-    let [baseH, baseM] = horaInicio.split(':').map(Number)
+    // Parse horaInicio (soporta 24h '08:00' y 12h AM/PM '08:00 AM')
+    const parsedHora = parseHoraTo24(horaInicio) || '08:00'
+    let [baseH, baseM] = parsedHora.split(':').map(Number)
     if (isNaN(baseH)) baseH = 8
     if (isNaN(baseM)) baseM = 0
+
+    const [year, month, day] = fechaInicio.split('-').map(Number)
 
     for (let i = 0; i < asignaciones.length; i++) {
       const a = asignaciones[i]
@@ -64,11 +66,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         where: { asignacionId: a.id }
       })
 
-      // Generar nuevas fechas cada 15 días
+      // Generar nuevas fechas cada 15 días (cada 2 semanas = +14 días)
+      // Ancladas a las 12:00:00 UTC para neutralidad de huso horario
       const nuevasFechas = []
       for (let j = 0; j < cantEncuentros; j++) {
-        const d = new Date(baseDate)
-        d.setDate(d.getDate() + (j * 14)) // Cada 15 días (es decir, +14 días desde la semana 1 a la 3)
+        const d = new Date(Date.UTC(year, month - 1, day + (j * 14), 12, 0, 0))
         nuevasFechas.push({
           asignacionId: a.id,
           fecha: d,

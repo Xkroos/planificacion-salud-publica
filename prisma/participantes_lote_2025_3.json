@@ -1,0 +1,2732 @@
+[
+  {
+    "email": null,
+    "cedula": "9972204",
+    "apellido": "Gago Gonzalez",
+    "nombre": "Julieta Karina",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "16379869",
+    "apellido": "Torres Ruiz",
+    "nombre": "Claudia Lorena",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "12164466",
+    "apellido": "Viana Echenique",
+    "nombre": "Segunda del Carmen",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "14351276",
+    "apellido": "Aguado Maury",
+    "nombre": "Desirée",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "12055575",
+    "apellido": "Gonzalez",
+    "nombre": "Xiomara",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "20588252",
+    "apellido": "Oviedo Tiape",
+    "nombre": "Daniel Eliezer",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "14039914",
+    "apellido": "Rodriguez",
+    "nombre": "Moirelys",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "8973714",
+    "apellido": "Garcia de Velazco",
+    "nombre": "Maria Clara",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "18914126",
+    "apellido": "Kouefati",
+    "nombre": "Mary Yuly",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "13409794",
+    "apellido": "Gonzalez Pinto",
+    "nombre": "Nancy Gabriela",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "16083769",
+    "apellido": "Gandica",
+    "nombre": "Johana",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "25157205",
+    "apellido": "Amundarain",
+    "nombre": "Danyela",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "16379221",
+    "apellido": "Campione",
+    "nombre": "Adriana",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "12485809",
+    "apellido": "Hernandez",
+    "nombre": "Doyi",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "12483882",
+    "apellido": "Fernandez Mora",
+    "nombre": "Hilda Lorena",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "19726932",
+    "apellido": "Torrealba Infante",
+    "nombre": "Jesus Ramiro",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "25146227",
+    "apellido": "Blanco Aguero",
+    "nombre": "Adolfo Damian",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "13303357",
+    "apellido": "Quintero Villamizar",
+    "nombre": "Pablo Didney",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "23707220",
+    "apellido": "Gomez Mogollon",
+    "nombre": "Carla Isabel",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "20675215",
+    "apellido": "Garcia Martinez",
+    "nombre": "Scarlet",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "17401639",
+    "apellido": "Linares",
+    "nombre": "Virginia",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "11666170",
+    "apellido": "Muñoz Gil",
+    "nombre": "Octavio Adolfo",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "25978578",
+    "apellido": "Gonzalez Palacio",
+    "nombre": "Stefany Alejandra",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "14225609",
+    "apellido": "Huartaja",
+    "nombre": "Josue",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "17946647",
+    "apellido": "BARRETO BRITO",
+    "nombre": "NARELBIS YOMAIRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "15071123",
+    "apellido": "CARRASCO FREITEZ",
+    "nombre": "GLENDYS PAOLA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "12964389",
+    "apellido": "CASTILLO",
+    "nombre": "YAIDEE JOSEFINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "24936749",
+    "apellido": "COLMENAREZ AZUAJE",
+    "nombre": "PAHOLA DOUGLYSBETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "19715182",
+    "apellido": "CORDERO DE CANELON",
+    "nombre": "ZAIS ISAMAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18922193",
+    "apellido": "GIL GONZALEZ",
+    "nombre": "YUSDELMAR DEL VALLE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18732151",
+    "apellido": "GONZALEZ SALAZAR",
+    "nombre": "MARVIELIS KARELIS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "14346584",
+    "apellido": "GONZALEZ DE TORREALBA",
+    "nombre": "YUDEPSY MARISELA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "12710332",
+    "apellido": "HERNANDEZ AZUAJE",
+    "nombre": "ALEIDY JOSEFINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18871588",
+    "apellido": "HIDALGO CUELLO",
+    "nombre": "GRECIA MARIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "13485514",
+    "apellido": "INFANTE TORREALBA",
+    "nombre": "SOLENRY SARAHI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "19282310",
+    "apellido": "LARA VARGAS",
+    "nombre": "YALETZY CORINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "15867595",
+    "apellido": "LEON JIMENEZ",
+    "nombre": "BRICEIDA COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "17600175",
+    "apellido": "LINAREZ VERGARA",
+    "nombre": "ZORAIDA DEL CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "10780381",
+    "apellido": "LOYO ALVARADO",
+    "nombre": "OLGA CECILIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "15492780",
+    "apellido": "LOZADA GUERRERO",
+    "nombre": "MAIRA RAMONA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "12264676",
+    "apellido": "LOZADA SANCHEZ",
+    "nombre": "NAILETH TERESA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "15867909",
+    "apellido": "MOTA PINEDA",
+    "nombre": "YULIMAR DANIEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "26759317",
+    "apellido": "MUJICA PRIETO",
+    "nombre": "JOSÉ",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "16753870",
+    "apellido": "MUÑOZ CASTEJON",
+    "nombre": "CARMEN GREGORIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "13486010",
+    "apellido": "PARADA ZAMBRANO",
+    "nombre": "MIGUELINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "19052129",
+    "apellido": "PEREZ CASTILLO",
+    "nombre": "LUZKAREN DAYANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "17945272",
+    "apellido": "RODRIGUEZ CIVIRA",
+    "nombre": "MARIELIS YANETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "9838987",
+    "apellido": "RODRIGUEZ MARTINEZ",
+    "nombre": "DORIS LEIDA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18671543",
+    "apellido": "RODRIGUEZ PEROZO",
+    "nombre": "VIANKELIS CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18671542",
+    "apellido": "SERRADA HIDALGO",
+    "nombre": "NOELYS DEL VALLE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "17564849",
+    "apellido": "TORRES TORRES",
+    "nombre": "LEIDYMAR CHIQUINQUIRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "22102298",
+    "apellido": "TOYO PAEZ",
+    "nombre": "ADRIANA YURIMA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "16293535",
+    "apellido": "YEPEZ JIMENEZ",
+    "nombre": "EVIMAR ALEXANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "11849493",
+    "apellido": "YRIGOLLEN PEREZ",
+    "nombre": "DANIS JANETTE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "ACARIGUA",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "11639731",
+    "apellido": "ALTUVE ARAGONA",
+    "nombre": "MARIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "15308007",
+    "apellido": "ALVAREZ VERGARA",
+    "nombre": "SORLENY MARITZA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "18123863",
+    "apellido": "BASTIDAS BARAZARTE",
+    "nombre": "YOHANA ELIZABETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "12386300",
+    "apellido": "BASTIDAS",
+    "nombre": "MARIA EMILIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "16715600",
+    "apellido": "BERRIOS VERGARA",
+    "nombre": "YOHERVIS JOSE",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17355175",
+    "apellido": "BRACA",
+    "nombre": "GENY XIOMARA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "15517560",
+    "apellido": "CASTRO DUQUE",
+    "nombre": "ISABEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "19050000",
+    "apellido": "COLMENARES PULIDO",
+    "nombre": "ISMARY ALEXANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "16815900",
+    "apellido": "CONTRERAS MOLINA",
+    "nombre": "ADRIANA JOSEFINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "8149115",
+    "apellido": "DIAZ RAMIREZ",
+    "nombre": "LIZVER VESENIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "11432100",
+    "apellido": "FARIAS CASTILLO",
+    "nombre": "ANDRI CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "24111966",
+    "apellido": "FERNANDEZ RAMIREZ",
+    "nombre": "DARLY COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "13508080",
+    "apellido": "GARRIDO MALAVER",
+    "nombre": "NORAIMA HERLIBETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "22511800",
+    "apellido": "GIL LOPEZ",
+    "nombre": "YUSMARI EVELIN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "12588040",
+    "apellido": "GONZALEZ SANDOVAL",
+    "nombre": "DEGLY JOHANNA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17593100",
+    "apellido": "GUERRERO SANTIAGO",
+    "nombre": "EVA YERINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17595303",
+    "apellido": "GUTIERREZ FLORES",
+    "nombre": "YELITZA DEL VALLE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "19077163",
+    "apellido": "IZARRA RIVERO",
+    "nombre": "KEYLA YURITZA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "15145860",
+    "apellido": "IZQUIERDO MOLINA",
+    "nombre": "BETHSAIDA LISBETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "19071810",
+    "apellido": "MARICHAL GUERRERO",
+    "nombre": "YOSBEIDYS DEL CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "19071811",
+    "apellido": "MERAS DE LAVA",
+    "nombre": "MARLIN YAMIRET",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17260600",
+    "apellido": "MOSQUERA DE BOZA",
+    "nombre": "MARA MAIRETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "24800000",
+    "apellido": "ORELLANA QUINTERO",
+    "nombre": "LILIAN ANAIS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "13240300",
+    "apellido": "PALENCIA MORENO",
+    "nombre": "HERLIANGEL MILAGRO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "25079920",
+    "apellido": "PEÑA MOLINA",
+    "nombre": "MARIA ANTONIETA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "25435290",
+    "apellido": "PEREZ ARAUJO",
+    "nombre": "BLANCA YUDITH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "11012000",
+    "apellido": "POLANCO SALAZAR",
+    "nombre": "YOJAIRA LISBETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "16434938",
+    "apellido": "QUINTERO RAMIREZ",
+    "nombre": "LIFRAN ALBANIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17155800",
+    "apellido": "RAMIREZ",
+    "nombre": "DURAIMA DEL CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17975000",
+    "apellido": "RAMIREZ ALVARADO",
+    "nombre": "ELIDA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "20044230",
+    "apellido": "RANGEL TOVAR",
+    "nombre": "FABIOLA JOCELYN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "9212440",
+    "apellido": "RIERA CHINCHILLA",
+    "nombre": "JAVIER ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "17255020",
+    "apellido": "RIOS ALTUVE",
+    "nombre": "ALEXNNA KARINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "18500000",
+    "apellido": "RIVAS",
+    "nombre": "RAMON BENITO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "10505557",
+    "apellido": "RODRIGUEZ CHINCHILLA",
+    "nombre": "BELKIS COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "20267900",
+    "apellido": "SANCHEZ DE VILLEGAS",
+    "nombre": "LEINY YUDITH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "15026790",
+    "apellido": "VILORIA MORENO",
+    "nombre": "DOUGLEIDYS NATHALY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARINAS",
+    "region": "BARINAS"
+  },
+  {
+    "email": null,
+    "cedula": "28588931",
+    "apellido": "MEZA",
+    "nombre": "ANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "9414988",
+    "apellido": "ALFONZO MADERA",
+    "nombre": "FLORANGEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "11324441",
+    "apellido": "ABREU",
+    "nombre": "MARGELIS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "27756497",
+    "apellido": "PEREZ VICTORIA",
+    "nombre": "SOFIA NAKARY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "19692096",
+    "apellido": "PALACIOS BELLORIN",
+    "nombre": "AYARIXSI KATIUSKA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "23944065",
+    "apellido": "CARABALLO",
+    "nombre": "REBECA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "25718876",
+    "apellido": "RODRIGUEZ",
+    "nombre": "KIMBERLY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "15165867",
+    "apellido": "BALAGUERA CRESPO",
+    "nombre": "MILDRED YIXLEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "15222850",
+    "apellido": "MONTIJO SUAREZ",
+    "nombre": "ABRAHAN JESUS",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "17478528",
+    "apellido": "MENDEZ LAMAR",
+    "nombre": "ALEXANDRA JOSEFINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "5096467",
+    "apellido": "GAMERO",
+    "nombre": "RAFAEL",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "25664333",
+    "apellido": "MEZA",
+    "nombre": "ARNELY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "7682225",
+    "apellido": "DELGADO",
+    "nombre": "ALIDA CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "6165489",
+    "apellido": "GUZMAN",
+    "nombre": "MARTIN",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "12374890",
+    "apellido": "RODRIGUEZ",
+    "nombre": "ADELAIDA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "24799653",
+    "apellido": "MATA",
+    "nombre": "ANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "6916439",
+    "apellido": "PARES",
+    "nombre": "VIRGINIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "15039245",
+    "apellido": "AVILA",
+    "nombre": "JULIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "18402222",
+    "apellido": "LUGO VALERA",
+    "nombre": "YOMARY YACKELINE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "17980623",
+    "apellido": "PAEZ ZAMBRANO",
+    "nombre": "ROALYS DAYANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "10504848",
+    "apellido": "CASAÑAS CHIRINOS",
+    "nombre": "DANIEL ENRIQUE",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "15147995",
+    "apellido": "SOLORZANO UZCATEGUI",
+    "nombre": "GERMAN ALEXIS",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "16086914",
+    "apellido": "PAJARO FERNANDEZ",
+    "nombre": "NELLYMAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "CARACAS",
+    "region": "CARACAS"
+  },
+  {
+    "email": null,
+    "cedula": "20025807",
+    "apellido": "ALVARADO HEREDIA",
+    "nombre": "DIANA RAQUEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "14352505",
+    "apellido": "ALVAREZ LONGA",
+    "nombre": "MARIBAL MARIBELIS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "15674145",
+    "apellido": "ALVAREZ VARGAS",
+    "nombre": "KEMBERLYS MACARENA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "15170619",
+    "apellido": "ALVAREZ",
+    "nombre": "YASNELLYS LOURDES",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "15263036",
+    "apellido": "ARROYO CRESPO",
+    "nombre": "RAMÓN ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "13855925",
+    "apellido": "BORGES",
+    "nombre": "NINOSKA YOJANNY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "23813946",
+    "apellido": "CABAÑA JIMENEZ",
+    "nombre": "ANAIS MARYCRUZ",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "27198527",
+    "apellido": "CANELON COLOMBO",
+    "nombre": "DAVID EDUARDO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "14405415",
+    "apellido": "EREU EREU",
+    "nombre": "MIRNALET DE LOS ANGELES",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "10956066",
+    "apellido": "ESCALONA PEREZ",
+    "nombre": "JOSÉ GREGORIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "14648153",
+    "apellido": "ESCALONA QUERO",
+    "nombre": "NILZI LORENA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "29561993",
+    "apellido": "ESCORCIA LUGO",
+    "nombre": "ROSANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "18261182",
+    "apellido": "INSAUTI RAMIREZ",
+    "nombre": "GERALDIN ADDALITZA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "24026309",
+    "apellido": "MARTINEZ MARTINEZ",
+    "nombre": "MILAGRO MARIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "9412506",
+    "apellido": "MENDOZA DURAN",
+    "nombre": "BELKIS ZULEMA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "17572244",
+    "apellido": "MONTERO",
+    "nombre": "JOSÉ RAFAEL",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "10848129",
+    "apellido": "ORTIGOZA MUJICA",
+    "nombre": "LENNY COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "22181368",
+    "apellido": "PALACIOS GALLARDO",
+    "nombre": "JHIUHIAIZZYS JHOSENPHAWEHIRZ CHAPARR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "18058652",
+    "apellido": "PEREIRA BARCO",
+    "nombre": "LEIDIMAR DEL CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "20015372",
+    "apellido": "PEREIRA CHAVEZ",
+    "nombre": "KELLY KATRINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "19639336",
+    "apellido": "PEREZ MENDOZA",
+    "nombre": "AURIMAR KARINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "15139334",
+    "apellido": "PLANCHEZ PISELLI",
+    "nombre": "MARIA BELEN DE LOS ANGELES",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "29737898",
+    "apellido": "ROJAS HERNANDEZ",
+    "nombre": "JESSICA YEMILI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "28596434",
+    "apellido": "TORRES GONZALEZ",
+    "nombre": "YEFFERSON ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "12704162",
+    "apellido": "VILLASMIL GIMENEZ",
+    "nombre": "HENGRI FABIOLA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "7443907",
+    "apellido": "ZAMBRANO MACIAS",
+    "nombre": "LUÍS ERNESTO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "BARQUISIMETO",
+    "region": "LARA"
+  },
+  {
+    "email": null,
+    "cedula": "21161583",
+    "apellido": "ALVARADO DIAZ",
+    "nombre": "ANA TERESA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "11400189",
+    "apellido": "CONTRERAS GUZMAN",
+    "nombre": "MILAGRO COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "20321834",
+    "apellido": "FERNANDEZ AZUAJE",
+    "nombre": "ANAIZ DEL CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18250076",
+    "apellido": "FLORES FERNANDEZ",
+    "nombre": "HUMBERLY CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "28489567",
+    "apellido": "FRIAS MENDOZA",
+    "nombre": "MANUEL EDUARDO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "20544373",
+    "apellido": "FUENTES BLANCO",
+    "nombre": "LISMAR COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "15349476",
+    "apellido": "GONZALEZ",
+    "nombre": "MORISBEL PASTORA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "27277882",
+    "apellido": "GONZALEZ NAVA",
+    "nombre": "OSWELDI ANDREA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "27350932",
+    "apellido": "GUZMAN PEREZ",
+    "nombre": "MELVIN YONAIKERT",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18669200",
+    "apellido": "LINARES PARGAS",
+    "nombre": "SOR KATHERINE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18072960",
+    "apellido": "MARTINEZ ORELLANA",
+    "nombre": "YUSMERLY LA CRUZ",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "14864168",
+    "apellido": "MEDINA TOTUA",
+    "nombre": "RAMONA ANTONIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "10050462",
+    "apellido": "MENDOZA RIVAS",
+    "nombre": "MERY MARLENI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "12895022",
+    "apellido": "MUÑOZ VELASQYEZ",
+    "nombre": "ARELIS ELENA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "19338884",
+    "apellido": "ORTIZ",
+    "nombre": "ZULLY CANDELARIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "18296324",
+    "apellido": "PAREDES LOZADA",
+    "nombre": "ANNY LISBETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "14731919",
+    "apellido": "PEREZ FERNANDEZ",
+    "nombre": "DISLEC COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "22091300",
+    "apellido": "PEREZ LEÓN",
+    "nombre": "NELCISMAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "14333651",
+    "apellido": "PEREZ PEREZ",
+    "nombre": "NUVIA DEL CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "26811121",
+    "apellido": "RODRIGUEZ ORELLANA",
+    "nombre": "YENIFER CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "24538279",
+    "apellido": "SALON ROJAS",
+    "nombre": "ROXIBEL CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "8045583",
+    "apellido": "SANTAROMITA VELASQUEZ",
+    "nombre": "ETHY JOSEFINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "28064748",
+    "apellido": "SOTO VALERO",
+    "nombre": "HEIMIS LISETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "28094126",
+    "apellido": "VELAZQUEZ GRATEROL",
+    "nombre": "BETSY COROMOTO",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUANARE",
+    "region": "PORTUGUESA"
+  },
+  {
+    "email": null,
+    "cedula": "17063293",
+    "apellido": "AREVALO CEBALLOS",
+    "nombre": "LUCIANA ESTILITA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "10674690",
+    "apellido": "DOMÍNGUEZ TOVAR",
+    "nombre": "MARCO AURELIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "19222793",
+    "apellido": "FLORES LEÓN",
+    "nombre": "CARLOS EDUARDO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "15797769",
+    "apellido": "HERNÁNDEZ BETERMIN",
+    "nombre": "DUBRHASKA AYARYS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "21278463",
+    "apellido": "LEDEZMA PACHECO",
+    "nombre": "DORIMAR JOSÉ",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "12840749",
+    "apellido": "MILANO CONTRERAS",
+    "nombre": "MARIELBA ROSA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "16044676",
+    "apellido": "MUÑOZ MOTA",
+    "nombre": "WISTON JOSÉ",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "26231052",
+    "apellido": "PEÑA OLIVEROS",
+    "nombre": "MARIA DAYMAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "27814628",
+    "apellido": "QUEVEDO MONTOYA",
+    "nombre": "ESTEFANI ALEJANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "28266302",
+    "apellido": "ROJAS RODRIGUEZ",
+    "nombre": "ANDREA ISABEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "26026075",
+    "apellido": "SANTAELLA OCHOA",
+    "nombre": "LUVISMAR CARIDAD",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "19725839",
+    "apellido": "SILVEIRA LINARES",
+    "nombre": "GRESIL MARIANT",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "10499871",
+    "apellido": "SOLER TOMASE",
+    "nombre": "MARÍA ESTILITA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "22341189",
+    "apellido": "UTRERA RÍOS",
+    "nombre": "ISIMAR NAZARETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "18167751",
+    "apellido": "ZERPA PEREZ",
+    "nombre": "DIXON DANIEL",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "19999292",
+    "apellido": "GARCIA",
+    "nombre": "ROSENIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "17498622",
+    "apellido": "CUADRADO",
+    "nombre": "MAYRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "18001519",
+    "apellido": "GONZALEZ",
+    "nombre": "SAMYASE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "23194566",
+    "apellido": "SALINAS",
+    "nombre": "NEYESCA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "20820398",
+    "apellido": "GARCIA",
+    "nombre": "ERIKA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "16878384",
+    "apellido": "FLORES",
+    "nombre": "ELENA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "29756138",
+    "apellido": "CAMACHO",
+    "nombre": "DIRUSKA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "13567873",
+    "apellido": "ARANGUREN",
+    "nombre": "YUSMARY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "17457215",
+    "apellido": "DELGADILLO",
+    "nombre": "RENEE",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "20032130",
+    "apellido": "REYES",
+    "nombre": "NATALIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "16368146",
+    "apellido": "RAMOS",
+    "nombre": "NAKARY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "14841020",
+    "apellido": "GUTIERREZ",
+    "nombre": "CRISTIAN",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "17118382",
+    "apellido": "RIVAS",
+    "nombre": "YEIBIS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "19710350",
+    "apellido": "ASCANIO",
+    "nombre": "VERUSKA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "18753594",
+    "apellido": "VARGAS",
+    "nombre": "KATI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "25915016",
+    "apellido": "RIVAS",
+    "nombre": "JHOANGEL",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "20208991",
+    "apellido": "URBINA",
+    "nombre": "CYNDI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "25518007",
+    "apellido": "SOLORZANO",
+    "nombre": "KELLY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "16097217",
+    "apellido": "SPERA",
+    "nombre": "YENNIFER",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "24843572",
+    "apellido": "BOCARANDA",
+    "nombre": "GHEYGIL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "17650724",
+    "apellido": "PESTANA",
+    "nombre": "ZARAY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "12828650",
+    "apellido": "LARA",
+    "nombre": "YULISSA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "13567726",
+    "apellido": "FERNANDEZ",
+    "nombre": "CARMEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "20103978",
+    "apellido": "SERRANO",
+    "nombre": "JOSE",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "19201451",
+    "apellido": "RANGEL",
+    "nombre": "RANGEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "16342727",
+    "apellido": "ORELLANES",
+    "nombre": "KARINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "GUARENAS",
+    "region": "MIRANDA"
+  },
+  {
+    "email": null,
+    "cedula": "24742782",
+    "apellido": "AGUILAR ORTIZ",
+    "nombre": "OSWALDO ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "20651952",
+    "apellido": "ALVAREZ CICARIELLO",
+    "nombre": "EDWIN ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18977615",
+    "apellido": "ARAUJO CASTILLO",
+    "nombre": "ENEIDYS CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18702909",
+    "apellido": "ARAUJO CASTILLO",
+    "nombre": "ENERYS JOSEFINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "25066684",
+    "apellido": "BLANCO MUÑOZ",
+    "nombre": "BRANGINA BRAYANLY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "29503562",
+    "apellido": "CABRICES PACHECO",
+    "nombre": "MARÍA JOSÉ",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "11591884",
+    "apellido": "CALZADA COUSSIN",
+    "nombre": "YNDIRA BELEN",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "16133036",
+    "apellido": "CASTILLO ESCALONA",
+    "nombre": "ASDRUBAL ALIX",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "14729690",
+    "apellido": "CASTRO QUIJADA",
+    "nombre": "VANESA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "12573729",
+    "apellido": "CISNEROS CARDOZO",
+    "nombre": "JASMÍN ALEJANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "20386853",
+    "apellido": "COLMENAREZ RUIZ",
+    "nombre": "ADRIANA DEL VALLE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "22343614",
+    "apellido": "CONTRERAS FLORES",
+    "nombre": "IRIANA TERESA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "19912680",
+    "apellido": "ESCALONA OSPINO",
+    "nombre": "YOLMERLY YUSERKYS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "26166039",
+    "apellido": "FIGUEROA VASQUEZ",
+    "nombre": "KIMBERLY GABRIELA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18646525",
+    "apellido": "FRANCO DELVALLE",
+    "nombre": "BETSY BENEYDA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "27289280",
+    "apellido": "GONCALVES ALCUBILLA",
+    "nombre": "MARIELFRI JOSÉ",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18586898",
+    "apellido": "GONZALEZ CASTRO",
+    "nombre": "XIOMARA DEL VALLE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "23648651",
+    "apellido": "GUANCHE RAMONES",
+    "nombre": "JESÚS DAVID",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18644793",
+    "apellido": "GUARICUCO ORTIZ",
+    "nombre": "REBECA SARAI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "20355964",
+    "apellido": "INOJOSA OROPEZA",
+    "nombre": "DIANA ANDREYNA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18489904",
+    "apellido": "LEDEZMA TORRES",
+    "nombre": "CARMEN ALEJANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "26067066",
+    "apellido": "MALDONADO RENGEL",
+    "nombre": "YHORVIS RICARDO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "29620292",
+    "apellido": "MITCHELL VASQUEZ",
+    "nombre": "SHEA ESTHER",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "11350101",
+    "apellido": "MONZON REYES",
+    "nombre": "LUIS ALBERTO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18264591",
+    "apellido": "PEÑA PIÑERO",
+    "nombre": "FLORELIA AILEMAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "26714897",
+    "apellido": "RABAGO SOLORZANO",
+    "nombre": "RAYMAR MAELIX",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "25677751",
+    "apellido": "RODRIGUEZ ARIAS",
+    "nombre": "STEPHANIE ANDREINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "29527618",
+    "apellido": "RODRIGUEZ SANCHEZ",
+    "nombre": "DUBRAZKA GABRIELA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "11941744",
+    "apellido": "RODRIGUEZ SIBILA",
+    "nombre": "GUSTAVO ADOLFO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "19131822",
+    "apellido": "ROJAS LOPEZ",
+    "nombre": "JOHMAR CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "20761837",
+    "apellido": "SALAZAR SALAS",
+    "nombre": "ANGIE GINNISBETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "19469802",
+    "apellido": "SANCHEZ",
+    "nombre": "MAYERLIN KATERINE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "15196169",
+    "apellido": "SANCHEZ SANCHEZ",
+    "nombre": "EDWIN ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "14024678",
+    "apellido": "SANDOVAL PINZON",
+    "nombre": "YENISE CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "16128391",
+    "apellido": "SUL ROBLES",
+    "nombre": "MAIRIN KATIUSKA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "25841645",
+    "apellido": "TOVAR ESCALONA",
+    "nombre": "ANGEL LEONARDO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18176422",
+    "apellido": "VASQUEZ MORA",
+    "nombre": "VICKY CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "18083514",
+    "apellido": "VILLASMIL MADRID",
+    "nombre": "ASTRID ELITZABEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "12145194",
+    "apellido": "ZAMBRANO DE PEREZ",
+    "nombre": "ZULAY MERCEDES",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "MARACAY",
+    "region": "ARAGUA"
+  },
+  {
+    "email": null,
+    "cedula": "13874881",
+    "apellido": "ARREAZA DÍAZ",
+    "nombre": "YSMERY MARIVI",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "17272971",
+    "apellido": "BOYER SALAS",
+    "nombre": "JACOB ABRAHAM",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "13875966",
+    "apellido": "CARABALLO TORRES",
+    "nombre": "EDITH ESTHER",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "18336699",
+    "apellido": "GARCÍA VILLARROEL",
+    "nombre": "DANIEL JOSÉ",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "18616680",
+    "apellido": "LOAIZA",
+    "nombre": "GREISY YANETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "22950552",
+    "apellido": "PEREZ HERNANDEZ",
+    "nombre": "LUSVELY DEL MAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "12842153",
+    "apellido": "RÍOS PACHECO",
+    "nombre": "GRICE PAULINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "12810373",
+    "apellido": "ROMERO MARTINEZ",
+    "nombre": "YSABEL MARIA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "28176274",
+    "apellido": "TORRES ARMAS",
+    "nombre": "LUIS FERNANDO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "28482262",
+    "apellido": "TORRES SEIJAS",
+    "nombre": "YENNIFER ALEJANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "19222718",
+    "apellido": "TOVAR LORETO",
+    "nombre": "ADRIANA CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "30039685",
+    "apellido": "VASQUEZ MEJIAS",
+    "nombre": "MARIA ALEJANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "30039684",
+    "apellido": "VASQUEZ MEJIAS",
+    "nombre": "MARIA ALEXANDRA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN JUAN DE LOS MORROS",
+    "region": "GUARICO"
+  },
+  {
+    "email": null,
+    "cedula": "17867440",
+    "apellido": "RIVERO MEDINA",
+    "nombre": "ANA MILALIS",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "17637753",
+    "apellido": "PINTO MOTA",
+    "nombre": "ANDREINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "24561670",
+    "apellido": "CASTILLO CUICAS",
+    "nombre": "BEATRIZ ADRIANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "15483554",
+    "apellido": "GUEDEZ ESPINOZA",
+    "nombre": "CELIT MAIROBY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "13503139",
+    "apellido": "MONTEZUMA CORDERO",
+    "nombre": "DAMARYS YULIANA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "18193220",
+    "apellido": "CAMPOS HURTADO",
+    "nombre": "DHAYISBEL ANTONIETA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "15389980",
+    "apellido": "SALAS CAMACHO",
+    "nombre": "DILEINI YSABEL",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "14608923",
+    "apellido": "BAUTE GONZALEZ",
+    "nombre": "EBONY YANETH",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "15483741",
+    "apellido": "COLINA BETANCOURT",
+    "nombre": "GLADYMAR",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "21301299",
+    "apellido": "OSORIO SERRANO",
+    "nombre": "JESÚS ANTONIO",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "17257335",
+    "apellido": "HERRERA AGUILAR",
+    "nombre": "MAIREC ANDREÍNA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "20539227",
+    "apellido": "FALZONE CORDIDO",
+    "nombre": "MIKELY ANYELINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "12783360",
+    "apellido": "GARCÍA PETIT",
+    "nombre": "MIREYA DESIREE",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "17867254",
+    "apellido": "MUÑOZ EREU",
+    "nombre": "RAQUEL CAROLINA",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "25833831",
+    "apellido": "RODRÍGUEZ GUEVARA",
+    "nombre": "ANDY DANIEL",
+    "genero": "MASCULINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  },
+  {
+    "email": null,
+    "cedula": "19857610",
+    "apellido": "GÓMEZ FRANCO",
+    "nombre": "YAKELINE NATHALY",
+    "genero": "FEMENINO",
+    "telefono": null,
+    "aula": "SAN FELIPE",
+    "region": "YARACUY"
+  }
+]

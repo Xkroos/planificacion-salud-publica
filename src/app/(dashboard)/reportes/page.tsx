@@ -39,19 +39,28 @@ export default function ReportesPage() {
   const [profSeccion, setProfSeccion] = useState('')
 
   useEffect(() => {
-    fetch('/sistema/api/cronograma').then(r => r.json()).then(d => {
-      if (Array.isArray(d)) {
-        setCronogramas(d)
-      } else {
-        console.error('API Error:', d)
+    fetch('/sistema/api/cronograma?all=true')
+      .then(r => r.json())
+      .then(d => {
+        const items = Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : null)
+        if (items) {
+          setCronogramas(items)
+        } else {
+          console.error('API Error:', d)
+          setCronogramas([])
+        }
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Fetch Error:', err)
         setCronogramas([])
-      }
-      setLoading(false)
-    })
+        setLoading(false)
+      })
   }, [])
 
   // Agrupar cronogramas
   const groupedData = cronogramas.reduce((acc, c) => {
+    if (!c.aulaTerritorial?.region) return acc
     const regId = c.aulaTerritorial.region.id
     if (!acc[regId]) acc[regId] = { id: regId, nombre: c.aulaTerritorial.region.nombre, aulas: {} }
     
@@ -90,8 +99,10 @@ export default function ReportesPage() {
       const { jsPDF } = await import('jspdf')
       const autoTable = (await import('jspdf-autotable')).default
 
-      const res = await fetch(`/sistema/api/participantes?aulaTerritorialId=${cronograma.aulaTerritorial.id}&periodoId=${cronograma.periodo.id}`)
-      const allParts = await res.json()
+      const aulaId = cronograma.aulaTerritorial?.id || ''
+      const res = await fetch(`/sistema/api/participantes?aulaTerritorialId=${aulaId}&periodoId=${cronograma.periodo.id}&limit=1000`)
+      const allPartsData = await res.json()
+      const allParts = Array.isArray(allPartsData) ? allPartsData : (Array.isArray(allPartsData?.data) ? allPartsData.data : [])
       
       const enrolled = allParts.filter((p: any) => p.cronogramas?.some((cp: any) => cp.cronogramaId === cronograma.id))
 
@@ -102,8 +113,8 @@ export default function ReportesPage() {
       
       doc.setFontSize(10)
       doc.setFont('times', 'normal')
-      doc.text(`Estado: ${cronograma.aulaTerritorial.region.nombre}`, 14, 22)
-      doc.text(`Aula Territorial: ${cronograma.aulaTerritorial.nombre}`, 14, 27)
+      doc.text(`Estado: ${cronograma.aulaTerritorial?.region?.nombre || 'N/A'}`, 14, 22)
+      doc.text(`Aula Territorial: ${cronograma.aulaTerritorial?.nombre || 'N/A'}`, 14, 27)
       doc.text(`Sección: ${cronograma.seccion} (${cronograma.trimestre === 'Introductorio' ? cronograma.trimestre : cronograma.trimestre + '° Trim.'})`, 14, 32)
 
       autoTable(doc, {
@@ -135,8 +146,8 @@ export default function ReportesPage() {
       const autoTable = (await import('jspdf-autotable')).default
 
       let filteredCrons = cronogramas
-      if (profRegion) filteredCrons = filteredCrons.filter(c => c.aulaTerritorial.region.id === profRegion)
-      if (profAula) filteredCrons = filteredCrons.filter(c => c.aulaTerritorial.id === profAula)
+      if (profRegion) filteredCrons = filteredCrons.filter(c => c.aulaTerritorial?.region?.id === profRegion)
+      if (profAula) filteredCrons = filteredCrons.filter(c => c.aulaTerritorial?.id === profAula)
       if (profTrimestre) filteredCrons = filteredCrons.filter(c => c.trimestre === profTrimestre)
       if (profSeccion) filteredCrons = filteredCrons.filter(c => c.id === profSeccion)
 
@@ -201,10 +212,12 @@ export default function ReportesPage() {
   }
 
   const getAllFromAula = (aula: any) => {
-    return Object.values(aula.trimestres).flatMap((t: any) => t.cronogramas)
+    if (!aula?.trimestres) return []
+    return Object.values(aula.trimestres).flatMap((t: any) => t.cronogramas || [])
   }
 
   const getAllFromRegion = (region: any) => {
+    if (!region?.aulas) return []
     return Object.values(region.aulas).flatMap((a: any) => getAllFromAula(a))
   }
 

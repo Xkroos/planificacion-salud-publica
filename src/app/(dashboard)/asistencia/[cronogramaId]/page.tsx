@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { CheckSquare, ArrowLeft } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { formatFechaEncuentroLarga } from '@/lib/utils'
 
 type Cronograma = {
   id: string
@@ -112,7 +113,7 @@ export default function AsistenciaPage() {
             <option value="">-- Seleccione una fecha --</option>
             {allFechas.map(f => (
               <option key={f.id} value={f.id}>
-                {new Date(f.fecha).toLocaleDateString('es-VE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                {formatFechaEncuentroLarga(f.fecha)}
                 {' — '}{f.unidad.slice(0, 40)}...
               </option>
             ))}

@@ -118,7 +118,7 @@ function ExpedienteDetalle({ periodo, onBack }: { periodo: Periodo; onBack: () =
   const [pagePart, setPagePart] = useState(1)
   const [totalPartPages, setTotalPartPages] = useState(1)
   const [totalPart, setTotalPart] = useState(0)
-  const LIMIT = 50
+  const LIMIT = 20
 
   // Trayectoria modal
   const [trayectoParticipante, setTrayectoParticipante] = useState<any | null>(null)

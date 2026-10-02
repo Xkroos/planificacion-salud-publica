@@ -6,13 +6,19 @@ import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, Use
 import Link from 'next/link'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
 import toast from 'react-hot-toast'
+import { formatFechaEncuentro, formatHoraAmPm, parseHoraTo24 } from '@/lib/utils'
 
-const TIME_OPTIONS = Array.from({ length: 16 * 4 + 1 }).map((_, i) => {
-  const h = Math.floor(i / 4) + 6;
-  const m = (i % 4) * 15;
-  if (h > 21 && m > 0) return null;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-}).filter(Boolean) as string[];
+const TIME_OPTIONS = [
+  '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM',
+  '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM',
+  '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM',
+  '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM',
+  '07:00 PM', '07:30 PM', '08:00 PM',
+  '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
+  '19:00', '19:30', '20:00'
+];
 
 type Cronograma = {
   id: string
@@ -64,7 +70,7 @@ export default function CronogramaDetailPage() {
 
   const [showGenerarModal, setShowGenerarModal] = useState(false)
   const [fechaInicio, setFechaInicio] = useState('')
-  const [horaInicioBase, setHoraInicioBase] = useState('08:00')
+  const [horaInicioBase, setHoraInicioBase] = useState('08:00 AM')
   const [generandoFechas, setGenerandoFechas] = useState(false)
 
   const handleGenerarFechas = async () => {
@@ -77,7 +83,7 @@ export default function CronogramaDetailPage() {
       const res = await fetch(`/sistema/api/cronograma/${id}/generar-fechas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fechaInicio, horaInicio: horaInicioBase })
+        body: JSON.stringify({ fechaInicio, horaInicio: parseHoraTo24(horaInicioBase) })
       })
       const resData = await res.json()
       if (!res.ok) throw new Error(resData.error || 'Error al generar fechas')
@@ -188,10 +194,15 @@ export default function CronogramaDetailPage() {
 
   const handleUpdateAsign = async () => {
     setSavingAsign(true)
+    const payload = {
+      ...editAsign,
+      horaInicio: parseHoraTo24(editAsign.horaInicio),
+      horaFin: parseHoraTo24(editAsign.horaFin),
+    }
     await fetch(`/sistema/api/asignaciones/${editAsign.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editAsign)
+      body: JSON.stringify(payload)
     })
     await fetch_()
     setEditAsign(null)
@@ -213,11 +224,11 @@ export default function CronogramaDetailPage() {
     if (isNaN(totalClases) || totalClases <= 0) return
 
     const generatedFechas: string[] = []
-    const currentDate = new Date(fechaInicial + 'T12:00:00')
+    const [year, month, day] = fechaInicial.split('-').map(Number)
 
     for (let j = 0; j < totalClases; j++) {
-      generatedFechas.push(currentDate.toISOString().split('T')[0])
-      currentDate.setDate(currentDate.getDate() + 15)
+      const d = new Date(Date.UTC(year, month - 1, day + (j * 14), 12, 0, 0))
+      generatedFechas.push(d.toISOString().split('T')[0])
     }
     setEditAsign({ ...editAsign, fechas: generatedFechas.sort() })
   }
@@ -397,7 +408,7 @@ export default function CronogramaDetailPage() {
                       )}
                     </td>
                     <td style={{ maxWidth: '200px', fontSize: '12px' }}>{a.unidad.nombre}</td>
-                    <td style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{a.horaInicio} — {a.horaFin}</td>
+                    <td style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{formatHoraAmPm(a.horaInicio)} — {formatHoraAmPm(a.horaFin)}</td>
                     <td><span className="badge badge-blue">{a.uc}</span></td>
                     <td><span className="badge badge-green">{a.cantHoras}hr</span></td>
                     <td>
@@ -409,7 +420,7 @@ export default function CronogramaDetailPage() {
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {a.fechas.map(f => (
                           <span key={f.id} style={{ background: '#f0fdf4', color: '#166534', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', whiteSpace: 'nowrap' }}>
-                            {new Date(f.fecha).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            {formatFechaEncuentro(f.fecha)}
                           </span>
                         ))}
                       </div>
@@ -424,7 +435,7 @@ export default function CronogramaDetailPage() {
                           )}
                           {canEditOrDelete && (
                             <>
-                              <button className="btn-icon" style={{ color: '#2563eb', borderColor: '#bfdbfe' }} title="Editar Detalles" onClick={() => setEditAsign({ ...a, fechas: a.fechas.map((f: any) => f.fecha.split('T')[0]) })}><Edit2 size={14} /></button>
+                              <button className="btn-icon" style={{ color: '#2563eb', borderColor: '#bfdbfe' }} title="Editar Detalles" onClick={() => setEditAsign({ ...a, horaInicio: formatHoraAmPm(a.horaInicio), horaFin: formatHoraAmPm(a.horaFin), fechas: a.fechas.map((f: any) => { const m = String(f.fecha).match(/^(\d{4}-\d{2}-\d{2})/); return m ? m[1] : f.fecha.split('T')[0] }) })}><Edit2 size={14} /></button>
                               <button className="btn-icon" style={{ color: '#dc2626', borderColor: '#fecaca' }} onClick={() => setDeleteAsign(a.id)}><Trash2 size={14} /></button>
                             </>
                           )}
@@ -571,7 +582,7 @@ export default function CronogramaDetailPage() {
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label className="form-label">Hora Inicial *</label>
-                  <input className="form-input" type="text" list="time-options" value={horaInicioBase} onChange={e => setHoraInicioBase(e.target.value)} placeholder="Ingrese la hora HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" />
+                  <input className="form-input" type="text" list="time-options" value={horaInicioBase} onChange={e => setHoraInicioBase(e.target.value)} placeholder="Ej: 08:00 AM" />
                 </div>
               </div>
 
@@ -939,11 +950,11 @@ export default function CronogramaDetailPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Hora Inicio</label>
-                  <input className="form-input" type="text" list="time-options" value={editAsign.horaInicio || ''} onChange={e => setEditAsign({ ...editAsign, horaInicio: e.target.value })} placeholder="Ingrese la hora HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" />
+                  <input className="form-input" type="text" list="time-options" value={editAsign.horaInicio || ''} onChange={e => setEditAsign({ ...editAsign, horaInicio: e.target.value })} placeholder="Ej: 08:00 AM" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Hora Fin</label>
-                  <input className="form-input" type="text" list="time-options" value={editAsign.horaFin || ''} onChange={e => setEditAsign({ ...editAsign, horaFin: e.target.value })} placeholder="Ingrese la hora HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" />
+                  <input className="form-input" type="text" list="time-options" value={editAsign.horaFin || ''} onChange={e => setEditAsign({ ...editAsign, horaFin: e.target.value })} placeholder="Ej: 10:00 AM" />
                 </div>
               </div>
 
@@ -963,7 +974,7 @@ export default function CronogramaDetailPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {editAsign.fechas.map((f: string) => (
                     <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dbeafe', color: '#1d4ed8', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500 }}>
-                      <Calendar size={12} />{new Date(f + 'T12:00:00').toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      <Calendar size={12} />{formatFechaEncuentro(f)}
                       <button onClick={() => removeFechaFromEdit(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', padding: '0', marginLeft: '2px', display: 'flex', alignItems: 'center' }}><X size={12} /></button>
                     </span>
                   ))}

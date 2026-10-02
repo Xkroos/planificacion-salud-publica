@@ -30,10 +30,16 @@ export default function FinanzasSelectorPage() {
       try {
         const [regRes, croRes] = await Promise.all([
           fetch('/sistema/api/regiones'),
-          fetch('/sistema/api/cronograma')
+          fetch('/sistema/api/cronograma?all=true')
         ])
-        if (regRes.ok) setRegiones(await regRes.json())
-        if (croRes.ok) setCronogramas(await croRes.json())
+        if (regRes.ok) {
+          const regData = await regRes.json()
+          setRegiones(Array.isArray(regData) ? regData : [])
+        }
+        if (croRes.ok) {
+          const croData = await croRes.json()
+          setCronogramas(Array.isArray(croData) ? croData : (Array.isArray(croData?.data) ? croData.data : []))
+        }
       } catch (e) {
         console.error(e)
       } finally {
@@ -51,11 +57,13 @@ export default function FinanzasSelectorPage() {
 
   // Filtered Options
   const filteredCronogramas = useMemo(() => {
-    return cronogramas.filter(c => {
+    const list = Array.isArray(cronogramas) ? cronogramas : []
+    const regList = Array.isArray(regiones) ? regiones : []
+    return list.filter(c => {
       // Region filter
       if (selectedRegionId) {
-        const region = regiones.find(r => r.id === selectedRegionId);
-        if (region && !region.aulas.some(a => a.id === c.aulaTerritorial?.id)) {
+        const region = regList.find(r => r.id === selectedRegionId);
+        if (region && !region.aulas?.some(a => a.id === c.aulaTerritorial?.id)) {
           return false;
         }
       }
@@ -70,7 +78,7 @@ export default function FinanzasSelectorPage() {
         const term = searchTerm.toLowerCase();
         const aulaNombre = c.aulaTerritorial?.nombre?.toLowerCase() || '';
         const seccion = c.seccion?.toLowerCase() || '';
-        const periodoStr = `${c.periodo?.anio}-${c.periodo?.numero}`;
+        const periodoStr = `${c.periodo?.anio || ''}-${c.periodo?.numero || ''}`;
         const trimestre = c.trimestre?.toLowerCase() || '';
         
         if (!aulaNombre.includes(term) && !seccion.includes(term) && !periodoStr.includes(term) && !trimestre.includes(term)) {
@@ -82,15 +90,16 @@ export default function FinanzasSelectorPage() {
     });
   }, [cronogramas, regiones, selectedRegionId, selectedAulaId, searchTerm])
 
-  const selectedRegion = useMemo(() => regiones.find(r => r.id === selectedRegionId), [regiones, selectedRegionId])
-  const aulasForRegion = selectedRegion ? selectedRegion.aulas : regiones.flatMap(r => r.aulas)
+  const selectedRegion = useMemo(() => Array.isArray(regiones) ? regiones.find(r => r.id === selectedRegionId) : undefined, [regiones, selectedRegionId])
+  const aulasForRegion = selectedRegion ? (selectedRegion.aulas || []) : (Array.isArray(regiones) ? regiones.flatMap(r => r.aulas || []) : [])
 
   // Group filtered cronogramas by Region to display them nicely
   const groupedCronogramas = useMemo(() => {
     const groups: { [regionName: string]: Cronograma[] } = {};
+    const regList = Array.isArray(regiones) ? regiones : []
     
     filteredCronogramas.forEach(c => {
-      const region = regiones.find(r => r.aulas.some(a => a.id === c.aulaTerritorial?.id));
+      const region = regList.find(r => r.aulas?.some(a => a.id === c.aulaTerritorial?.id));
       const regionName = region ? region.nombre : 'Sin Región';
       if (!groups[regionName]) {
         groups[regionName] = [];

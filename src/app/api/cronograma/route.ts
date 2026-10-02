@@ -11,8 +11,10 @@ export async function GET(req: NextRequest) {
     const regionId = searchParams.get('regionId') || ''
     const aulaTerritorialId = searchParams.get('aulaTerritorialId') || ''
     const trimestre = searchParams.get('trimestre') || ''
+    const hasPagination = searchParams.has('page') || (searchParams.has('limit') && searchParams.get('limit') !== 'all')
+    const isAll = searchParams.get('all') === 'true' || searchParams.get('limit') === 'all' || !hasPagination
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = hasPagination ? parseInt(searchParams.get('limit') || '10') : 0
     const skip = (page - 1) * limit
 
     const where: any = {}
@@ -23,8 +25,14 @@ export async function GET(req: NextRequest) {
       if (activePeriodo) {
         where.periodoId = activePeriodo.id
       } else {
-        // Si no hay periodo activo, devolvemos vacío
-        return NextResponse.json([])
+        // Si no hay periodo activo, devolvemos respuesta vacía consistente
+        return NextResponse.json({
+          data: [],
+          total: 0,
+          page: 1,
+          limit: limit || 10,
+          totalPages: 0
+        })
       }
     }
 
@@ -66,16 +74,15 @@ export async function GET(req: NextRequest) {
         },
         _count: { select: { participantes: true } },
       },
-      skip,
-      take: limit,
+      ...(hasPagination && limit > 0 ? { skip, take: limit } : {}),
     })
     
     return NextResponse.json({
       data: cronogramas,
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
+      page: hasPagination ? page : 1,
+      limit: hasPagination ? limit : total,
+      totalPages: hasPagination && limit > 0 ? Math.ceil(total / limit) : 1
     })
   } catch (error) {
     console.error('Error fetching cronogramas:', error)

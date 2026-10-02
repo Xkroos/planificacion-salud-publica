@@ -4,13 +4,19 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ClipboardList, ArrowLeft, Calendar, X } from 'lucide-react'
 import Link from 'next/link'
+import { formatFechaEncuentro, formatHoraAmPm, parseHoraTo24 } from '@/lib/utils'
 
-const TIME_OPTIONS = Array.from({ length: 16 * 4 + 1 }).map((_, i) => {
-  const h = Math.floor(i / 4) + 6;
-  const m = (i % 4) * 15;
-  if (h > 21 && m > 0) return null;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-}).filter(Boolean) as string[];
+const TIME_OPTIONS = [
+  '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM',
+  '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM',
+  '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM',
+  '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM',
+  '07:00 PM', '07:30 PM', '08:00 PM',
+  '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
+  '19:00', '19:30', '20:00'
+];
 
 type Cronograma = {
   id: string
@@ -44,8 +50,8 @@ export default function AgregarDocentePage() {
   
   const [unidadId, setUnidadId] = useState('')
   const [lugar, setLugar] = useState('')
-  const [horaInicio, setHoraInicio] = useState('08:00')
-  const [horaFin, setHoraFin] = useState('10:00')
+  const [horaInicio, setHoraInicio] = useState('08:00 AM')
+  const [horaFin, setHoraFin] = useState('10:00 AM')
   const [modalidad, setModalidad] = useState('PRESENCIAL')
   const [uc, setUc] = useState('3')
   const [cantHoras, setCantHoras] = useState('48')
@@ -75,13 +81,16 @@ export default function AgregarDocentePage() {
             setDocenteId(a.docenteId || '')
             setUnidadId(a.unidadId || '')
             setLugar(a.lugar || '')
-            setHoraInicio(a.horaInicio)
-            setHoraFin(a.horaFin)
+            setHoraInicio(formatHoraAmPm(a.horaInicio))
+            setHoraFin(formatHoraAmPm(a.horaFin))
             setModalidad(a.modalidad)
             setUc(a.uc.toString())
             setCantHoras(a.cantHoras.toString())
             if (a.fechas) {
-              setFechas(a.fechas.map((f: any) => f.fecha.split('T')[0]).sort())
+              setFechas(a.fechas.map((f: any) => {
+                const m = String(f.fecha).match(/^(\d{4}-\d{2}-\d{2})/)
+                return m ? m[1] : f.fecha.split('T')[0]
+              }).sort())
             }
           }
         }
@@ -138,11 +147,11 @@ export default function AgregarDocentePage() {
     if (isNaN(totalClases) || totalClases <= 0) return
 
     const generated: string[] = []
-    const currentDate = new Date(start + 'T12:00:00')
+    const [year, month, day] = start.split('-').map(Number)
 
     for (let j = 0; j < totalClases; j++) {
-      generated.push(currentDate.toISOString().split('T')[0])
-      currentDate.setDate(currentDate.getDate() + 15)
+      const d = new Date(Date.UTC(year, month - 1, day + (j * 14), 12, 0, 0))
+      generated.push(d.toISOString().split('T')[0])
     }
     setFechas(generated.sort())
   }
@@ -188,8 +197,8 @@ const handleSave = async (e: React.FormEvent) => {
           docenteId,
           unidadId,
           lugar,
-          horaInicio,
-          horaFin,
+          horaInicio: parseHoraTo24(horaInicio),
+          horaFin: parseHoraTo24(horaFin),
           modalidad,
           uc,
           cantHoras,
@@ -292,12 +301,12 @@ const handleSave = async (e: React.FormEvent) => {
 
           <div className="form-group">
             <label className="form-label">Hora Inicio *</label>
-            <input className="form-input" type="text" list="time-options" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} placeholder="Ingrese la hora HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required />
+            <input className="form-input" type="text" list="time-options" value={horaInicio} onChange={e => setHoraInicio(e.target.value)} placeholder="Ej: 08:00 AM" required />
           </div>
 
           <div className="form-group">
             <label className="form-label">Hora Fin *</label>
-            <input className="form-input" type="text" list="time-options" value={horaFin} onChange={e => setHoraFin(e.target.value)} placeholder="Ingrese la hora HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" required />
+            <input className="form-input" type="text" list="time-options" value={horaFin} onChange={e => setHoraFin(e.target.value)} placeholder="Ej: 10:00 AM" required />
           </div>
 
           <div className="form-group">
@@ -341,7 +350,7 @@ const handleSave = async (e: React.FormEvent) => {
             {fechas.map(f => (
               <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dbeafe', color: '#1d4ed8', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 500 }}>
                 <Calendar size={12} />
-                {new Date(f + 'T12:00:00').toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                {formatFechaEncuentro(f)}
                 <button type="button" onClick={() => removeFecha(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1d4ed8', padding: '0', marginLeft: '2px', display: 'flex', alignItems: 'center' }}>
                   <X size={12} />
                 </button>

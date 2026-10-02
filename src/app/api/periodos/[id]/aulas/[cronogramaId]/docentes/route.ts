@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { parseHoraTo24 } from '@/lib/utils'
 
 // GET /api/periodos/[id]/aulas/[cronogramaId]/docentes
 export async function GET(
@@ -68,15 +69,15 @@ export async function POST(
         unidadId: body.unidadId,
         viatico: viatico, // Asignar viático calculado
         lugar: body.lugar || null,
-        horaInicio: body.horaInicio,
-        horaFin: body.horaFin,
+        horaInicio: parseHoraTo24(body.horaInicio) || '08:00',
+        horaFin: parseHoraTo24(body.horaFin) || '10:00',
         modalidad: body.modalidad,
         uc: parseInt(body.uc),
         cantHoras: parseInt(body.cantHoras),
         orden: parseInt(body.orden) || 0,
         fechas: {
           create: (body.fechas || []).map((f: string) => ({
-            fecha: new Date(f),
+            fecha: new Date(f.includes('T') ? f : `${f}T12:00:00Z`),
             modalidad: body.modalidad,
           })),
         },

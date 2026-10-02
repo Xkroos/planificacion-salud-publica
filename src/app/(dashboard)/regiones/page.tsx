@@ -67,11 +67,11 @@ export default function RegionesPage() {
 
   const openEditAula = (a: Aula) => {
     setEditingAula(a)
-    setAulaForm({ 
-      nombre: a.nombre, 
-      coordinador: a.coordinador || '', 
-      enlace: a.enlace || '', 
-      regionId: a.regionId 
+    setAulaForm({
+      nombre: a.nombre,
+      coordinador: a.coordinador || '',
+      enlace: a.enlace || '',
+      regionId: a.regionId
     })
     setShowAulaModal(true)
   }
@@ -177,15 +177,15 @@ export default function RegionesPage() {
             <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">Nombre del Aula *</label>
-                <input className="form-input" placeholder="Ej: PUERTO CABELLO" value={aulaForm.nombre} onChange={e => setAulaForm({ ...aulaForm, nombre: e.target.value })} autoFocus />
+                <input className="form-input" placeholder="Nombre del aula" value={aulaForm.nombre} onChange={e => setAulaForm({ ...aulaForm, nombre: e.target.value })} autoFocus />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Coordinador Nacional</label>
+                <input className="form-input" placeholder="Nombre del coordinador" value={aulaForm.coordinador} onChange={e => setAulaForm({ ...aulaForm, coordinador: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Coordinador Territorial</label>
-                <input className="form-input" placeholder="Ej: DRA. MILDRE PÉREZ" value={aulaForm.coordinador} onChange={e => setAulaForm({ ...aulaForm, coordinador: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Enlace Territorial</label>
-                <input className="form-input" placeholder="Nombre del enlace" value={aulaForm.enlace} onChange={e => setAulaForm({ ...aulaForm, enlace: e.target.value })} />
+                <input className="form-input" placeholder="Nombre del Coordinador" value={aulaForm.enlace} onChange={e => setAulaForm({ ...aulaForm, enlace: e.target.value })} />
               </div>
             </div>
             <div className="modal-footer">
