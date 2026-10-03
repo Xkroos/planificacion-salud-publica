@@ -250,7 +250,12 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
       y += totalHead
 
       // ─── Filas de datos ───────────────────────────────────────────────────
-      const asignaciones: any[] = cr.asignaciones || []
+      const asignaciones: any[] = [...(cr.asignaciones || [])].sort((a: any, b: any) => {
+        const ordA = typeof a.orden === 'number' ? a.orden : 0
+        const ordB = typeof b.orden === 'number' ? b.orden : 0
+        if (ordA !== ordB) return ordA - ordB
+        return 0
+      })
       asignaciones.forEach((a: any) => {
         const fechas: any[] = a.fechas || []
         const numFechas = Math.max(fechas.length, 1)

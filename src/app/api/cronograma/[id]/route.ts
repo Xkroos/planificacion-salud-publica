@@ -17,7 +17,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
             unidad: true,
             fechas: { orderBy: { fecha: 'asc' } },
           },
-          orderBy: { horaInicio: 'asc' },
+          orderBy: [{ orden: 'asc' }, { horaInicio: 'asc' }, { id: 'asc' }],
         },
         participantes: {
           include: { participante: true },

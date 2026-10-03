@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
             unidad: true,
             fechas: { orderBy: { fecha: 'asc' } },
           },
-          orderBy: { horaInicio: 'asc' },
+          orderBy: [{ orden: 'asc' }, { horaInicio: 'asc' }, { id: 'asc' }],
         },
         _count: { select: { participantes: true } },
       },

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const asignaciones = await prisma.asignacionDocente.findMany({
       where: { cronogramaId: id },
-      orderBy: { id: 'asc' } // Para que el orden sea determinista
+      orderBy: [{ orden: 'asc' }, { horaInicio: 'asc' }, { id: 'asc' }]
     })
 
     if (asignaciones.length === 0) {
@@ -52,12 +52,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       
       const horario = { inicio: `${sH}:${sM}`, fin: `${eH}:${sM}` }
 
-      // Actualizar el horario en la asignación
+      // Actualizar el horario en la asignación y garantizar el orden
       await prisma.asignacionDocente.update({
         where: { id: a.id },
         data: {
           horaInicio: horario.inicio,
-          horaFin: horario.fin
+          horaFin: horario.fin,
+          orden: i
         }
       })
 

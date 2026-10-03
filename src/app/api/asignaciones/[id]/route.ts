@@ -86,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // Obtenemos todas las asignaciones del cronograma ordenadas
     const todasAsignaciones = await prisma.asignacionDocente.findMany({
       where: { cronogramaId: asignacion.cronogramaId },
-      orderBy: { horaInicio: 'asc' }
+      orderBy: [{ orden: 'asc' }, { horaInicio: 'asc' }, { id: 'asc' }]
     });
     
     const currentIndex = todasAsignaciones.findIndex(a => a.id === id);

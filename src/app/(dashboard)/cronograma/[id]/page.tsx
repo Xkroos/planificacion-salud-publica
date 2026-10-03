@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, UserPlus, UserMinus, Search, Loader2 } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, UserPlus, UserMinus, Search, Loader2, GripVertical, ChevronUp, ChevronDown, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
 import toast from 'react-hot-toast'
@@ -31,6 +31,7 @@ type Cronograma = {
   asignaciones: {
     id: string; docenteId: string; unidadId: string; lugar: string | null
     horaInicio: string; horaFin: string; modalidad: string; uc: number; cantHoras: number
+    orden?: number
     docente: { nombre: string; categoria: string; dedicacion: string }
     unidad: { id: string; nombre: string }
     fechas: { id: string; fecha: string; modalidad: string }[]
@@ -97,12 +98,125 @@ export default function CronogramaDetailPage() {
   }
 
   const [generatingPDF, setGeneratingPDF] = useState(false)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [isReordering, setIsReordering] = useState(false)
+
+  const handleDragStart = (index: number, e: React.DragEvent) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', index.toString())
+  }
+
+  const handleDragOver = (index: number, e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index)
+    }
+  }
+
+  const handleDragLeave = () => {
+    // Mantener hasta drop/end
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (dropIndex: number, e: React.DragEvent) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    moveAsignacion(draggedIndex, dropIndex)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const moveAsignacion = async (fromIndex: number, toIndex: number) => {
+    if (!data || fromIndex === toIndex) return
+    if (fromIndex < 0 || fromIndex >= data.asignaciones.length) return
+    if (toIndex < 0 || toIndex >= data.asignaciones.length) return
+
+    const newAsignaciones = [...data.asignaciones]
+    const [movedItem] = newAsignaciones.splice(fromIndex, 1)
+    newAsignaciones.splice(toIndex, 0, movedItem)
+
+    // Actualización optimista de interfaz inmediata
+    setData({
+      ...data,
+      asignaciones: newAsignaciones
+    })
+
+    setIsReordering(true)
+    try {
+      const res = await fetch(`/sistema/api/cronograma/${id}/reordenar-asignaciones`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ordenes: newAsignaciones.map((a, idx) => ({ id: a.id, orden: idx }))
+        })
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Error al guardar nuevo orden')
+      }
+      toast.success('Orden de materias actualizado')
+      await fetch_()
+    } catch (err: any) {
+      toast.error(err.message || 'Error al reordenar')
+      await fetch_()
+    } finally {
+      setIsReordering(false)
+    }
+  }
+
+  const handleAutoAjustarHorarios = async () => {
+    if (!data || data.asignaciones.length === 0) return
+    if (!confirm('¿Desea reajustar los horarios de las materias en bloques consecutivos (08:00 AM - 10:00 AM, 10:00 AM - 12:00 PM, etc.) respetando el orden actual?')) return
+
+    setIsReordering(true)
+    try {
+      const res = await fetch(`/sistema/api/cronograma/${id}/reordenar-asignaciones`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ordenes: data.asignaciones.map((a, idx) => ({ id: a.id, orden: idx })),
+          reajustarHorarios: true,
+          horaInicioBase: '08:00'
+        })
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Error al ajustar horarios')
+      }
+      toast.success('Horarios ajustados consecutivamente con éxito')
+      await fetch_()
+    } catch (err: any) {
+      toast.error(err.message || 'Error al ajustar horarios')
+    } finally {
+      setIsReordering(false)
+    }
+  }
 
   const handleGeneratePDF = async () => {
     if (!data) return
     setGeneratingPDF(true)
     try {
-      await generateCronogramaPDF([data], `Cronograma_Secc_${data.seccion}`)
+      const sortedData = {
+        ...data,
+        asignaciones: [...data.asignaciones].sort((a, b) => {
+          const ordA = typeof a.orden === 'number' ? a.orden : 0
+          const ordB = typeof b.orden === 'number' ? b.orden : 0
+          if (ordA !== ordB) return ordA - ordB
+          return 0
+        })
+      }
+      await generateCronogramaPDF([sortedData], `Cronograma_Secc_${data.seccion}`)
     } catch (error) {
       toast.error('Error al generar PDF: ' + (error as Error).message)
     } finally {
@@ -152,6 +266,14 @@ export default function CronogramaDetailPage() {
         uList.forEach((u: any) => { uDict[u.id] = u.nombre })
       }
       setUnidadesGlobal(uDict)
+      if (d && Array.isArray(d.asignaciones)) {
+        d.asignaciones.sort((a: any, b: any) => {
+          const ordA = typeof a.orden === 'number' ? a.orden : 0
+          const ordB = typeof b.orden === 'number' ? b.orden : 0
+          if (ordA !== ordB) return ordA - ordB
+          return 0
+        })
+      }
       setData(d)
     } catch (e) {
       console.error(e)
@@ -375,9 +497,32 @@ export default function CronogramaDetailPage() {
 
       {/* Asignaciones */}
       <div className="card" style={{ marginBottom: '20px' }}>
-        <div className="card-header">
-          <h2 className="card-title">Asignaciones de Docentes</h2>
-          <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="card-header" style={{ flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <h2 className="card-title">Asignaciones de Docentes</h2>
+            {canModifyAsignaciones && data.asignaciones.length > 1 && (
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '3px 0 0 0' }}>
+                💡 Puedes arrastrar las materias para reordenarlas o usar las flechas (▲ / ▼).
+              </p>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {isReordering && (
+              <span style={{ fontSize: '12px', color: '#2563eb', display: 'flex', alignItems: 'center', gap: '4px', background: '#eff6ff', padding: '4px 8px', borderRadius: '6px' }}>
+                <Loader2 size={13} className="spin" /> Guardando orden...
+              </span>
+            )}
+            {canModifyAsignaciones && data.asignaciones.length > 1 && (
+              <button 
+                type="button"
+                className="btn btn-sm btn-secondary" 
+                onClick={handleAutoAjustarHorarios}
+                disabled={isReordering}
+                title="Alinear automáticamente los horarios consecutivos (8:00 AM - 10:00 AM, 10:00 AM - 12:00 PM...) según el orden actual de las materias"
+              >
+                <Clock size={14} /> Sincronizar Horarios
+              </button>
+            )}
             {canModifyAsignaciones && <button className="btn btn-sm btn-secondary" onClick={() => setShowGenerarModal(true)}><Calendar size={14} /> Generar Fechas</button>}
           </div>
         </div>
@@ -388,14 +533,69 @@ export default function CronogramaDetailPage() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: '85px', textAlign: 'center' }}>Orden</th>
                   <th>Docente</th><th>Categoría / Dedicación</th><th>Unidad Curricular</th>
                   <th>Horario</th><th>UC</th><th>Horas</th><th>Modalidad</th>
                   <th>Fechas</th><th>Acc.</th>
                 </tr>
               </thead>
               <tbody>
-                {data.asignaciones.map(a => (
-                  <tr key={a.id}>
+                {data.asignaciones.map((a, index) => (
+                  <tr
+                    key={a.id}
+                    draggable={canModifyAsignaciones}
+                    onDragStart={(e) => handleDragStart(index, e)}
+                    onDragOver={(e) => handleDragOver(index, e)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(index, e)}
+                    onDragEnd={handleDragEnd}
+                    style={{
+                      opacity: draggedIndex === index ? 0.35 : 1,
+                      backgroundColor: dragOverIndex === index ? '#eff6ff' : undefined,
+                      borderTop: dragOverIndex === index ? '2px solid #2563eb' : undefined,
+                      transition: 'background-color 0.15s ease, opacity 0.15s ease',
+                      cursor: canModifyAsignaciones ? 'grab' : 'default',
+                    }}
+                  >
+                    <td style={{ textAlign: 'center', verticalAlign: 'middle', userSelect: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        {canModifyAsignaciones && (
+                          <div
+                            style={{ cursor: 'grab', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                            title="Arrastra para reordenar esta materia"
+                          >
+                            <GripVertical size={16} />
+                          </div>
+                        )}
+                        <span className="badge badge-gray" style={{ minWidth: '26px', fontWeight: 700, fontSize: '11px', textAlign: 'center' }}>
+                          #{index + 1}
+                        </span>
+                        {canModifyAsignaciones && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                            <button
+                              type="button"
+                              disabled={index === 0 || isReordering}
+                              onClick={(e) => { e.stopPropagation(); moveAsignacion(index, index - 1) }}
+                              className="btn-icon"
+                              style={{ width: '18px', height: '14px', padding: 0, border: 'none', background: 'transparent', cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#cbd5e1' : '#475569' }}
+                              title="Subir una posición"
+                            >
+                              <ChevronUp size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === data.asignaciones.length - 1 || isReordering}
+                              onClick={(e) => { e.stopPropagation(); moveAsignacion(index, index + 1) }}
+                              className="btn-icon"
+                              style={{ width: '18px', height: '14px', padding: 0, border: 'none', background: 'transparent', cursor: index === data.asignaciones.length - 1 ? 'not-allowed' : 'pointer', color: index === data.asignaciones.length - 1 ? '#cbd5e1' : '#475569' }}
+                              title="Bajar una posición"
+                            >
+                              <ChevronDown size={13} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td><div style={{ fontWeight: 600, color: a.docente ? '#1a3a6b' : '#a0aec0' }}>{a.docente ? a.docente.nombre : 'Sin docente asignado'}</div></td>
                     <td>
                       {a.docente ? (
