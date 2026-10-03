@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
 import toast from 'react-hot-toast'
 import { formatFechaEncuentro, formatHoraAmPm, parseHoraTo24 } from '@/lib/utils'
+import { CronogramaEditModal } from '@/components/CronogramaEditModal'
 
 const TIME_OPTIONS = [
   '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM',
@@ -22,11 +23,15 @@ const TIME_OPTIONS = [
 
 type Cronograma = {
   id: string
+  periodoId?: string
   periodo: { id: string; anio: number; numero: number; modalidad: string }
   trimestre: string
   seccion: string
+  aulaTerritorialId?: string
   aulaTerritorial: { id: string; nombre: string; coordinador: string | null; enlace: string | null; region: { id: string; nombre: string } }
   vocero: string | null; telefonoVocero: string | null; emailVocero: string | null
+  resolucion?: string | null
+  modalidad?: string
   participantesFem: number; participantesMasc: number
   asignaciones: {
     id: string; docenteId: string; unidadId: string; lugar: string | null
@@ -47,6 +52,7 @@ export default function CronogramaDetailPage() {
   const [deleteAsign, setDeleteAsign] = useState<string | null>(null)
   const [showPartForm, setShowPartForm] = useState(false)
   const [showSimplePartForm, setShowSimplePartForm] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [simpleFem, setSimpleFem] = useState('0')
   const [simpleMasc, setSimpleMasc] = useState('0')
   const [savingSimple, setSavingSimple] = useState(false)
@@ -464,6 +470,11 @@ export default function CronogramaDetailPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
+          {(isAdmin || data._meta?.asignacionCargaAbierta) && (
+            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)}>
+              <Edit2 size={16} /> Editar Datos
+            </button>
+          )}
           <Link href={`/cronograma/${id}/costos`} className="btn btn-secondary">
             Estructura de Costos
           </Link>
@@ -1188,6 +1199,17 @@ export default function CronogramaDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showEditModal && data && (
+        <CronogramaEditModal
+          cronograma={data}
+          onClose={() => setShowEditModal(false)}
+          onSaved={() => {
+            setShowEditModal(false)
+            fetch_()
+          }}
+        />
       )}
     </div>
   )

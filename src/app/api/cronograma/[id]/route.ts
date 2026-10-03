@@ -47,29 +47,51 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'OPERADOR')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
+
+    if (session.user.role === 'OPERADOR') {
+      const config = await prisma.configuracionSistema.findFirst()
+      if (!config?.asignacionCargaAbierta) {
+        return NextResponse.json({ error: 'El proceso está cerrado para edición por operadores' }, { status: 403 })
+      }
+    }
+
     const { id } = await params
     const body = await req.json()
+
+    const updateData: any = {}
+    if (body.seccion !== undefined) updateData.seccion = String(body.seccion).trim()
+    if (body.trimestre !== undefined) updateData.trimestre = String(body.trimestre).trim()
+    if (body.modalidad !== undefined) updateData.modalidad = body.modalidad
+    if (body.periodoId !== undefined) updateData.periodoId = body.periodoId
+    if (body.aulaTerritorialId !== undefined) updateData.aulaTerritorialId = body.aulaTerritorialId
+    if (body.vocero !== undefined) updateData.vocero = body.vocero ? String(body.vocero).trim() : null
+    if (body.telefonoVocero !== undefined) updateData.telefonoVocero = body.telefonoVocero ? String(body.telefonoVocero).trim() : null
+    if (body.emailVocero !== undefined) updateData.emailVocero = body.emailVocero ? String(body.emailVocero).trim() : null
+    if (body.resolucion !== undefined) updateData.resolucion = body.resolucion ? String(body.resolucion).trim() : null
+    if (body.participantesFem !== undefined) updateData.participantesFem = parseInt(body.participantesFem) || 0
+    if (body.participantesMasc !== undefined) updateData.participantesMasc = parseInt(body.participantesMasc) || 0
+
     const cronograma = await prisma.cronograma.update({
       where: { id },
-      data: {
-        periodoId: body.periodoId,
-        aulaTerritorialId: body.aulaTerritorialId,
-        vocero: body.vocero || null,
-        telefonoVocero: body.telefonoVocero || null,
-        emailVocero: body.emailVocero || null,
-        participantesFem: parseInt(body.participantesFem) || 0,
-        participantesMasc: parseInt(body.participantesMasc) || 0,
-      },
+      data: updateData,
+      include: {
+        periodo: true,
+        aulaTerritorial: { include: { region: true } },
+      }
     })
 
-    await logAction('CRONOGRAMAS', 'ACTUALIZAR', `Se actualizaron datos del cronograma (ID: ${cronograma.id})`)
+    await logAction('CRONOGRAMAS', 'ACTUALIZAR', `Se actualizaron datos del cronograma (ID: ${cronograma.id}, Sección: ${cronograma.seccion})`)
 
     return NextResponse.json(cronograma)
-  } catch {
-    return NextResponse.json({ error: 'Error al actualizar cronograma' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Error al actualizar cronograma:', error)
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Ya existe un cronograma con esa misma sede, trimestre y sección en este período' }, { status: 400 })
+    }
+    return NextResponse.json({ error: error.message || 'Error al actualizar cronograma' }, { status: 500 })
   }
 }
 

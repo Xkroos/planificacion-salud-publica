@@ -1,18 +1,24 @@
 'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
-import { ClipboardList, Plus, Eye, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users, ChevronLeft } from 'lucide-react'
+import { ClipboardList, Plus, Eye, Edit2, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { CronogramaEditModal } from '@/components/CronogramaEditModal'
 
 type Cronograma = {
   id: string
-  periodo: { anio: number; numero: number; modalidad: string; trimestres: string[] }
+  periodoId?: string
+  periodo: { id?: string; anio: number; numero: number; modalidad: string; trimestres?: string[] }
   trimestre: string
   seccion: string
-  aulaTerritorial: { nombre: string; coordinador: string | null; region: { nombre: string } }
+  aulaTerritorialId?: string
+  aulaTerritorial: { id?: string; nombre: string; coordinador: string | null; region: { id?: string; nombre: string } }
   vocero: string | null
+  telefonoVocero?: string | null
+  emailVocero?: string | null
+  resolucion?: string | null
   modalidad: string
   participantesFem: number
   participantesMasc: number
@@ -31,6 +37,7 @@ function CronogramaListContent() {
   const [activePeriodo, setActivePeriodo] = useState<any>(null)
   
   const [showModal, setShowModal] = useState(false)
+  const [editingCronograma, setEditingCronograma] = useState<Cronograma | null>(null)
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'ADMIN'
 
@@ -239,11 +246,21 @@ function CronogramaListContent() {
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                            <Link href={`/cronograma/${c.id}`} className="btn-icon">
+                            <Link href={`/cronograma/${c.id}`} className="btn-icon" title="Ver Detalle">
                               <Eye size={16} />
                             </Link>
+                            {(isAdmin || (config && config.asignacionCargaAbierta)) && (
+                              <button 
+                                className="btn-icon" 
+                                style={{ color: '#2563eb', borderColor: '#bfdbfe' }} 
+                                title="Editar información del cronograma"
+                                onClick={() => setEditingCronograma(c)}
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                            )}
                             {isAdmin && (
-                              <button className="btn-icon" style={{ color: '#dc2626' }} onClick={() => setDeleteConfirm(c.id)}>
+                              <button className="btn-icon" style={{ color: '#dc2626' }} title="Eliminar" onClick={() => setDeleteConfirm(c.id)}>
                                 <Trash2 size={16} />
                               </button>
                             )}
@@ -292,6 +309,17 @@ function CronogramaListContent() {
           onClose={handleCloseModal}
           onSaved={handleSavedModal}
           existingCronogramas={cronogramas}
+        />
+      )}
+
+      {editingCronograma && (
+        <CronogramaEditModal
+          cronograma={editingCronograma}
+          onClose={() => setEditingCronograma(null)}
+          onSaved={() => {
+            setEditingCronograma(null)
+            fetch_()
+          }}
         />
       )}
 
