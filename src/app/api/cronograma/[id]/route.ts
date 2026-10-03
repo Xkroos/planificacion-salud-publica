@@ -83,6 +83,43 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     })
 
+    if (Array.isArray(body.materiasIds)) {
+      const asignacionesActuales = await prisma.asignacionDocente.findMany({
+        where: { cronogramaId: id }
+      })
+      const actualesMap = new Map(asignacionesActuales.map(a => [a.unidadId, a]))
+      const nuevosIds = new Set(body.materiasIds as string[])
+
+      // Eliminar asignaciones deseleccionadas
+      for (const a of asignacionesActuales) {
+        if (!nuevosIds.has(a.unidadId)) {
+          await prisma.asignacionDocente.delete({ where: { id: a.id } })
+        }
+      }
+
+      // Agregar nuevas materias seleccionadas
+      let nextOrden = asignacionesActuales.length
+      for (const uId of body.materiasIds) {
+        if (!actualesMap.has(uId)) {
+          const u = await prisma.unidadCurricular.findUnique({ where: { id: uId } })
+          if (u) {
+            await prisma.asignacionDocente.create({
+              data: {
+                cronogramaId: id,
+                unidadId: uId,
+                modalidad: (body.modalidad || cronograma.modalidad || 'PRESENCIAL') as any,
+                horaInicio: '08:00',
+                horaFin: '10:00',
+                uc: u.creditos,
+                cantHoras: u.horas,
+                orden: nextOrden++,
+              }
+            })
+          }
+        }
+      }
+    }
+
     await logAction('CRONOGRAMAS', 'ACTUALIZAR', `Se actualizaron datos del cronograma (ID: ${cronograma.id}, Sección: ${cronograma.seccion})`)
 
     return NextResponse.json(cronograma)
