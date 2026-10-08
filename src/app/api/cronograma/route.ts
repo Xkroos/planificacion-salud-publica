@@ -43,7 +43,14 @@ export async function GET(req: NextRequest) {
       where.aulaTerritorialId = aulaTerritorialId
     }
     if (trimestre && trimestre !== 'undefined' && trimestre !== 'TODOS') {
-      where.trimestre = trimestre
+      const romanMap: Record<string, string> = { '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V' }
+      const arabicMap: Record<string, string> = { 'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5' }
+      const alternate = romanMap[trimestre] || arabicMap[trimestre.toUpperCase()]
+      if (alternate) {
+        where.trimestre = { in: [trimestre, alternate] }
+      } else {
+        where.trimestre = trimestre
+      }
     }
 
     if (search) {
@@ -60,7 +67,12 @@ export async function GET(req: NextRequest) {
 
     const cronogramas = await prisma.cronograma.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { aulaTerritorial: { region: { nombre: 'asc' } } },
+        { aulaTerritorial: { nombre: 'asc' } },
+        { trimestre: 'asc' },
+        { seccion: 'asc' },
+      ],
       include: {
         periodo: true,
         aulaTerritorial: { include: { region: true } },
@@ -114,55 +126,67 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Faltan datos obligatorios' }, { status: 400 })
     }
 
-    const maxSecciones = Math.max(...Object.values(materias as Record<string, number>), 0)
+    const cleanPeriodoId = String(periodoId).trim()
+    const cleanAulaId = String(aulaTerritorialId).trim()
+    const cleanTrimestre = String(trimestre).trim()
 
+    const maxSecciones = Math.max(...Object.values(materias as Record<string, number>), 0)
+    if (maxSecciones <= 0) {
+      return NextResponse.json({ error: 'Debe especificar al menos 1 sección para alguna materia' }, { status: 400 })
+    }
+
+    const targetAula = await prisma.aulaTerritorial.findUnique({
+      where: { id: cleanAulaId },
+      include: { region: true }
+    })
+
+    if (!targetAula) {
+      return NextResponse.json({ error: 'Aula territorial no encontrada' }, { status: 404 })
+    }
+
+    // Comprobar si ya existen cronogramas para esta sede (o sedes homónimas en la misma región)
     const aulasSectionsRaw = await prisma.cronograma.findMany({
-      where: { periodoId, aulaTerritorialId, trimestre }
+      where: { 
+        periodoId: cleanPeriodoId, 
+        trimestre: cleanTrimestre,
+        OR: [
+          { aulaTerritorialId: cleanAulaId },
+          {
+            aulaTerritorial: {
+              regionId: targetAula.regionId,
+              nombre: { equals: targetAula.nombre, mode: 'insensitive' }
+            }
+          }
+        ]
+      }
     })
     
     if (aulasSectionsRaw.length > 0) {
       return NextResponse.json(
-        { error: 'Ya existe un cronograma registrado para esta Aula Territorial en este Trimestre. No se puede duplicar.' }, 
+        { error: `Ya existe un cronograma registrado para la sede ${targetAula.nombre} (${targetAula.region?.nombre || ''}) en el Trimestre ${cleanTrimestre}. No se puede duplicar.` }, 
         { status: 400 }
       )
     }
-    const aulasSections = aulasSectionsRaw.sort((a, b) => {
-      const numA = parseInt(a.seccion) || 0
-      const numB = parseInt(b.seccion) || 0
-      return numA - numB
-    })
 
-    const existingCount = aulasSections.length
-    const needed = maxSecciones - existingCount
+    const aulasSections: any[] = []
 
-    if (needed > 0) {
-      const allCrons = await prisma.cronograma.findMany({
-        where: { periodoId, aulaTerritorialId, trimestre },
-        select: { seccion: true }
+    for (let n = 1; n <= maxSecciones; n++) {
+      const seccion = n.toString()
+      const newCron = await prisma.cronograma.create({
+        data: { 
+          periodoId: cleanPeriodoId, 
+          aulaTerritorialId: cleanAulaId, 
+          trimestre: cleanTrimestre, 
+          seccion,
+          modalidad: modalidad || 'PRESENCIAL',
+          vocero: vocero ? String(vocero).trim() : null,
+          telefonoVocero: telefonoVocero ? String(telefonoVocero).trim() : null,
+          emailVocero: emailVocero ? String(emailVocero).trim() : null,
+          participantesFem: parseInt(participantesFem) || 0,
+          participantesMasc: parseInt(participantesMasc) || 0,
+        }
       })
-      
-      let maxSec = 0
-      for (const c of allCrons) {
-        const num = parseInt(c.seccion)
-        if (!isNaN(num) && num > maxSec) maxSec = num
-      }
-
-      for (let n = 1; n <= needed; n++) {
-        maxSec++
-        const seccion = maxSec.toString()
-        const newCron = await prisma.cronograma.create({
-          data: { 
-            periodoId, aulaTerritorialId, trimestre, seccion,
-            modalidad: modalidad || 'PRESENCIAL',
-            vocero: vocero || null,
-            telefonoVocero: telefonoVocero || null,
-            emailVocero: emailVocero || null,
-            participantesFem: parseInt(participantesFem) || 0,
-            participantesMasc: parseInt(participantesMasc) || 0,
-          }
-        })
-        aulasSections.push(newCron)
-      }
+      aulasSections.push(newCron)
     }
 
     // Actualizar también la información básica (modalidad, vocero, etc.) de TODAS las secciones (las nuevas y las existentes)

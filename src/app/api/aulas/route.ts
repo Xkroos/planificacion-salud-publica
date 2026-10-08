@@ -23,9 +23,26 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    const cleanNombre = (body.nombre || '').trim().toUpperCase()
+
+    if (!cleanNombre || !body.regionId) {
+      return NextResponse.json({ error: 'Nombre de sede y región son obligatorios' }, { status: 400 })
+    }
+
+    const existingAula = await prisma.aulaTerritorial.findFirst({
+      where: {
+        regionId: body.regionId,
+        nombre: { equals: cleanNombre, mode: 'insensitive' }
+      }
+    })
+
+    if (existingAula) {
+      return NextResponse.json({ error: `Ya existe una sede territorial llamada "${cleanNombre}" en esta región` }, { status: 400 })
+    }
+
     const aula = await prisma.aulaTerritorial.create({
       data: {
-        nombre: body.nombre.toUpperCase(),
+        nombre: cleanNombre,
         coordinador: body.coordinador || null,
         enlace: body.enlace || null,
         costo: body.costo ? parseFloat(body.costo) : 0,
@@ -44,7 +61,7 @@ export async function POST(req: NextRequest) {
     await logAction('AULAS', 'CREAR', `Se registró el aula territorial ${aula.nombre} (Región: ${aula.region?.nombre || ''})`)
 
     return NextResponse.json(aula, { status: 201 })
-  } catch {
-    return NextResponse.json({ error: 'Error al crear aula' }, { status: 500 })
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Error al crear aula' }, { status: 500 })
   }
 }

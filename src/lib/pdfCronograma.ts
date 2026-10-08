@@ -166,19 +166,21 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
         ? 'INTRODUCTORIO'
         : `CURSO ${(cr.trimestre || '').toUpperCase()} TRIMESTRE`
 
-      // ── Fila 1: TRIMESTRE ──────────────────────────────────────────────────
+      const coordNacional = (cr.aulaTerritorial?.coordinador || (cr as any)._meta?.coordinadorNacional || '').toUpperCase()
+      const coordTerritorial = (cr.aulaTerritorial?.enlace || '').toUpperCase()
+
+      // ── Fila 1: TRIMESTRE y COORDINADOR NACIONAL ─────────────────────────────
       drawCell('TRIMESTRE:', aX, y, aW, rh, yellow, black, 7, 'bold')
       drawCell(trimTxt, bX, y, bigValW, rh, undefined, black, 7, 'bold')
-      // COORD ocupa filas 1-2 (alto 2 * rh)
-      drawCell('COORDINADOR\nTERRITORIAL\nENLACE TERRITORIAL:', gX, y, gW, rh * 2, yellow, black, 5.5, 'bold')
-      // Valor coord ocupa ancho hW+iW combinado, 2 filas
-      drawCell(cr.aulaTerritorial?.coordinador || '', hX, y, hW + iW, rh * 2, undefined, black, 6.5, 'bold')
+      drawCell('COORDINADOR NACIONAL:', gX, y, gW, rh, yellow, black, 5.5, 'bold')
+      drawCell(coordNacional, hX, y, hW + iW, rh, undefined, black, 6, 'bold')
       y += rh
 
-      // ── Fila 2: LAPSO ACADÉMICO ────────────────────────────────────────────
+      // ── Fila 2: LAPSO ACADÉMICO y COORDINADOR TERRITORIAL ────────────────────
       drawCell('LAPSO ACADÉMICO:', aX, y, aW, rh, yellow, black, 6.5, 'bold')
       drawCell(`${cr.periodo?.anio || ''}-${cr.periodo?.numero || ''}`, bX, y, bigValW, rh, undefined, black, 8, 'bold')
-      // (celdas gX y hX cubiertas por el span de 2 filas de fila 1)
+      drawCell('COORDINADOR TERRITORIAL:', gX, y, gW, rh, yellow, black, 5.5, 'bold')
+      drawCell(coordTerritorial, hX, y, hW + iW, rh, undefined, black, 6, 'bold')
       y += rh
 
       // ── Fila 3: VOCERO - fila de LABELS ────────────────────────────────────

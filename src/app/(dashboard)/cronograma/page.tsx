@@ -1,11 +1,12 @@
 'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
-import { ClipboardList, Plus, Eye, Edit2, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users, ChevronLeft } from 'lucide-react'
+import { ClipboardList, Plus, Eye, Edit2, Trash2, X, Search, Loader2, ChevronRight, ChevronDown, MapPin, BookOpen, Users, ChevronLeft, Sparkles, CheckCircle2, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { CronogramaEditModal } from '@/components/CronogramaEditModal'
+import { AgregarSeccionModal } from '@/components/AgregarSeccionModal'
 
 type Cronograma = {
   id: string
@@ -14,7 +15,7 @@ type Cronograma = {
   trimestre: string
   seccion: string
   aulaTerritorialId?: string
-  aulaTerritorial: { id?: string; nombre: string; coordinador: string | null; region: { id?: string; nombre: string } }
+  aulaTerritorial: { id?: string; nombre: string; coordinador: string | null; enlace?: string | null; region: { id?: string; nombre: string } }
   vocero: string | null
   telefonoVocero?: string | null
   emailVocero?: string | null
@@ -38,6 +39,11 @@ function CronogramaListContent() {
   
   const [showModal, setShowModal] = useState(false)
   const [editingCronograma, setEditingCronograma] = useState<Cronograma | null>(null)
+  const [agregarSeccionCronograma, setAgregarSeccionCronograma] = useState<Cronograma | null>(null)
+  const [cleaningDuplicados, setCleaningDuplicados] = useState(false)
+  const [showCleanConfirm, setShowCleanConfirm] = useState(false)
+  const [cleanMessage, setCleanMessage] = useState<string | null>(null)
+
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'ADMIN'
 
@@ -128,32 +134,74 @@ function CronogramaListContent() {
     setDeleteConfirm(null)
   }
 
+  const handleLimpiarDuplicados = async () => {
+    setCleaningDuplicados(true)
+    setShowCleanConfirm(false)
+    try {
+      const res = await fetch('/sistema/api/cronograma/limpiar-duplicados', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setCleanMessage(`Limpieza completada: Se eliminaron ${data.cronogramasEliminados} cronograma(s) duplicado(s) y se unificaron ${data.sedesFusionadas || 0} sede(s).`)
+        fetch_()
+      } else {
+        alert(data.error || 'Error al ejecutar limpieza de duplicados')
+      }
+    } catch {
+      alert('Error de conexión al limpiar duplicados')
+    } finally {
+      setCleaningDuplicados(false)
+    }
+  }
+
   const filtered = cronogramas // Filtering is now server-side
-
-
 
   return (
     <div className="fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+      {cleanMessage && (
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '13px' }}>
+            <CheckCircle2 size={18} color="#16a34a" /> {cleanMessage}
+          </div>
+          <button className="btn-icon" onClick={() => setCleanMessage(null)} style={{ border: 'none', background: 'transparent', color: '#166534' }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1a3a6b', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <ClipboardList size={24} color="#2d6bc4" /> Cronogramas de Planificación
           </h1>
           <p style={{ fontSize: '13px', color: '#718096', marginTop: '2px' }}>{totalRecords} cronograma(s) registrado(s)</p>
         </div>
-        {(!activePeriodo && !loading) ? (
-          <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
-            No hay Periodo academico activo
-          </div>
-        ) : (!isAdmin && config && !config.asignacionCargaAbierta) ? (
-          <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
-            Proceso de carga cerrado
-          </div>
-        ) : (
-          <button className="btn btn-primary" onClick={() => setShowModal(true)} disabled={!activePeriodo}>
-            <Plus size={16} /> Nuevo Cronograma
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {isAdmin && (
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => setShowCleanConfirm(true)} 
+              disabled={cleaningDuplicados || loading}
+              title="Detectar y eliminar automáticamente cronogramas repetidos en el sistema"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              {cleaningDuplicados ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} color="#d97706" />}
+              {cleaningDuplicados ? 'Limpiando...' : 'Limpiar Duplicados'}
+            </button>
+          )}
+          {(!activePeriodo && !loading) ? (
+            <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
+              No hay Periodo academico activo
+            </div>
+          ) : (!isAdmin && config && !config.asignacionCargaAbierta) ? (
+            <div style={{ background: '#fffbeb', color: '#b45309', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, border: '1px solid #fde68a' }}>
+              Proceso de carga cerrado
+            </div>
+          ) : (
+            <button className="btn btn-primary" onClick={() => setShowModal(true)} disabled={!activePeriodo}>
+              <Plus size={16} /> Nuevo Cronograma
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: '20px', padding: '12px 16px' }}>
@@ -178,10 +226,11 @@ function CronogramaListContent() {
             <select className="form-select" value={filterTrimestre} onChange={e => setFilterTrimestre(e.target.value)}>
               <option value="">Todos los Trimestres</option>
               <option value="Introductorio">Introductorio</option>
-              <option value="1">1° Trimestre</option>
-              <option value="2">2° Trimestre</option>
-              <option value="3">3° Trimestre</option>
-              <option value="4">4° Trimestre</option>
+              <option value="I">1° Trimestre (I)</option>
+              <option value="II">2° Trimestre (II)</option>
+              <option value="III">3° Trimestre (III)</option>
+              <option value="IV">4° Trimestre (IV)</option>
+              <option value="V">5° Trimestre (V)</option>
             </select>
           </div>
         </div>
@@ -250,14 +299,24 @@ function CronogramaListContent() {
                               <Eye size={16} />
                             </Link>
                             {(isAdmin || (config && config.asignacionCargaAbierta)) && (
-                              <button 
-                                className="btn-icon" 
-                                style={{ color: '#2563eb', borderColor: '#bfdbfe' }} 
-                                title="Editar información del cronograma"
-                                onClick={() => setEditingCronograma(c)}
-                              >
-                                <Edit2 size={16} />
-                              </button>
+                              <>
+                                <button 
+                                  className="btn-icon" 
+                                  style={{ color: '#059669', borderColor: '#a7f3d0' }} 
+                                  title="Agregar Sección"
+                                  onClick={() => setAgregarSeccionCronograma(c)}
+                                >
+                                  <PlusCircle size={16} />
+                                </button>
+                                <button 
+                                  className="btn-icon" 
+                                  style={{ color: '#2563eb', borderColor: '#bfdbfe' }} 
+                                  title="Editar información del cronograma"
+                                  onClick={() => setEditingCronograma(c)}
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                              </>
                             )}
                             {isAdmin && (
                               <button className="btn-icon" style={{ color: '#dc2626' }} title="Eliminar" onClick={() => setDeleteConfirm(c.id)}>
@@ -308,7 +367,6 @@ function CronogramaListContent() {
         <CronogramaGeneratorModal
           onClose={handleCloseModal}
           onSaved={handleSavedModal}
-          existingCronogramas={cronogramas}
         />
       )}
 
@@ -321,6 +379,45 @@ function CronogramaListContent() {
             fetch_()
           }}
         />
+      )}
+
+      {agregarSeccionCronograma && (
+        <AgregarSeccionModal
+          cronogramaBase={agregarSeccionCronograma}
+          onClose={() => setAgregarSeccionCronograma(null)}
+          onSaved={() => {
+            setAgregarSeccionCronograma(null)
+            fetch_()
+          }}
+        />
+      )}
+
+      {showCleanConfirm && (
+        <div className="modal-overlay" onClick={() => setShowCleanConfirm(false)}>
+          <div className="modal" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title" style={{ color: '#d97706', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={20} /> Limpiar Cronogramas Repetidos
+              </h3>
+              <button className="btn-icon" onClick={() => setShowCleanConfirm(false)}><X size={18} /></button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#374151' }}>
+                ¿Desea buscar y eliminar automáticamente los cronogramas y sedes duplicadas?
+              </p>
+              <div style={{ background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', padding: '10px 12px', borderRadius: '6px', fontSize: '12px', marginTop: '12px' }}>
+                <strong>Seguro y sin pérdida de datos:</strong> Si una sección repetida tiene docentes o estudiantes asignados, estos se consolidarán en la sección principal antes de eliminar la copia vacía.
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowCleanConfirm(false)} disabled={cleaningDuplicados}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleLimpiarDuplicados} disabled={cleaningDuplicados} style={{ background: '#d97706', borderColor: '#d97706' }}>
+                {cleaningDuplicados ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} />}
+                {cleaningDuplicados ? 'Limpiando...' : 'Sí, Limpiar Duplicados'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deleteConfirm && (
@@ -359,10 +456,11 @@ export default function CronogramaListPage() {
   )
 }
 
-function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { onClose: () => void, onSaved: () => void, existingCronogramas: any[] }) {
+function CronogramaGeneratorModal({ onClose, onSaved }: { onClose: () => void, onSaved: () => void }) {
   const [periodos, setPeriodos] = useState<any[]>([])
   const [regiones, setRegiones] = useState<any[]>([])
   const [unidades, setUnidades] = useState<any[]>([])
+  const [allExistingCrons, setAllExistingCrons] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -385,11 +483,16 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
     Promise.all([
       fetch('/sistema/api/periodos').then(r => r.json()),
       fetch('/sistema/api/regiones').then(r => r.json()),
-      fetch('/sistema/api/unidades').then(r => r.json())
-    ]).then(([per, reg, uni]) => {
-      setPeriodos(per.filter((p: any) => p.estado !== 'CERRADO'))
-      setRegiones(reg)
-      setUnidades(uni)
+      fetch('/sistema/api/unidades').then(r => r.json()),
+      fetch('/sistema/api/cronograma?all=true').then(r => r.json())
+    ]).then(([per, reg, uni, cronsRes]) => {
+      setPeriodos(Array.isArray(per) ? per.filter((p: any) => p.estado !== 'CERRADO') : [])
+      setRegiones(Array.isArray(reg) ? reg : [])
+      setUnidades(Array.isArray(uni) ? uni : [])
+      const list = Array.isArray(cronsRes?.data) ? cronsRes.data : (Array.isArray(cronsRes) ? cronsRes : [])
+      setAllExistingCrons(list)
+      setLoading(false)
+    }).catch(() => {
       setLoading(false)
     })
   }, [])
@@ -401,7 +504,29 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
   
   const activeTrimestres = selectedPeriodo?.trimestres || []
 
-  const existingCombos = new Set(existingCronogramas.map(c => `${c.periodo.id}-${c.trimestre}-${c.aulaTerritorial.id}`))
+  // Mapear combinaciones existentes tanto por ID de aula como por Nombre normalizado + Región
+  const isComboRegistered = (trim: string, aulaId?: string) => {
+    if (!form.periodoId || !trim) return false
+    const targetAulaId = aulaId || form.aulaTerritorialId
+    if (!targetAulaId) return false
+    const aulaObj = aulas.find((a: any) => a.id === targetAulaId)
+    const tClean = trim.trim().toUpperCase()
+
+    return allExistingCrons.some(c => {
+      if (c.periodoId !== form.periodoId && c.periodo?.id !== form.periodoId) return false
+      const cTrim = (c.trimestre || '').trim().toUpperCase()
+      if (cTrim !== tClean) return false
+
+      if (c.aulaTerritorialId === targetAulaId || c.aulaTerritorial?.id === targetAulaId) return true
+
+      if (aulaObj && c.aulaTerritorial) {
+        const isSameName = (c.aulaTerritorial.nombre || '').trim().toUpperCase() === (aulaObj.nombre || '').trim().toUpperCase()
+        const isSameReg = c.aulaTerritorial.regionId === aulaObj.regionId || c.aulaTerritorial.region?.id === aulaObj.regionId
+        if (isSameName && isSameReg) return true
+      }
+      return false
+    })
+  }
 
   const handleMateriaChange = (id: string, num: string) => {
     const val = parseInt(num)
@@ -468,7 +593,7 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
                   <select className="form-select" value={form.trimestre} onChange={e => setForm({ ...form, trimestre: e.target.value })} disabled={!form.periodoId}>
                     <option value="">Seleccione...</option>
                     {activeTrimestres.map((t: string) => {
-                      const isDisabled = form.aulaTerritorialId ? existingCombos.has(`${form.periodoId}-${t}-${form.aulaTerritorialId}`) : false
+                      const isDisabled = isComboRegistered(t)
                       return <option key={t} value={t} disabled={isDisabled}>{t} {isDisabled ? '(Ya registrado)' : ''}</option>
                     })}
                   </select>
@@ -489,7 +614,7 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
                   <select className="form-select" value={form.aulaTerritorialId} onChange={e => setForm({ ...form, aulaTerritorialId: e.target.value })} disabled={!form.regionId}>
                     <option value="">Seleccione...</option>
                     {aulas.map((a: any) => {
-                      const isDisabled = form.trimestre ? existingCombos.has(`${form.periodoId}-${form.trimestre}-${a.id}`) : false
+                      const isDisabled = form.trimestre ? isComboRegistered(form.trimestre, a.id) : false
                       return <option key={a.id} value={a.id} disabled={isDisabled}>{a.nombre} {isDisabled ? '(Ya registrado)' : ''}</option>
                     })}
                   </select>
@@ -497,8 +622,9 @@ function CronogramaGeneratorModal({ onClose, onSaved, existingCronogramas }: { o
               </div>
               
               {selectedAula && (
-                <div style={{ marginTop: '12px', fontSize: '12px', color: '#4a5568', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
-                  <strong>Coordinador Territorial:</strong> {selectedAula.coordinador || 'No asignado'}
+                <div style={{ marginTop: '12px', fontSize: '12px', color: '#4a5568', background: '#f8fafc', padding: '10px', borderRadius: '6px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                  <div><strong>Coordinador Nacional:</strong> {selectedAula.coordinador || 'No asignado'}</div>
+                  <div><strong>Coordinador Territorial:</strong> {selectedAula.enlace || 'No asignado'}</div>
                 </div>
               )}
             </div>

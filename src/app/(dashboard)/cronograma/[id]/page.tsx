@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, UserPlus, UserMinus, Search, Loader2, GripVertical, ChevronUp, ChevronDown, Clock } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, UserPlus, UserMinus, Search, Loader2, GripVertical, ChevronUp, ChevronDown, Clock, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
 import toast from 'react-hot-toast'
 import { formatFechaEncuentro, formatHoraAmPm, parseHoraTo24 } from '@/lib/utils'
 import { CronogramaEditModal } from '@/components/CronogramaEditModal'
+import { AgregarSeccionModal } from '@/components/AgregarSeccionModal'
 
 const TIME_OPTIONS = [
   '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM',
@@ -53,6 +54,7 @@ export default function CronogramaDetailPage() {
   const [showPartForm, setShowPartForm] = useState(false)
   const [showSimplePartForm, setShowSimplePartForm] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showAgregarSeccionModal, setShowAgregarSeccionModal] = useState(false)
   const [simpleFem, setSimpleFem] = useState('0')
   const [simpleMasc, setSimpleMasc] = useState('0')
   const [savingSimple, setSavingSimple] = useState(false)
@@ -471,9 +473,18 @@ export default function CronogramaDetailPage() {
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           {(isAdmin || data._meta?.asignacionCargaAbierta) && (
-            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)}>
-              <Edit2 size={16} /> Editar Datos
-            </button>
+            <>
+              <button 
+                className="btn btn-secondary" 
+                style={{ color: '#059669', borderColor: '#a7f3d0' }}
+                onClick={() => setShowAgregarSeccionModal(true)}
+              >
+                <PlusCircle size={16} /> Agregar Sección
+              </button>
+              <button className="btn btn-secondary" onClick={() => setShowEditModal(true)}>
+                <Edit2 size={16} /> Editar Datos
+              </button>
+            </>
           )}
           <Link href={`/cronograma/${id}/costos`} className="btn btn-secondary">
             Estructura de Costos
@@ -493,7 +504,8 @@ export default function CronogramaDetailPage() {
           { label: 'Modalidad', value: data.periodo.modalidad },
           { label: 'Sede', value: data.aulaTerritorial.nombre },
           { label: 'Región', value: data.aulaTerritorial.region.nombre },
-          { label: 'Coordinador', value: data.aulaTerritorial.coordinador || '—' },
+          { label: 'Coord. Nacional', value: data.aulaTerritorial.coordinador || '—' },
+          { label: 'Coord. Territorial', value: data.aulaTerritorial.enlace || '—' },
           { label: 'Vocero', value: data.vocero || '—' },
           { label: 'Participantes ♀', value: data.participantesFem.toString() },
           { label: 'Participantes ♂', value: data.participantesMasc.toString() },
@@ -1207,6 +1219,17 @@ export default function CronogramaDetailPage() {
           onClose={() => setShowEditModal(false)}
           onSaved={() => {
             setShowEditModal(false)
+            fetch_()
+          }}
+        />
+      )}
+
+      {showAgregarSeccionModal && data && (
+        <AgregarSeccionModal
+          cronogramaBase={data}
+          onClose={() => setShowAgregarSeccionModal(false)}
+          onSaved={() => {
+            setShowAgregarSeccionModal(false)
             fetch_()
           }}
         />

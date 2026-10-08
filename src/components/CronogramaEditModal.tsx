@@ -241,8 +241,9 @@ export function CronogramaEditModal({ cronograma, onClose, onSaved }: Cronograma
               </div>
               
               {selectedAula && (
-                <div style={{ marginTop: '12px', fontSize: '12px', color: '#4a5568', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
-                  <strong>Coordinador Territorial:</strong> {selectedAula.coordinador || 'No asignado'}
+                <div style={{ marginTop: '12px', fontSize: '12px', color: '#4a5568', background: '#f8fafc', padding: '10px', borderRadius: '6px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                  <div><strong>Coordinador Nacional:</strong> {selectedAula.coordinador || 'No asignado'}</div>
+                  <div><strong>Coordinador Territorial:</strong> {selectedAula.enlace || 'No asignado'}</div>
                 </div>
               )}
             </div>

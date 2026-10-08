@@ -61,12 +61,44 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params
     const body = await req.json()
 
-    const updateData: any = {}
-    if (body.seccion !== undefined) updateData.seccion = String(body.seccion).trim()
-    if (body.trimestre !== undefined) updateData.trimestre = String(body.trimestre).trim()
+    const currentCron = await prisma.cronograma.findUnique({
+      where: { id },
+      include: { aulaTerritorial: true }
+    })
+    if (!currentCron) {
+      return NextResponse.json({ error: 'Cronograma no encontrado' }, { status: 404 })
+    }
+
+    const targetPeriodoId = body.periodoId ? String(body.periodoId).trim() : currentCron.periodoId
+    const targetAulaId = body.aulaTerritorialId ? String(body.aulaTerritorialId).trim() : currentCron.aulaTerritorialId
+    const targetTrimestre = body.trimestre ? String(body.trimestre).trim() : currentCron.trimestre
+    const targetSeccion = body.seccion !== undefined ? String(body.seccion).trim() : currentCron.seccion
+
+    // Verificar si otro cronograma ya ocupa esta misma combinación (periodo, aula, trimestre, seccion)
+    const conflicto = await prisma.cronograma.findFirst({
+      where: {
+        id: { not: id },
+        periodoId: targetPeriodoId,
+        aulaTerritorialId: targetAulaId,
+        trimestre: targetTrimestre,
+        seccion: targetSeccion
+      },
+      include: { aulaTerritorial: true }
+    })
+
+    if (conflicto) {
+      return NextResponse.json({
+        error: `Ya existe otro cronograma para la sede ${conflicto.aulaTerritorial?.nombre || 'seleccionada'} en el Trimestre ${targetTrimestre}, Sección ${targetSeccion}. No se puede duplicar.`
+      }, { status: 400 })
+    }
+
+    const updateData: any = {
+      periodoId: targetPeriodoId,
+      aulaTerritorialId: targetAulaId,
+      trimestre: targetTrimestre,
+      seccion: targetSeccion
+    }
     if (body.modalidad !== undefined) updateData.modalidad = body.modalidad
-    if (body.periodoId !== undefined) updateData.periodoId = body.periodoId
-    if (body.aulaTerritorialId !== undefined) updateData.aulaTerritorialId = body.aulaTerritorialId
     if (body.vocero !== undefined) updateData.vocero = body.vocero ? String(body.vocero).trim() : null
     if (body.telefonoVocero !== undefined) updateData.telefonoVocero = body.telefonoVocero ? String(body.telefonoVocero).trim() : null
     if (body.emailVocero !== undefined) updateData.emailVocero = body.emailVocero ? String(body.emailVocero).trim() : null
