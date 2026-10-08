@@ -217,13 +217,14 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
       const tUC = 42
       const tCat = 40          // 40 / 8 = 5 exacto → sin decimales
       const tSub = 5           // tCat / 8 = 5
-      const tDoc = 42
+      const tDoc = 38
+      const tTlf = 24
       const tLug = 18
       const tHor = 24
       const tFec = 28
       const tUc2 = 9
       const tHrs = 16
-      const usedW = tUC + tCat + tDoc + tLug + tHor + tFec + tUc2 + tHrs
+      const usedW = tUC + tCat + tDoc + tTlf + tLug + tHor + tFec + tUc2 + tHrs
       const tMod = Math.max(pageW - margin * 2 - usedW, 15)
 
       const hR1 = 6, hR2 = 4, hR3 = 4
@@ -242,6 +243,7 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
       tx += tCat
 
       drawCell('NOMBRE\nDOCENTE', tx, y, tDoc, totalHead, yellow, black, 6, 'bold'); tx += tDoc
+      drawCell('TELÉFONO', tx, y, tTlf, totalHead, yellow, black, 6, 'bold'); tx += tTlf
       drawCell('LUGAR', tx, y, tLug, totalHead, yellow, black, 6, 'bold'); tx += tLug
       drawCell('HORARIO', tx, y, tHor, totalHead, yellow, black, 6, 'bold'); tx += tHor
       drawCell('FECHAS DE\nENCUENTROS', tx, y, tFec, totalHead, yellow, black, 6, 'bold'); tx += tFec
@@ -276,6 +278,8 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
         tx += tCat
 
         drawCell((a.docente?.nombre || '').toUpperCase(), tx, y, tDoc, rowH, undefined, black, 6, 'bold', 'center'); tx += tDoc
+        const tlfDoc = a.docente?.contacto || a.docente?.telefono || ''
+        drawCell(tlfDoc, tx, y, tTlf, rowH, undefined, black, 6, 'normal', 'center'); tx += tTlf
         drawCell(a.lugar || '', tx, y, tLug, rowH, undefined, black, 6, 'normal', 'center'); tx += tLug
         const horaInicioStr = formatHoraAmPm(a.horaInicio)
         const horaFinStr = formatHoraAmPm(a.horaFin)
@@ -317,6 +321,7 @@ export const generateCronogramaPDF = async (cohortCronogramas: any[], filename: 
         for (let j = 0; j < 8; j++) drawCell('', tx + tSub * j, y, tSub, eH)
         tx += tCat
         drawCell('', tx, y, tDoc, eH); tx += tDoc
+        drawCell('', tx, y, tTlf, eH); tx += tTlf
         drawCell('', tx, y, tLug, eH); tx += tLug
         drawCell('', tx, y, tHor, eH); tx += tHor
         drawCell('', tx, y, tFec, eH); tx += tFec

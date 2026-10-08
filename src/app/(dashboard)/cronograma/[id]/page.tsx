@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, UserPlus, UserMinus, Search, Loader2, GripVertical, ChevronUp, ChevronDown, Clock, PlusCircle } from 'lucide-react'
+import { ArrowLeft, FileText, Plus, Trash2, X, Calendar, Edit2, CheckSquare, UserPlus, UserMinus, Search, Loader2, GripVertical, ChevronUp, ChevronDown, Clock, PlusCircle, Phone } from 'lucide-react'
 import Link from 'next/link'
 import { generateCronogramaPDF } from '@/lib/pdfCronograma'
 import toast from 'react-hot-toast'
@@ -38,7 +38,7 @@ type Cronograma = {
     id: string; docenteId: string; unidadId: string; lugar: string | null
     horaInicio: string; horaFin: string; modalidad: string; uc: number; cantHoras: number
     orden?: number
-    docente: { nombre: string; categoria: string; dedicacion: string }
+    docente: { nombre: string; categoria: string; dedicacion: string; contacto?: string | null; telefono?: string | null }
     unidad: { id: string; nombre: string }
     fechas: { id: string; fecha: string; modalidad: string }[]
   }[]
@@ -619,7 +619,14 @@ export default function CronogramaDetailPage() {
                         )}
                       </div>
                     </td>
-                    <td><div style={{ fontWeight: 600, color: a.docente ? '#1a3a6b' : '#a0aec0' }}>{a.docente ? a.docente.nombre : 'Sin docente asignado'}</div></td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: a.docente ? '#1a3a6b' : '#a0aec0' }}>{a.docente ? a.docente.nombre : 'Sin docente asignado'}</div>
+                      {a.docente && (a.docente.contacto || a.docente.telefono) && (
+                        <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                          <Phone size={11} color="#64748b" /> {a.docente.contacto || a.docente.telefono}
+                        </div>
+                      )}
+                    </td>
                     <td>
                       {a.docente ? (
                         <>
