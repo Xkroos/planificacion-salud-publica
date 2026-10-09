@@ -55,6 +55,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
        }
     }
 
+    // Validar choque de horarios
+    if (body.docenteId && body.fechas && body.fechas.length > 0 && body.horaInicio && body.horaFin) {
+      const { checkDocenteAvailability } = await import('@/lib/validations');
+      const horaInicioStr = parseHoraTo24(body.horaInicio) || '08:00';
+      const horaFinStr = parseHoraTo24(body.horaFin) || '10:00';
+      
+      const availability = await checkDocenteAvailability(
+        body.docenteId,
+        body.fechas,
+        horaInicioStr,
+        horaFinStr,
+        id // Excluir la asignación actual de la validación
+      );
+
+      if (!availability.isAvailable) {
+        return NextResponse.json({ error: availability.message }, { status: 400 });
+      }
+    }
+
     // Actualizar asignación y regenerar fechas
     await prisma.fechaEncuentro.deleteMany({ where: { asignacionId: id } })
     const asignacion = await prisma.asignacionDocente.update({

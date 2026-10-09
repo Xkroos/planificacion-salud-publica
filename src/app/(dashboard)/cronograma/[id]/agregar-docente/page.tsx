@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ClipboardList, ArrowLeft, Calendar, X } from 'lucide-react'
 import Link from 'next/link'
 import { formatFechaEncuentro, formatHoraAmPm, parseHoraTo24 } from '@/lib/utils'
+import toast from 'react-hot-toast'
 
 const TIME_OPTIONS = [
   '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM',
@@ -211,7 +212,9 @@ const handleSave = async (e: React.FormEvent) => {
       }
       router.push(`/cronograma/${id}`)
     } catch (err: unknown) {
-      setError((err as Error).message || 'Error al guardar')
+      const errorMessage = (err as Error).message || 'Error al guardar';
+      setError(errorMessage);
+      toast.error(errorMessage);
       setSaving(false)
     }
   }

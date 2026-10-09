@@ -62,6 +62,24 @@ export async function POST(
       }
     }
 
+    // Validar choque de horarios
+    if (body.docenteId && body.fechas && body.fechas.length > 0 && body.horaInicio && body.horaFin) {
+      const { checkDocenteAvailability } = await import('@/lib/validations');
+      const horaInicioStr = parseHoraTo24(body.horaInicio) || '08:00';
+      const horaFinStr = parseHoraTo24(body.horaFin) || '10:00';
+      
+      const availability = await checkDocenteAvailability(
+        body.docenteId,
+        body.fechas,
+        horaInicioStr,
+        horaFinStr
+      );
+
+      if (!availability.isAvailable) {
+        return NextResponse.json({ error: availability.message }, { status: 400 });
+      }
+    }
+
     const asignacion = await prisma.asignacionDocente.create({
       data: {
         cronogramaId,
