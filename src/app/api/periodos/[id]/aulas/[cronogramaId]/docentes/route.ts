@@ -76,7 +76,7 @@ export async function POST(
       );
 
       if (!availability.isAvailable) {
-        return NextResponse.json({ error: availability.message }, { status: 400 });
+        return NextResponse.json({ error: availability.message });
       }
     }
 

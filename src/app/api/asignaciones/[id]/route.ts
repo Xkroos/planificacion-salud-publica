@@ -70,7 +70,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       );
 
       if (!availability.isAvailable) {
-        return NextResponse.json({ error: availability.message }, { status: 400 });
+        return NextResponse.json({ error: availability.message });
       }
     }
 

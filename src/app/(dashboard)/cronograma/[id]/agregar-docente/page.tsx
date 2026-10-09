@@ -41,6 +41,7 @@ export default function AgregarDocentePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [modalError, setModalError] = useState<string | null>(null)
 
 
   // Form State
@@ -175,11 +176,15 @@ export default function AgregarDocentePage() {
 const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!docenteId || !unidadId) {
-      setError('Seleccione un docente válido de la lista y una unidad curricular')
+      const msg = 'Seleccione un docente válido de la lista y una unidad curricular'
+      setError(msg)
+      setModalError(msg)
       return
     }
     if (fechas.length === 0) {
-      setError('Debe asignar al menos una fecha de encuentro')
+      const msg = 'Debe asignar al menos una fecha de encuentro'
+      setError(msg)
+      setModalError(msg)
       return
     }
 
@@ -207,14 +212,13 @@ const handleSave = async (e: React.FormEvent) => {
         })
       })
       const resData = await res.json()
-      if (!res.ok) {
+      if (!res.ok || resData.error) {
         throw new Error(resData.error || 'Error al guardar asignación')
       }
       router.push(`/cronograma/${id}`)
     } catch (err: unknown) {
       const errorMessage = (err as Error).message || 'Error al guardar';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      setModalError(errorMessage);
       setSaving(false)
     }
   }
@@ -372,6 +376,26 @@ const handleSave = async (e: React.FormEvent) => {
           </button>
         </div>
       </form>
+
+      {modalError && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className="card fade-in" style={{ padding: '32px', maxWidth: '500px', width: '100%', textAlign: 'center', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <X size={32} color="#ef4444" />
+            </div>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1a202c', marginBottom: '12px' }}>Error de Asignación</h2>
+            <p style={{ color: '#4a5568', marginBottom: '24px', lineHeight: '1.5' }}>{modalError}</p>
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '12px', fontSize: '16px' }}
+              onClick={() => setModalError(null)}
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
