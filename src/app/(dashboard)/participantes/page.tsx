@@ -38,6 +38,13 @@ type Participante = {
   aulaTerritorial?: { nombre: string } | null
   periodo?: { anio: number; numero: number } | null
   periodoId?: string | null
+  inscripciones?: {
+    id: string
+    trimestre: string
+    condicion: string
+    notaPromedio?: number | null
+    periodo: { anio: number; numero: number }
+  }[]
   cronogramas?: {
     cronograma: {
       trimestre: string
@@ -724,6 +731,41 @@ export default function ParticipantesPage() {
                 </div>
               ) : (
                 <>
+                  {trayectoParticipante.inscripciones && trayectoParticipante.inscripciones.length > 0 && (
+                    <div style={{ marginBottom: '24px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#4a5568', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <GraduationCap size={14} /> Historial Formal de Progresión Académica
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {trayectoParticipante.inscripciones.map((insc: any) => {
+                          const condColors: Record<string, { bg: string; color: string; border: string }> = {
+                            'APROBADO': { bg: '#dcfce7', color: '#15803d', border: '#86efac' },
+                            'REPROBADO': { bg: '#fee2e2', color: '#b91c1c', border: '#fca5a5' },
+                            'RETIRADO': { bg: '#fef3c7', color: '#b45309', border: '#fde68a' },
+                            'INACTIVO': { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
+                            'REGULAR': { bg: '#e0f2fe', color: '#0369a1', border: '#7dd3fc' },
+                          }
+                          const cStyle = condColors[insc.condicion] || condColors['REGULAR']
+                          return (
+                            <div key={insc.id} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '13px' }}>
+                                  Período {insc.periodo?.anio}-{insc.periodo?.numero} &bull; {formatTrimestre(insc.trimestre)}
+                                </div>
+                                {insc.notaPromedio !== null && insc.notaPromedio !== undefined && (
+                                  <div style={{ fontSize: '11px', color: '#64748b' }}>Nota: {insc.notaPromedio} pts</div>
+                                )}
+                              </div>
+                              <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', background: cStyle.bg, color: cStyle.color, border: `1px solid ${cStyle.border}` }}>
+                                {insc.condicion}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {trayectoParticipante.cronogramas && trayectoParticipante.cronogramas.length > 0 && (
                     <div style={{ marginBottom: '24px' }}>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: '#4a5568', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>

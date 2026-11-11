@@ -2,16 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { logAction } from '@/lib/bitacora'
-
-const SECUENCIA = [
-  'Introductorio',
-  'I',
-  'II',
-  'III',
-  'IV',
-  'V',
-  'Comisión Técnica'
-]
+import { procesarInscripcionesNuevoPeriodo } from '@/lib/services/progresionAcademica'
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,57 +12,37 @@ export async function POST(req: NextRequest) {
     if (session.user.role === 'OPERADOR') {
       const config = await prisma.configuracionSistema.findFirst()
       if (!config?.inscripcionParticipantesAbierta) {
-        return NextResponse.json({ error: 'El proceso esta cerrado' }, { status: 403 })
+        return NextResponse.json({ error: 'El proceso está cerrado' }, { status: 403 })
       }
     }
 
     const { periodoId } = await req.json()
     if (!periodoId) return NextResponse.json({ error: 'Falta periodoId' }, { status: 400 })
 
-    const participantes = await prisma.participante.findMany({
-      where: { periodoId }
+    const userName = session.user.name || session.user.email || 'Sistema'
+
+    const resultado = await procesarInscripcionesNuevoPeriodo(
+      periodoId,
+      undefined,
+      userName
+    )
+
+    await logAction(
+      'PARTICIPANTES',
+      'ACTUALIZAR',
+      `Se procesó la progresión académica de ${resultado.totalProcesados} participantes (Promovidos: ${resultado.totalPromovidos}, Repetidores: ${resultado.totalRepetidores}) en el periodo ${resultado.periodo}`
+    )
+
+    return NextResponse.json({
+      message: 'Promoción y progresión completada con éxito',
+      promovidos: resultado.totalPromovidos,
+      repetidores: resultado.totalRepetidores,
+      total: resultado.totalProcesados,
+      detalles: resultado.muestraDetalles
     })
-
-    if (participantes.length === 0) {
-      return NextResponse.json({ message: 'No hay participantes para promover', promovidos: 0 })
-    }
-
-    let promovidos = 0
-
-    for (const p of participantes) {
-      if (!p.trimestre) continue
-      
-      const index = SECUENCIA.indexOf(p.trimestre)
-      if (index >= 0 && index < SECUENCIA.length - 1) {
-        const nuevoTrimestre = SECUENCIA[index + 1]
-        
-        await prisma.$transaction([
-          prisma.participante.update({
-            where: { id: p.id },
-            data: { trimestre: nuevoTrimestre }
-          }),
-          prisma.historialTrimestre.create({
-            data: {
-              participanteId: p.id,
-              trimestreAnterior: p.trimestre,
-              trimestreNuevo: nuevoTrimestre,
-              periodoId: p.periodoId,
-              regionId: p.regionId,
-              aulaTerritorialId: p.aulaTerritorialId,
-              cambiadoPor: session.user.name || session.user.email || 'Sistema',
-            }
-          })
-        ])
-        promovidos++
-      }
-    }
-
-    await logAction('PARTICIPANTES', 'ACTUALIZAR', `Se promovieron masivamente ${promovidos} participantes del periodo ${periodoId}`)
-
-    return NextResponse.json({ message: 'Promoción completada', promovidos })
 
   } catch (error: any) {
     console.error('Error promoción masiva:', error)
-    return NextResponse.json({ error: 'Error interno al realizar la promoción masiva' }, { status: 500 })
+    return NextResponse.json({ error: error?.message || 'Error interno al realizar la promoción' }, { status: 500 })
   }
 }

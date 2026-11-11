@@ -48,6 +48,14 @@ enum EstadoPeriodo {
   CERRADO
 }
 
+enum CondicionAcademica {
+  REGULAR
+  APROBADO
+  REPROBADO
+  RETIRADO
+  INACTIVO
+}
+
 model Usuario {
   id        String   @id @default(cuid())
   nombre    String
@@ -110,6 +118,7 @@ model Periodo {
   createdAt            DateTime     @default(now())
   cronogramas          Cronograma[]
   participantes        Participante[]
+  inscripciones        InscripcionPeriodo[]
 
   @@unique([anio, numero])
   @@map("periodos")
@@ -238,8 +247,28 @@ model Participante {
   cronogramas  CronogramaParticipante[]
   asistencias  Asistencia[]
   historial    HistorialTrimestre[]
+  inscripciones InscripcionPeriodo[]
 
   @@map("participantes")
+}
+
+model InscripcionPeriodo {
+  id                String             @id @default(cuid())
+  participanteId    String
+  participante      Participante       @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+  periodoId         String
+  periodo           Periodo            @relation(fields: [periodoId], references: [id], onDelete: Cascade)
+  trimestre         String             // 'Introductorio', 'I', 'II', 'III', 'IV', 'V', 'Comisión Técnica', 'Finalizado'
+  condicion         CondicionAcademica @default(REGULAR)
+  notaPromedio      Float?
+  aulaTerritorialId String?
+  seccion           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@unique([participanteId, periodoId])
+  @@index([participanteId, trimestre])
+  @@map("inscripciones_periodo")
 }
 
 model HistorialTrimestre {

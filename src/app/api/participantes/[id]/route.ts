@@ -17,6 +17,13 @@ export async function GET(
         region: true,
         aulaTerritorial: true,
         periodo: true,
+        inscripciones: {
+          include: { periodo: true },
+          orderBy: [
+            { periodo: { anio: 'asc' } },
+            { periodo: { numero: 'asc' } }
+          ]
+        },
         cronogramas: {
           include: {
             cronograma: {
