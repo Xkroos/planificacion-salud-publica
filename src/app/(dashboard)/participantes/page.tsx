@@ -252,7 +252,20 @@ export default function ParticipantesPage() {
 
   const openCreate = () => {
     setEditing(null)
-    setForm({ nombre: '', apellido: '', cedula: '', telefono: '', email: '', genero: 'MASCULINO', unidadId: '', trimestre: '', seccion: '', periodoId: '', regionId: '', aulaTerritorialId: '' })
+    setForm({
+      nombre: '',
+      apellido: '',
+      cedula: '',
+      telefono: '',
+      email: '',
+      genero: 'MASCULINO',
+      unidadId: '',
+      trimestre: 'Introductorio',
+      seccion: '',
+      periodoId: activePeriodo?.id || '',
+      regionId: '',
+      aulaTerritorialId: ''
+    })
     setError('')
     setShowModal(true)
   }
@@ -278,12 +291,14 @@ export default function ParticipantesPage() {
       const method = editing ? 'PUT' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) throw new Error(data.error || 'Error al guardar participante')
       setSuccess(editing ? 'Participante actualizado' : 'Participante registrado exitosamente')
       setShowModal(false)
-      await fetchData()
+      await Promise.all([fetchData(), fetchStats()])
     } catch (e: unknown) {
-      setError((e as Error).message || 'Error al guardar')
+      const msg = (e as Error).message || 'Error al guardar'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setSaving(false)
     }
@@ -292,7 +307,7 @@ export default function ParticipantesPage() {
   const handleDelete = async (id: string) => {
     await fetch(`/sistema/api/participantes/${id}`, { method: 'DELETE' })
     setDeleteConfirm(null)
-    await fetchData()
+    await Promise.all([fetchData(), fetchStats()])
   }
 
   const openEstatus = (p: Participante) => {
@@ -1041,6 +1056,11 @@ export default function ParticipantesPage() {
                   </select>
                 </div>
               </div>
+              {error && (
+                <div className="alert alert-error" style={{ marginTop: '14px', marginBottom: 0 }}>
+                  {error}
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>

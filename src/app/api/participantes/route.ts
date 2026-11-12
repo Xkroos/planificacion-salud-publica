@@ -190,60 +190,101 @@ export async function POST(req: NextRequest) {
 
     const nombreStr = typeof body.nombre === 'string' ? body.nombre.trim() : ''
     const apellidoStr = typeof body.apellido === 'string' ? body.apellido.trim() : ''
-    const cedulaStr = typeof body.cedula === 'string' ? body.cedula.trim() : ''
+    const cedulaStr = typeof body.cedula === 'string' ? body.cedula.trim().replace(/^[VEJvej]-?\s*/, '') : ''
+    const telefonoStr = typeof body.telefono === 'string' ? body.telefono.trim() : ''
+    const emailStr = typeof body.email === 'string' ? body.email.trim() : ''
 
     // Validar campos obligatorios
     if (!nombreStr || !apellidoStr || !cedulaStr || !body.genero) {
       return NextResponse.json({ error: 'Nombre, apellido, cédula y género son obligatorios' }, { status: 400 })
     }
 
-    // Verificar cédula única
-    if (cedulaStr) {
-      const existente = await prisma.participante.findFirst({ where: { cedula: cedulaStr } })
-      if (existente) {
-        return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
-      }
-      
-      const docenteExistente = await prisma.docente.findFirst({ where: { cedula: cedulaStr } })
-      if (docenteExistente) {
-        return NextResponse.json({ error: 'La cédula ya está registrada como un docente' }, { status: 409 })
-      }
+    // Determinar el período destino (el enviado en el formulario o el período activo actual)
+    let targetPeriodoId: string | null = body.periodoId ? String(body.periodoId).trim() : null
+    if (!targetPeriodoId) {
+      const activePer = await prisma.periodo.findFirst({ where: { estado: 'ACTIVO' } })
+      if (activePer) targetPeriodoId = activePer.id
     }
 
-    // Verificar email único
-    if (body.email) {
-      const emailExistente = await prisma.participante.findFirst({ where: { email: body.email.trim() } })
-      if (emailExistente) {
-        return NextResponse.json({ error: 'correo registrado en el sistema' }, { status: 409 })
-      }
-    }
+    const targetTrimestre = body.trimestre ? String(body.trimestre).trim() : 'Introductorio'
 
-    // Verificar teléfono único
-    if (body.telefono) {
-      const tlfExistente = await prisma.participante.findFirst({ where: { telefono: body.telefono.trim() } })
-      if (tlfExistente) {
-        return NextResponse.json({ error: 'numero de telefono registrado en el sistema' }, { status: 409 })
+    // Verificar si ya existe un participante con esta cédula (con o sin prefijo V-)
+    const existente = await prisma.participante.findFirst({
+      where: {
+        OR: [
+          { cedula: cedulaStr },
+          { cedula: body.cedula.trim() }
+        ]
       }
-    }
-
-    // Force rebuild
-    const participante = await prisma.participante.create({
-      data: {
-        nombre: nombreStr,
-        apellido: apellidoStr,
-        cedula: cedulaStr,
-        telefono: body.telefono || null,
-        email: body.email || null,
-        genero: body.genero,
-        trimestre: body.trimestre || null,
-        seccion: body.seccion || null,
-        ...(body.unidadId ? { unidad: { connect: { id: body.unidadId } } } : {}),
-        ...(body.periodoId ? { periodo: { connect: { id: body.periodoId } } } : {}),
-        ...(body.regionId ? { region: { connect: { id: body.regionId } } } : {}),
-        ...(body.aulaTerritorialId ? { aulaTerritorial: { connect: { id: body.aulaTerritorialId } } } : {}),
-      },
-      include: { unidad: true },
     })
+
+    let participante
+    if (existente) {
+      // Si ya existe en el sistema, actualizamos sus datos y período sin bloquear con error 409
+      participante = await prisma.participante.update({
+        where: { id: existente.id },
+        data: {
+          nombre: nombreStr,
+          apellido: apellidoStr,
+          cedula: cedulaStr,
+          telefono: telefonoStr || existente.telefono || null,
+          email: emailStr || existente.email || null,
+          genero: body.genero,
+          trimestre: targetTrimestre || existente.trimestre || 'Introductorio',
+          seccion: body.seccion || existente.seccion || null,
+          ...(body.unidadId ? { unidad: { connect: { id: body.unidadId } } } : {}),
+          ...(targetPeriodoId ? { periodo: { connect: { id: targetPeriodoId } } } : {}),
+          ...(body.regionId ? { region: { connect: { id: body.regionId } } } : {}),
+          ...(body.aulaTerritorialId ? { aulaTerritorial: { connect: { id: body.aulaTerritorialId } } } : {}),
+        },
+        include: { unidad: true },
+      })
+    } else {
+      participante = await prisma.participante.create({
+        data: {
+          nombre: nombreStr,
+          apellido: apellidoStr,
+          cedula: cedulaStr,
+          telefono: telefonoStr || null,
+          email: emailStr || null,
+          genero: body.genero,
+          trimestre: targetTrimestre,
+          seccion: body.seccion || null,
+          ...(body.unidadId ? { unidad: { connect: { id: body.unidadId } } } : {}),
+          ...(targetPeriodoId ? { periodo: { connect: { id: targetPeriodoId } } } : {}),
+          ...(body.regionId ? { region: { connect: { id: body.regionId } } } : {}),
+          ...(body.aulaTerritorialId ? { aulaTerritorial: { connect: { id: body.aulaTerritorialId } } } : {}),
+        },
+        include: { unidad: true },
+      })
+    }
+
+    // Registrar también en inscripciones_periodo si hay período destino
+    if (targetPeriodoId) {
+      try {
+        await prisma.inscripcionPeriodo.upsert({
+          where: {
+            participanteId_periodoId: {
+              participanteId: participante.id,
+              periodoId: targetPeriodoId
+            }
+          },
+          create: {
+            participanteId: participante.id,
+            periodoId: targetPeriodoId,
+            trimestre: targetTrimestre,
+            aulaTerritorialId: body.aulaTerritorialId || null,
+            seccion: body.seccion || null
+          },
+          update: {
+            trimestre: targetTrimestre,
+            ...(body.aulaTerritorialId ? { aulaTerritorialId: body.aulaTerritorialId } : {})
+          }
+        })
+      } catch (e) {
+        console.warn('Aviso al sincronizar inscripcionPeriodo en POST participante:', e)
+      }
+    }
 
     await logAction('PARTICIPANTES', 'CREAR', `Se registró el participante ${participante.nombre} ${participante.apellido || ''} (CI: ${participante.cedula})`)
 

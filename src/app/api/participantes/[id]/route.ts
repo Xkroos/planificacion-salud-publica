@@ -66,38 +66,22 @@ export async function PUT(
 
     const { id } = await params
     const body = await req.json()
-    const cedulaStr = typeof body.cedula === 'string' ? body.cedula.trim() : body.cedula
+    const cedulaStr = typeof body.cedula === 'string' ? body.cedula.trim().replace(/^[VEJvej]-?\s*/, '') : body.cedula
 
-    // Verificar cédula única
+    // Verificar cédula única en participantes
     if (cedulaStr) {
       const existente = await prisma.participante.findFirst({ where: { cedula: cedulaStr, NOT: { id } } })
-      if (existente) return NextResponse.json({ error: 'ya la cedula se encuentra registrada en el sistema' }, { status: 409 })
-
-      const docenteExistente = await prisma.docente.findFirst({ where: { cedula: cedulaStr } })
-      if (docenteExistente) return NextResponse.json({ error: 'La cédula ya está registrada como un docente' }, { status: 409 })
+      if (existente) return NextResponse.json({ error: 'La cédula ya se encuentra registrada en otro participante' }, { status: 409 })
     }
 
-    // Verificar email único
-    if (body.email) {
-      const emailExistente = await prisma.participante.findFirst({ where: { email: body.email.trim(), NOT: { id } } })
-      if (emailExistente) return NextResponse.json({ error: 'correo registrado en el sistema' }, { status: 409 })
-    }
-
-    // Verificar teléfono único
-    if (body.telefono) {
-      const tlfExistente = await prisma.participante.findFirst({ where: { telefono: body.telefono.trim(), NOT: { id } } })
-      if (tlfExistente) return NextResponse.json({ error: 'numero de telefono registrado en el sistema' }, { status: 409 })
-    }
-
-    // Force rebuild
     const participante = await prisma.participante.update({
       where: { id },
       data: {
         nombre: typeof body.nombre === 'string' ? body.nombre.trim() : body.nombre,
         apellido: typeof body.apellido === 'string' ? body.apellido.trim() : body.apellido,
-        cedula: typeof body.cedula === 'string' ? body.cedula.trim() : body.cedula,
-        telefono: body.telefono || null,
-        email: body.email || null,
+        cedula: cedulaStr || null,
+        telefono: typeof body.telefono === 'string' && body.telefono.trim() ? body.telefono.trim() : null,
+        email: typeof body.email === 'string' && body.email.trim() ? body.email.trim() : null,
         genero: body.genero,
         trimestre: body.trimestre || null,
         seccion: body.seccion || null,
