@@ -39,12 +39,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const cantEncuentros = a.uc * 2
       
       // Bloques de 2 horas consecutivos
-      // Agregamos un descanso de 1 hora si el bloque cae justo a las 12:00
-      let currentH = baseH + (i * 2)
-      // Logica simple: si el horario base era <= 10, y llegamos a las 12 o mas, agregamos 1 hora de descanso
-      // Para no complicarlo, simplemente sumamos 2 horas. Si el usuario pidio que no choquen, esto lo garantiza.
-      let startH = baseH + (i * 2)
-      let endH = startH + 2
+      const startH = baseH + (i * 2)
+      const endH = startH + 2
       
       const sH = startH.toString().padStart(2, '0')
       const sM = baseM.toString().padStart(2, '0')

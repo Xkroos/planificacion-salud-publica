@@ -422,7 +422,11 @@ export default function CronogramaDetailPage() {
       setSelectedParticipantsIds([])
       setEnrollModeSingle('ALL')
       setSelectedUnitsSingle([])
+      toast.success('Participante(s) inscrito(s) exitosamente')
       await fetch_()
+      if (showPartForm) {
+        await openInscripcionModal()
+      }
     } catch (e: any) {
       toast.error(e.message)
     }
@@ -434,7 +438,11 @@ export default function CronogramaDetailPage() {
         method: 'DELETE'
       })
       if (!res.ok) throw new Error('Error al desinscribir')
+      toast.success('Participante retirado de la sección')
       await fetch_()
+      if (showPartForm) {
+        await openInscripcionModal()
+      }
     } catch (e: any) {
       toast.error(e.message)
     }
@@ -733,7 +741,16 @@ export default function CronogramaDetailPage() {
             </div>
           ) : (
             <table className="data-table">
-              <thead><tr><th>#</th><th>Nombre</th><th>Cédula</th><th>Género</th><th>Asignatura</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>Cédula</th>
+                  <th>Género</th>
+                  <th>Asignatura</th>
+                  {canManageParticipants && <th style={{ textAlign: 'right' }}>Acciones</th>}
+                </tr>
+              </thead>
               <tbody>
                 {data.participantes.map((rel, i) => {
                   const esEspecifica = rel.unidadesIds && rel.unidadesIds.length > 0
@@ -747,6 +764,17 @@ export default function CronogramaDetailPage() {
                       <td>{rel.participante.cedula || '—'}</td>
                       <td><span className={`badge ${rel.participante.genero === 'FEMENINO' ? 'badge-red' : 'badge-blue'}`}>{rel.participante.genero === 'FEMENINO' ? '♀ Fem.' : '♂ Masc.'}</span></td>
                       <td><span className="badge badge-blue" style={{ fontSize: '11px' }}>{materias}</span></td>
+                      {canManageParticipants && (
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            className="btn btn-sm"
+                            style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '4px 10px', fontSize: '12px' }}
+                            onClick={() => handleDesinscribir(rel.participante.id)}
+                          >
+                            Desinscribir
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}
@@ -910,16 +938,36 @@ export default function CronogramaDetailPage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {(() => {
-                    const filteredParticipants = availableParticipants.filter(p => {
+                    // Mostrar SOLAMENTE los participantes que aún NO están inscritos en ninguna sección del período actual
+                    const sinInscribirEnPeriodo = availableParticipants.filter(p => {
+                      const inscritoEnEstaSeccion = data?.participantes.some(rel => rel.participante.id === p.id)
+                      if (inscritoEnEstaSeccion) return false
+
+                      const inscritoEnOtraSeccionMismoPeriodo = p.cronogramas?.some((r: any) => {
+                        const rPeriodoId = r.cronograma?.periodoId || r.cronograma?.periodo?.id
+                        return rPeriodoId === data?.periodo?.id
+                      })
+                      if (inscritoEnOtraSeccionMismoPeriodo) return false
+
+                      return true
+                    })
+
+                    const filteredParticipants = sinInscribirEnPeriodo.filter(p => {
                       const t = searchTerm.toLowerCase()
                       return (p.nombre?.toLowerCase().includes(t) || p.apellido?.toLowerCase().includes(t) || p.cedula?.includes(t))
                     })
                     
-                    const selectableParticipantsIds = filteredParticipants
-                      .filter(p => !data?.participantes.find(rel => rel.participante.id === p.id))
-                      .map(p => p.id)
+                    const selectableParticipantsIds = filteredParticipants.map(p => p.id)
 
                     const allSelected = selectableParticipantsIds.length > 0 && selectableParticipantsIds.every(id => selectedParticipantsIds.includes(id))
+
+                    if (sinInscribirEnPeriodo.length === 0) {
+                      return (
+                        <div style={{ textAlign: 'center', padding: '24px 16px', color: '#64748b' }}>
+                          Todos los participantes de esta región y aula territorial ya se encuentran inscritos en una sección de este período.
+                        </div>
+                      )
+                    }
 
                     return (
                       <>
@@ -941,66 +989,45 @@ export default function CronogramaDetailPage() {
                             Seleccionar todos los visibles ({selectableParticipantsIds.length})
                           </label>
                         )}
-                        {filteredParticipants.map(p => {
-                          const relacion = data?.participantes.find(rel => rel.participante.id === p.id)
-                          const isInscrito = !!relacion
-
-                    return (
-                      <div key={p.id} style={{ display: 'flex', gap: '12px', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', background: isInscrito ? '#f0fdf4' : '#fff' }}>
-                        {!isInscrito && (
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={selectedParticipantsIds.includes(p.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedParticipantsIds([...selectedParticipantsIds, p.id])
-                                } else {
-                                  setSelectedParticipantsIds(selectedParticipantsIds.filter(id => id !== p.id))
-                                }
-                              }}
-                              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                            />
-                          </div>
-                        )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1 }}>
-                          <div>
-                            <div style={{ fontWeight: 600, color: '#1a3a6b' }}>{p.apellido}, {p.nombre}</div>
-                            <div style={{ fontSize: '13px', color: '#4a5568' }}>
-                              CI: {p.cedula || '—'} · {p.genero === 'FEMENINO' ? 'Femenino' : 'Masculino'}
-                            </div>
-                            {isInscrito && (
-                              <div style={{ fontSize: '12px', color: '#16a34a', marginTop: '6px', background: '#dcfce7', padding: '4px 8px', borderRadius: '6px', display: 'inline-block' }}>
-                                ✅ Inscrito en {relacion.unidadesIds.length > 0 ? 'materias específicas' : `toda la sección ${data?.seccion}`}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            {isInscrito ? (
-                              <button className="btn btn-sm" style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }} onClick={() => handleDesinscribir(p.id)}>Desinscribir</button>
-                            ) : (
-                              <button className="btn btn-sm btn-primary" onClick={() => {
-                                let canAll = true
-                                p.cronogramas?.forEach((r: any) => {
-                                  if (r.cronograma.trimestre === data?.trimestre && r.cronograma.id !== data?.id) {
-                                    canAll = false
+                        {filteredParticipants.map(p => (
+                          <div key={p.id} style={{ display: 'flex', gap: '12px', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fff' }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={selectedParticipantsIds.includes(p.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedParticipantsIds([...selectedParticipantsIds, p.id])
+                                  } else {
+                                    setSelectedParticipantsIds(selectedParticipantsIds.filter(id => id !== p.id))
                                   }
-                                })
-                                setSelectedParticipantForEnroll(p)
-                                setEnrollModeSingle(canAll ? 'ALL' : 'SPECIFIC')
-                                setSelectedUnitsSingle([])
-                              }}>Inscribir</button>
-                            )}
+                                }}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                              />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1 }}>
+                              <div>
+                                <div style={{ fontWeight: 600, color: '#1a3a6b' }}>{p.apellido}, {p.nombre}</div>
+                                <div style={{ fontSize: '13px', color: '#4a5568' }}>
+                                  CI: {p.cedula || '—'} · {p.genero === 'FEMENINO' ? 'Femenino' : 'Masculino'}
+                                </div>
+                              </div>
+                              <div>
+                                <button className="btn btn-sm btn-primary" onClick={() => {
+                                  setSelectedParticipantForEnroll(p)
+                                  setEnrollModeSingle('ALL')
+                                  setSelectedUnitsSingle([])
+                                }}>Inscribir</button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        ))}
+                        {filteredParticipants.length === 0 && searchTerm && (
+                          <div style={{ textAlign: 'center', padding: '20px', color: '#718096' }}>No se encontraron participantes disponibles con esa búsqueda.</div>
+                        )}
+                      </>
                     )
-                  })}
-                  {filteredParticipants.length === 0 && searchTerm && (
-                    <div style={{ textAlign: 'center', padding: '20px', color: '#718096' }}>No se encontraron participantes con esa búsqueda.</div>
-                  )}
-                  </>
-                )})()}
+                  })()}
                 </div>
               )}
             </div>

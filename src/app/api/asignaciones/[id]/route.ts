@@ -119,8 +119,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       for (let i = currentIndex + 1; i < todasAsignaciones.length; i++) {
         const nextA = todasAsignaciones[i];
         
-        let startH = currentEndH;
-        let endH = startH + 2;
+        const startH = currentEndH;
+        const endH = startH + 2;
         
         const sH = startH.toString().padStart(2, '0');
         const sM = currentEndM.toString().padStart(2, '0');

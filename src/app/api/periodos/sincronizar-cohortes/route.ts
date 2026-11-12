@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { sincronizarCohortesHistoricas } from '@/lib/services/sincronizarCohortes'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
+export async function POST() {
   try {
     const session = await auth()
     if (!session || session.user.role !== 'ADMIN') {

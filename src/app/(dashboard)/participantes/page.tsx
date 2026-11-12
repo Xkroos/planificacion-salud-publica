@@ -891,7 +891,7 @@ export default function ParticipantesPage() {
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontWeight: 600, color: '#1a3a6b', fontSize: '14px', marginBottom: '4px' }}>
-                                  {formatTrimestre(crono.trimestre)} \u2014 Seccion {crono.seccion}
+                                  {formatTrimestre(crono.trimestre)} — Sección {crono.seccion}
                                 </div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '12px' }}>
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4a5568' }}>
@@ -904,7 +904,7 @@ export default function ParticipantesPage() {
                                   )}
                                   {(fechaInicio || fechaFin) && (
                                     <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#718096' }}>
-                                      <Clock size={11} /> {fechaInicio || '?'} \u2014 {fechaFin || '?'}
+                                      <Clock size={11} /> {fechaInicio || '?'} — {fechaFin || '?'}
                                     </span>
                                   )}
                                 </div>
@@ -1120,7 +1120,7 @@ export default function ParticipantesPage() {
                 <li>V → Comisión Técnica</li>
               </ul>
               <p style={{ color: '#d97706', fontSize: '13px', fontWeight: 600, background: '#fef3c7', padding: '10px', borderRadius: '8px' }}>
-                Nota: Los participantes en Comisión Técnica deben ser pasados a "Finalizado" de forma manual. 
+                Nota: Los participantes en Comisión Técnica deben ser pasados a &quot;Finalizado&quot; de forma manual. 
               </p>
               
               {errorPromocion && <div className="alert alert-error">{errorPromocion}</div>}

@@ -108,72 +108,120 @@ async function main() {
   })
   console.log(`   - Participantes vinculados a Cohorte 2026-2: ${upd2026_2.count}`)
 
-  // 5. Poblar el historial completo de inscripciones_periodo
-  console.log('🌱 Creando historial de inscripciones por período...')
+  // 5. Poblar y normalizar cronológicamente el historial completo de inscripciones_periodo
+  console.log('🌱 Creando y corrigiendo historial cronológico de inscripciones por período...')
 
-  // Cohorte 2025-3
-  const part2025_3 = await prisma.participante.findMany({
-    where: { periodoId: p2025_3.id },
-    select: { id: true, aulaTerritorialId: true, trimestre: true }
+  const SECUENCIA_NIVELES = [
+    'Introductorio',
+    'I',
+    'II',
+    'III',
+    'IV',
+    'V',
+    'Comisión Técnica',
+    'Finalizado'
+  ] as const
+
+  const todosPeriodos = await prisma.periodo.findMany({
+    orderBy: [{ anio: 'asc' }, { numero: 'asc' }]
   })
 
-  for (const p of part2025_3) {
-    // 2025-3
-    await prisma.inscripcionPeriodo.upsert({
-      where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2025_3.id } },
-      create: { participanteId: p.id, periodoId: p2025_3.id, trimestre: 'Introductorio', condicion: CondicionAcademica.APROBADO, aulaTerritorialId: p.aulaTerritorialId },
-      update: { trimestre: 'Introductorio', condicion: CondicionAcademica.APROBADO }
-    })
-    // 2026-1
-    await prisma.inscripcionPeriodo.upsert({
-      where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_1.id } },
-      create: { participanteId: p.id, periodoId: p2026_1.id, trimestre: 'I', condicion: CondicionAcademica.APROBADO, aulaTerritorialId: p.aulaTerritorialId },
-      update: { trimestre: 'I', condicion: CondicionAcademica.APROBADO }
-    })
-    // 2026-2
-    const trimActual = p.trimestre || 'II'
-    await prisma.inscripcionPeriodo.upsert({
-      where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_2.id } },
-      create: { participanteId: p.id, periodoId: p2026_2.id, trimestre: trimActual, condicion: CondicionAcademica.REGULAR, aulaTerritorialId: p.aulaTerritorialId },
-      update: { trimestre: trimActual, condicion: CondicionAcademica.REGULAR }
-    })
-  }
+  const valorCronologico = (anio: number, numero: number) => anio * 10 + numero
 
-  // Cohorte 2026-1
-  const part2026_1 = await prisma.participante.findMany({
-    where: { periodoId: p2026_1.id },
-    select: { id: true, aulaTerritorialId: true, trimestre: true }
+  const todosParticipantes = await prisma.participante.findMany({
+    include: {
+      periodo: true,
+      inscripciones: {
+        include: { periodo: true },
+        orderBy: [
+          { periodo: { anio: 'asc' } },
+          { periodo: { numero: 'asc' } }
+        ]
+      }
+    }
   })
 
-  for (const p of part2026_1) {
-    // 2026-1
-    await prisma.inscripcionPeriodo.upsert({
-      where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_1.id } },
-      create: { participanteId: p.id, periodoId: p2026_1.id, trimestre: 'I', condicion: CondicionAcademica.APROBADO, aulaTerritorialId: p.aulaTerritorialId },
-      update: { trimestre: 'I', condicion: CondicionAcademica.APROBADO }
-    })
-    // 2026-2
-    const trimActual = p.trimestre || 'I'
-    await prisma.inscripcionPeriodo.upsert({
-      where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_2.id } },
-      create: { participanteId: p.id, periodoId: p2026_2.id, trimestre: trimActual, condicion: CondicionAcademica.REGULAR, aulaTerritorialId: p.aulaTerritorialId },
-      update: { trimestre: trimActual, condicion: CondicionAcademica.REGULAR }
-    })
-  }
+  for (const participante of todosParticipantes) {
+    if (!participante.periodo) continue
 
-  // Cohorte 2026-2
-  const part2026_2 = await prisma.participante.findMany({
-    where: { periodoId: p2026_2.id },
-    select: { id: true, aulaTerritorialId: true, trimestre: true }
-  })
+    const inicioVal = valorCronologico(participante.periodo.anio, participante.periodo.numero)
+    const idxNivelActual = SECUENCIA_NIVELES.indexOf((participante.trimestre || 'Introductorio') as any)
+    const periodosDesdeInicio = todosPeriodos.filter(p => valorCronologico(p.anio, p.numero) >= inicioVal)
 
-  for (const p of part2026_2) {
-    const trimActual = p.trimestre || 'Introductorio'
-    await prisma.inscripcionPeriodo.upsert({
-      where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_2.id } },
-      create: { participanteId: p.id, periodoId: p2026_2.id, trimestre: trimActual, condicion: CondicionAcademica.REGULAR, aulaTerritorialId: p.aulaTerritorialId },
-      update: { trimestre: trimActual, condicion: CondicionAcademica.REGULAR }
-    })
+    const cantidadEsperada = Math.max(
+      participante.inscripciones.filter(i => i.periodo && valorCronologico(i.periodo.anio, i.periodo.numero) >= inicioVal).length,
+      idxNivelActual >= 0 ? idxNivelActual + 1 : 1
+    )
+
+    const periodosTrayecto = periodosDesdeInicio.slice(0, cantidadEsperada)
+    if (periodosTrayecto.length === 0) continue
+
+    const mapExistentes = new Map(
+      participante.inscripciones.map(i => [i.periodoId, i])
+    )
+
+    let cursorNivel = 0
+    let ultimoTrimestreCalculado = 'Introductorio'
+
+    for (let i = 0; i < periodosTrayecto.length; i++) {
+      const per = periodosTrayecto[i]
+      const esUltimoPeriodo = i === periodosTrayecto.length - 1
+      const existente = mapExistentes.get(per.id)
+
+      const trimestreCorrespondiente = SECUENCIA_NIVELES[Math.min(cursorNivel, SECUENCIA_NIVELES.length - 1)]
+      ultimoTrimestreCalculado = trimestreCorrespondiente
+
+      const condicionExplicitaPausa =
+        existente &&
+        (existente.condicion === CondicionAcademica.REPROBADO ||
+          existente.condicion === CondicionAcademica.RETIRADO ||
+          existente.condicion === CondicionAcademica.INACTIVO)
+
+      let condicionCorrespondiente: CondicionAcademica
+      if (condicionExplicitaPausa) {
+        condicionCorrespondiente = existente.condicion
+      } else if (!esUltimoPeriodo) {
+        condicionCorrespondiente = CondicionAcademica.APROBADO
+      } else {
+        condicionCorrespondiente =
+          per.estado === 'ACTIVO'
+            ? CondicionAcademica.REGULAR
+            : existente?.condicion === CondicionAcademica.APROBADO
+            ? CondicionAcademica.APROBADO
+            : CondicionAcademica.REGULAR
+      }
+
+      await prisma.inscripcionPeriodo.upsert({
+        where: {
+          participanteId_periodoId: {
+            participanteId: participante.id,
+            periodoId: per.id
+          }
+        },
+        create: {
+          participanteId: participante.id,
+          periodoId: per.id,
+          trimestre: trimestreCorrespondiente,
+          condicion: condicionCorrespondiente,
+          aulaTerritorialId: participante.aulaTerritorialId
+        },
+        update: {
+          trimestre: trimestreCorrespondiente,
+          condicion: condicionCorrespondiente
+        }
+      })
+
+      if (condicionCorrespondiente === CondicionAcademica.APROBADO) {
+        cursorNivel++
+      }
+    }
+
+    if (participante.trimestre !== ultimoTrimestreCalculado) {
+      await prisma.participante.update({
+        where: { id: participante.id },
+        data: { trimestre: ultimoTrimestreCalculado }
+      })
+    }
   }
 
   console.log('')

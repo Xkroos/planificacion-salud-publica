@@ -84,6 +84,27 @@ export async function POST(
         where: { cronogramaId_participanteId: { cronogramaId, participanteId } }
       })
 
+      // Verificar si el participante ya está inscrito en otra sección de este mismo período
+      const inscritoOtraSeccion = await prisma.cronogramaParticipante.findFirst({
+        where: {
+          participanteId,
+          cronogramaId: { not: cronogramaId },
+          cronograma: {
+            periodoId: cronograma.periodoId
+          }
+        },
+        include: { cronograma: true }
+      })
+
+      if (inscritoOtraSeccion) {
+        return NextResponse.json(
+          {
+            error: `El participante ${participante.apellido || ''} ${participante.nombre} ya se encuentra inscrito en la Sección ${inscritoOtraSeccion.cronograma.seccion} de este período.`
+          },
+          { status: 400 }
+        )
+      }
+
       const relacion = await prisma.cronogramaParticipante.upsert({
         where: { cronogramaId_participanteId: { cronogramaId, participanteId } },
         update: { unidadesIds },

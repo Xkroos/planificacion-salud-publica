@@ -35,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     })
     
-    let cambios: string[] = []
+    const cambios: string[] = []
     if (aulaVieja) {
       const camposNum = ['costo', 'preinscripcion', 'inscripcion', 'gastosAdministrativos', 'limpieza', 'vigilancia', 'aporteCoordinacion', 'viatico', 'viaticoZona']
       for (const campo of camposNum) {

@@ -3,6 +3,17 @@ import { CondicionAcademica } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 
+const SECUENCIA_NIVELES = [
+  'Introductorio',
+  'I',
+  'II',
+  'III',
+  'IV',
+  'V',
+  'Comisión Técnica',
+  'Finalizado'
+] as const
+
 let tablaVerificada = false
 
 export async function asegurarTablaInscripcionesPeriodo() {
@@ -42,8 +53,141 @@ export async function asegurarTablaInscripcionesPeriodo() {
   }
 }
 
+/**
+ * Repara y normaliza cronológicamente el historial de progresión (inscripciones_periodo)
+ * de un participante individual desde su período de ingreso hasta el período actual.
+ */
+export async function repararProgresionParticipante(participanteId: string) {
+  await asegurarTablaInscripcionesPeriodo()
+
+  const participante = await prisma.participante.findUnique({
+    where: { id: participanteId },
+    include: {
+      periodo: true,
+      inscripciones: {
+        include: { periodo: true },
+        orderBy: [
+          { periodo: { anio: 'asc' } },
+          { periodo: { numero: 'asc' } }
+        ]
+      }
+    }
+  })
+
+  if (!participante || !participante.periodo) return
+
+  const todosPeriodos = await prisma.periodo.findMany({
+    orderBy: [{ anio: 'asc' }, { numero: 'asc' }]
+  })
+
+  const valorCronologico = (anio: number, numero: number) => anio * 10 + numero
+  const inicioVal = valorCronologico(participante.periodo.anio, participante.periodo.numero)
+
+  // Determinar hasta qué período ha cursado el estudiante
+  let maxVal = inicioVal
+  for (const insc of participante.inscripciones) {
+    if (insc.periodo) {
+      const v = valorCronologico(insc.periodo.anio, insc.periodo.numero)
+      if (v > maxVal) maxVal = v
+    }
+  }
+
+  // Si no tenía inscripciones en períodos posteriores pero existe 2026-2 (o el período activo), incluir hasta donde corresponda según su nivel actual
+  const idxNivelActual = SECUENCIA_NIVELES.indexOf((participante.trimestre || 'Introductorio') as any)
+  const periodosDesdeInicio = todosPeriodos.filter(p => valorCronologico(p.anio, p.numero) >= inicioVal)
+
+  // Cantidad de períodos que debería abarcar su trayectoria:
+  // Al menos los que ya tiene registrados en inscripciones_periodo, o (idxNivelActual + 1) períodos desde su inicio
+  const cantidadEsperada = Math.max(
+    participante.inscripciones.filter(i => i.periodo && valorCronologico(i.periodo.anio, i.periodo.numero) >= inicioVal).length,
+    idxNivelActual >= 0 ? idxNivelActual + 1 : 1
+  )
+
+  const periodosTrayecto = periodosDesdeInicio.slice(0, cantidadEsperada)
+  if (periodosTrayecto.length === 0) return
+
+  const mapExistentes = new Map(
+    participante.inscripciones.map(i => [i.periodoId, i])
+  )
+
+  let cursorNivel = 0
+  let ultimoTrimestreCalculado = 'Introductorio'
+
+  for (let i = 0; i < periodosTrayecto.length; i++) {
+    const per = periodosTrayecto[i]
+    const esUltimoPeriodo = i === periodosTrayecto.length - 1
+    const existente = mapExistentes.get(per.id)
+
+    const trimestreCorrespondiente = SECUENCIA_NIVELES[Math.min(cursorNivel, SECUENCIA_NIVELES.length - 1)]
+    ultimoTrimestreCalculado = trimestreCorrespondiente
+
+    // Respetar si el estudiante fue marcado explícitamente como REPROBADO, RETIRADO o INACTIVO
+    const condicionExplicitaPausa =
+      existente &&
+      (existente.condicion === CondicionAcademica.REPROBADO ||
+        existente.condicion === CondicionAcademica.RETIRADO ||
+        existente.condicion === CondicionAcademica.INACTIVO)
+
+    let condicionCorrespondiente: CondicionAcademica
+    if (condicionExplicitaPausa) {
+      condicionCorrespondiente = existente.condicion
+    } else if (!esUltimoPeriodo) {
+      // Todo período anterior al último cursado debe figurar como APROBADO para haber podido avanzar
+      condicionCorrespondiente = CondicionAcademica.APROBADO
+    } else {
+      // En el último período cursado: si el período está ACTIVO es REGULAR, si está CERRADO y ya fue evaluado se respeta
+      condicionCorrespondiente =
+        per.estado === 'ACTIVO'
+          ? CondicionAcademica.REGULAR
+          : existente?.condicion === CondicionAcademica.APROBADO
+          ? CondicionAcademica.APROBADO
+          : CondicionAcademica.REGULAR
+    }
+
+    if (
+      !existente ||
+      existente.trimestre !== trimestreCorrespondiente ||
+      existente.condicion !== condicionCorrespondiente
+    ) {
+      await prisma.inscripcionPeriodo.upsert({
+        where: {
+          participanteId_periodoId: {
+            participanteId: participante.id,
+            periodoId: per.id
+          }
+        },
+        create: {
+          participanteId: participante.id,
+          periodoId: per.id,
+          trimestre: trimestreCorrespondiente,
+          condicion: condicionCorrespondiente,
+          aulaTerritorialId: participante.aulaTerritorialId
+        },
+        update: {
+          trimestre: trimestreCorrespondiente,
+          condicion: condicionCorrespondiente
+        }
+      })
+    }
+
+    // Si aprobó este período, avanza al siguiente trimestre para el próximo período
+    if (condicionCorrespondiente === CondicionAcademica.APROBADO) {
+      cursorNivel++
+    }
+  }
+
+  // Sincronizar también el nivel actual en la tabla Participante si había discrepancia
+  if (participante.trimestre !== ultimoTrimestreCalculado) {
+    await prisma.participante.update({
+      where: { id: participante.id },
+      data: { trimestre: ultimoTrimestreCalculado }
+    })
+  }
+}
+
 export async function sincronizarCohortesHistoricas(incluirInscripciones = true) {
   await asegurarTablaInscripcionesPeriodo()
+
   // 1. Obtener o crear los períodos base
   const p2025_3 = await prisma.periodo.upsert({
     where: { anio_numero: { anio: 2025, numero: 3 } },
@@ -156,64 +300,15 @@ export async function sincronizarCohortesHistoricas(incluirInscripciones = true)
     data: { periodoId: p2026_2.id }
   })
 
-  // 5. Poblar las inscripciones_periodo si se solicita y la tabla ya fue migrada
+  // 5. Poblar y reparar cronológicamente las inscripciones_periodo si se solicita
   if (incluirInscripciones) {
     try {
-      const part2025_3 = await prisma.participante.findMany({
-        where: { periodoId: p2025_3.id },
-        select: { id: true, aulaTerritorialId: true, trimestre: true }
+      const todosParticipantes = await prisma.participante.findMany({
+        select: { id: true }
       })
 
-      for (const p of part2025_3) {
-        await prisma.inscripcionPeriodo.upsert({
-          where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2025_3.id } },
-          create: { participanteId: p.id, periodoId: p2025_3.id, trimestre: 'Introductorio', condicion: CondicionAcademica.APROBADO, aulaTerritorialId: p.aulaTerritorialId },
-          update: { trimestre: 'Introductorio', condicion: CondicionAcademica.APROBADO }
-        })
-        await prisma.inscripcionPeriodo.upsert({
-          where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_1.id } },
-          create: { participanteId: p.id, periodoId: p2026_1.id, trimestre: 'I', condicion: CondicionAcademica.APROBADO, aulaTerritorialId: p.aulaTerritorialId },
-          update: { trimestre: 'I', condicion: CondicionAcademica.APROBADO }
-        })
-        const trimActual = p.trimestre || 'II'
-        await prisma.inscripcionPeriodo.upsert({
-          where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_2.id } },
-          create: { participanteId: p.id, periodoId: p2026_2.id, trimestre: trimActual, condicion: CondicionAcademica.REGULAR, aulaTerritorialId: p.aulaTerritorialId },
-          update: { trimestre: trimActual, condicion: CondicionAcademica.REGULAR }
-        })
-      }
-
-      const part2026_1 = await prisma.participante.findMany({
-        where: { periodoId: p2026_1.id },
-        select: { id: true, aulaTerritorialId: true, trimestre: true }
-      })
-
-      for (const p of part2026_1) {
-        await prisma.inscripcionPeriodo.upsert({
-          where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_1.id } },
-          create: { participanteId: p.id, periodoId: p2026_1.id, trimestre: 'I', condicion: CondicionAcademica.APROBADO, aulaTerritorialId: p.aulaTerritorialId },
-          update: { trimestre: 'I', condicion: CondicionAcademica.APROBADO }
-        })
-        const trimActual = p.trimestre || 'I'
-        await prisma.inscripcionPeriodo.upsert({
-          where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_2.id } },
-          create: { participanteId: p.id, periodoId: p2026_2.id, trimestre: trimActual, condicion: CondicionAcademica.REGULAR, aulaTerritorialId: p.aulaTerritorialId },
-          update: { trimestre: trimActual, condicion: CondicionAcademica.REGULAR }
-        })
-      }
-
-      const part2026_2 = await prisma.participante.findMany({
-        where: { periodoId: p2026_2.id },
-        select: { id: true, aulaTerritorialId: true, trimestre: true }
-      })
-
-      for (const p of part2026_2) {
-        const trimActual = p.trimestre || 'Introductorio'
-        await prisma.inscripcionPeriodo.upsert({
-          where: { participanteId_periodoId: { participanteId: p.id, periodoId: p2026_2.id } },
-          create: { participanteId: p.id, periodoId: p2026_2.id, trimestre: trimActual, condicion: CondicionAcademica.REGULAR, aulaTerritorialId: p.aulaTerritorialId },
-          update: { trimestre: trimActual, condicion: CondicionAcademica.REGULAR }
-        })
+      for (const p of todosParticipantes) {
+        await repararProgresionParticipante(p.id)
       }
     } catch (err) {
       console.warn('Aviso al sincronizar inscripciones_periodo:', err)
@@ -226,4 +321,3 @@ export async function sincronizarCohortesHistoricas(incluirInscripciones = true)
     '2026-2': res2026_2.count
   }
 }
-
