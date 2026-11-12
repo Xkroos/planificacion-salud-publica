@@ -369,15 +369,15 @@ export default function CronogramaDetailPage() {
     try {
       const regionId = data?.aulaTerritorial.region.id
       const aulaTerritorialId = data?.aulaTerritorial.id
-      const periodoId = data?.periodo.id
       const [partsRes, unitsRes] = await Promise.all([
-        fetch(`/sistema/api/participantes?regionId=${regionId}&aulaTerritorialId=${aulaTerritorialId}&periodoId=${periodoId}`),
+        fetch(`/sistema/api/participantes?regionId=${regionId}&aulaTerritorialId=${aulaTerritorialId}&soloActivos=true&limit=5000`),
         fetch(`/sistema/api/unidades`)
       ])
       const parts = await partsRes.json()
       const units = await unitsRes.json()
-      setAvailableParticipants(Array.isArray(parts) ? parts : [])
-      setAvailableUnits(units.filter((u: any) => u.trimestre === data?.trimestre))
+      const partsList = Array.isArray(parts) ? parts : (Array.isArray(parts?.data) ? parts.data : [])
+      setAvailableParticipants(partsList)
+      setAvailableUnits(Array.isArray(units) ? units.filter((u: any) => u.trimestre === data?.trimestre) : [])
     } catch (e) {
       console.error(e)
     } finally {
@@ -873,7 +873,12 @@ export default function CronogramaDetailPage() {
         <div className="modal-overlay" onClick={() => setShowPartForm(false)}>
           <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 className="modal-title">Gestionar Participantes</h3>
+              <div>
+                <h3 className="modal-title">Gestionar Participantes</h3>
+                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                  Estudiantes activos de <strong>{data.aulaTerritorial.region.nombre}</strong> — <strong>{data.aulaTerritorial.nombre}</strong>
+                </p>
+              </div>
               <button className="btn-icon" onClick={() => setShowPartForm(false)}><X size={18} /></button>
             </div>
             <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto', padding: '16px' }}>

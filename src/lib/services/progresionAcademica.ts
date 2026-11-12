@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { CondicionAcademica, Prisma } from '@prisma/client'
+import { asegurarTablaInscripcionesPeriodo } from '@/lib/services/sincronizarCohortes'
 
 export const SECUENCIA_TRIMESTRES = [
   'Introductorio',
@@ -53,6 +54,7 @@ export async function calcularNivelSiguiente(
   nuevoPeriodoId: string,
   tx: Prisma.TransactionClient = prisma
 ): Promise<ResultadoCalculoNivel> {
+  await asegurarTablaInscripcionesPeriodo()
   const nuevoPeriodo = await tx.periodo.findUnique({
     where: { id: nuevoPeriodoId },
   })

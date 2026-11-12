@@ -2,9 +2,11 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { CondicionAcademica } from '@prisma/client'
+import { asegurarTablaInscripcionesPeriodo } from '@/lib/services/sincronizarCohortes'
 
 export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   try {
+    await asegurarTablaInscripcionesPeriodo()
     const session = await auth()
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })

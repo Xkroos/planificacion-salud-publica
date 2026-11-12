@@ -5,10 +5,11 @@ import {
   Users, Pencil, Trash2, X, Search,
   Phone, Mail, GraduationCap, Loader2, UserPlus,
   ArrowUpCircle, BookOpen, MapPin, Calendar, Clock, ChevronRight, AlertCircle,
-  ChevronLeft
+  ChevronLeft, FileSpreadsheet, RefreshCw
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
+import ImportarParticipantesModal from '@/components/ImportarParticipantesModal'
 
 type UnidadCurricular = { id: string; nombre: string; creditos: number; trimestre: string | null }
 type Seccion = { id: string; nombre: string }
@@ -151,6 +152,25 @@ export default function ParticipantesPage() {
   const [savingPromocion, setSavingPromocion] = useState(false)
   const [errorPromocion, setErrorPromocion] = useState('')
 
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [syncingCohortes, setSyncingCohortes] = useState(false)
+
+  const handleSincronizarCohortes = async () => {
+    setSyncingCohortes(true)
+    try {
+      const res = await fetch('/sistema/api/periodos/sincronizar-cohortes', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al sincronizar cohortes')
+      toast.success('¡Cohortes y períodos de ingreso sincronizados correctamente!')
+      await fetchStats()
+      await fetchData()
+    } catch (e: any) {
+      toast.error(e.message || 'Error al sincronizar cohortes')
+    } finally {
+      setSyncingCohortes(false)
+    }
+  }
+
   const aulasFiltradas = form.regionId ? regiones.find((r: any) => r.id === form.regionId)?.aulas || [] : []
 
   const fetchStats = useCallback(async () => {
@@ -179,11 +199,10 @@ export default function ParticipantesPage() {
     params.set('page', page.toString())
     params.set('limit', '10')
     
-    if (selectedPeriodView === 'ACTUAL' && activePeriodo) {
-      params.set('periodoId', activePeriodo.id)
-    } else if (selectedPeriodView !== 'ACTUAL' && selectedPeriodView !== 'TODOS') {
-      const pId = stats.periodStats.find(p => p.label === selectedPeriodView)?.id
-      if (pId) params.set('periodoId', pId)
+    if (selectedPeriodView !== 'ACTUAL' && selectedPeriodView !== 'TODOS') {
+      const pMatch = stats.periodStats.find(p => p.label === selectedPeriodView || p.id === selectedPeriodView)
+        || periodos.find(p => `${p.anio}-${p.numero}` === selectedPeriodView || p.id === selectedPeriodView)
+      if (pMatch?.id) params.set('periodoId', pMatch.id)
     }
 
     const [partRes, unidRes, configRes, seccRes, regRes, perRes] = await Promise.all([
@@ -370,6 +389,17 @@ export default function ParticipantesPage() {
             </button>
           )}
           {canRegister && (
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowImportModal(true)}
+              disabled={isAdmin ? false : !activePeriodo}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              title="Importar participantes masivamente desde archivo Excel (.xlsx)"
+            >
+              <FileSpreadsheet size={16} color="#16a34a" /> Importar Excel
+            </button>
+          )}
+          {canRegister && (
             <button className="btn btn-primary" onClick={openCreate} disabled={isAdmin ? false : !activePeriodo}>
               <UserPlus size={16} /> Registrar Participante
             </button>
@@ -427,14 +457,16 @@ export default function ParticipantesPage() {
         </div>
       </div>
 
-      {/* Selección de Periodos Académicos - barra horizontal compacta */}
-      <div style={{ marginBottom: '12px' }}>
+      {/* Selección de Periodos Académicos - barra horizontal con todas las cohortes visibles */}
+      <div style={{ marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', marginRight: '4px' }}>
             Periodo:
           </span>
+
+          {/* 1. Botón: Periodo Actual (Todos los activos del periodo actual) */}
           <button
-            onClick={() => setSelectedPeriodView('ACTUAL')}
+            onClick={() => { setSelectedPeriodView('ACTUAL'); setPage(1) }}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
@@ -446,51 +478,111 @@ export default function ParticipantesPage() {
               transition: 'all 0.2s'
             }}
           >
-            <Users size={14} /> Periodo Actual
-            <span style={{ fontSize: '11px', background: selectedPeriodView === 'ACTUAL' ? '#bfdbfe' : '#e2e8f0', color: selectedPeriodView === 'ACTUAL' ? '#1e3a8a' : '#64748b', padding: '1px 7px', borderRadius: '10px', marginLeft: '2px' }}>
-              {stats.periodStats.find(p => p.id === activePeriodo?.id)?.count || 0}
+            <Users size={14} color={selectedPeriodView === 'ACTUAL' ? '#1d4ed8' : '#64748b'} /> Periodo Actual
+            <span style={{
+              fontSize: '11px',
+              background: selectedPeriodView === 'ACTUAL' ? '#bfdbfe' : '#e2e8f0',
+              color: selectedPeriodView === 'ACTUAL' ? '#1e3a8a' : '#64748b',
+              padding: '1px 7px',
+              borderRadius: '10px',
+              marginLeft: '2px',
+              fontWeight: 600
+            }}>
+              {stats.total || totalRecords}
             </span>
           </button>
 
-          {stats.periodStats.filter(p => p.id !== activePeriodo?.id).length > 0 && (
-            <>
-              <button
-                onClick={() => setSelectedPeriodView('TODOS')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-                  background: selectedPeriodView === 'TODOS' ? '#f8fafc' : 'white',
-                  color: selectedPeriodView === 'TODOS' ? '#0f172a' : '#475569',
-                  fontWeight: selectedPeriodView === 'TODOS' ? 700 : 500,
-                  fontSize: '13px',
-                  boxShadow: selectedPeriodView === 'TODOS' ? '0 0 0 2px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.08)',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <Users size={14} /> Todos los Históricos
-              </button>
-              {stats.periodStats.filter(p => p.id !== activePeriodo?.id).map((pStat) => (
+          {/* 2. Lista de Períodos Académicos (Estudiantes que iniciaron en cada período: 2025-3, 2026-1, 2026-2...) */}
+          {(() => {
+            const periodMap = new Map<string, { id: string, label: string, anio: number, numero: number, count: number, activo: boolean }>()
+
+            periodos.forEach((p: any) => {
+              const label = `${p.anio}-${p.numero}`
+              periodMap.set(label, {
+                id: p.id,
+                label,
+                anio: p.anio,
+                numero: p.numero,
+                count: 0,
+                activo: p.estado === 'ACTIVO'
+              })
+            })
+
+            stats.periodStats.forEach((ps: any) => {
+              if (!ps.label || ps.label === 'Sin periodo' || ps.label === 'Sin período') return
+              const existing = periodMap.get(ps.label)
+              if (existing) {
+                existing.count = ps.count
+                if (ps.id) existing.id = ps.id
+              } else {
+                periodMap.set(ps.label, {
+                  id: ps.id || ps.label,
+                  label: ps.label,
+                  anio: ps.anio || 0,
+                  numero: ps.numero || 0,
+                  count: ps.count,
+                  activo: !!ps.activo
+                })
+              }
+            })
+
+            const listaPeriodos = Array.from(periodMap.values()).sort((a, b) => {
+              return (a.anio * 10 + a.numero) - (b.anio * 10 + b.numero)
+            })
+
+            return listaPeriodos.map((pItem) => {
+              const isSelected = selectedPeriodView === pItem.label || (selectedPeriodView !== 'TODOS' && selectedPeriodView !== 'ACTUAL' && selectedPeriodView === pItem.id)
+
+              return (
                 <button
-                  key={pStat.label}
-                  onClick={() => setSelectedPeriodView(pStat.label)}
+                  key={pItem.label}
+                  onClick={() => { setSelectedPeriodView(pItem.label); setPage(1) }}
+                  title={`Ver solo los estudiantes que iniciaron en el período ${pItem.label}`}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
                     padding: '7px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-                    background: selectedPeriodView === pStat.label ? '#f8fafc' : 'white',
-                    color: selectedPeriodView === pStat.label ? '#0f172a' : '#475569',
-                    fontWeight: selectedPeriodView === pStat.label ? 700 : 500,
+                    background: isSelected ? '#eff6ff' : 'white',
+                    color: isSelected ? '#1d4ed8' : '#475569',
+                    fontWeight: isSelected ? 700 : 500,
                     fontSize: '13px',
-                    boxShadow: selectedPeriodView === pStat.label ? '0 0 0 2px #cbd5e1' : '0 1px 2px rgba(0,0,0,0.08)',
+                    boxShadow: isSelected ? '0 0 0 2px #bfdbfe' : '0 1px 2px rgba(0,0,0,0.08)',
                     transition: 'all 0.2s'
                   }}
                 >
-                  <Calendar size={14} /> {pStat.label}
-                  <span style={{ fontSize: '11px', background: selectedPeriodView === pStat.label ? '#e2e8f0' : '#f1f5f9', color: selectedPeriodView === pStat.label ? '#334155' : '#94a3b8', padding: '1px 7px', borderRadius: '10px', marginLeft: '2px' }}>
-                    {pStat.count}
+                  <Calendar size={14} color={isSelected ? '#1d4ed8' : '#64748b'} />
+                  <span>{pItem.label}</span>
+                  <span style={{
+                    fontSize: '11px',
+                    background: isSelected ? '#bfdbfe' : '#f1f5f9',
+                    color: isSelected ? '#1e3a8a' : '#64748b',
+                    padding: '1px 7px',
+                    borderRadius: '10px',
+                    marginLeft: '2px',
+                    fontWeight: 600
+                  }}>
+                    {pItem.count}
                   </span>
                 </button>
-              ))}
-            </>
+              )
+            })
+          })()}
+
+          {/* Botón para sincronizar cohortes históricas si hiciera falta */}
+          {isAdmin && (
+            <button
+              onClick={handleSincronizarCohortes}
+              disabled={syncingCohortes}
+              title="Sincronizar participantes según su período de inicio histórico (2025-3, 2026-1, 2026-2)"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '6px 12px', borderRadius: '16px', border: '1px solid #cbd5e1', cursor: 'pointer',
+                background: '#f8fafc', color: '#475569', fontSize: '11px', fontWeight: 600,
+                marginLeft: 'auto'
+              }}
+            >
+              <RefreshCw size={12} className={syncingCohortes ? 'animate-spin' : ''} />
+              {syncingCohortes ? 'Sincronizando...' : 'Sincronizar Cohortes'}
+            </button>
           )}
         </div>
       </div>
@@ -526,7 +618,7 @@ export default function ParticipantesPage() {
                     <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       {selectedPeriodView === 'ACTUAL' ? <Users size={18} color="#2d6bc4" /> : <Calendar size={18} color="#64748b" />}
                       <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#1a3a6b', margin: 0 }}>
-                        {selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : (selectedPeriodView === 'TODOS' ? 'Todos los Históricos' : `Participantes del Periodo ${selectedPeriodView}`)}
+                        {selectedPeriodView === 'ACTUAL' ? 'Participantes del Periodo Actual' : (selectedPeriodView === 'TODOS' ? 'Todos los Históricos' : `Participantes que iniciaron en el Periodo ${selectedPeriodView}`)}
                       </h3>
                     </div>
                     <table className="data-table" style={{ margin: 0, border: 'none', tableLayout: 'fixed', width: '100%' }}>
@@ -1022,6 +1114,16 @@ export default function ParticipantesPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Importación Masiva Excel */}
+      <ImportarParticipantesModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={() => {
+          fetchData()
+          fetchStats()
+        }}
+      />
 
     </div>
   )

@@ -514,7 +514,7 @@ async function main() {
               where: { id: existe.id },
               data: {
                 trimestre: (existe.trimestre === 'INTRODUCTORIO') ? 'Introductorio' : existe.trimestre,
-                periodoId: periodo2.id,
+                periodoId: existe.periodoId || periodo2.id,
                 // Solo sobreescribir region/aula si tenemos un valor válido nuevo
                 ...(rId ? { regionId: rId } : {}),
                 ...(aId ? { aulaTerritorialId: aId } : {}),

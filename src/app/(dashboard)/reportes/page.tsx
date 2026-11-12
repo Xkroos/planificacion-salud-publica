@@ -100,7 +100,7 @@ export default function ReportesPage() {
       const autoTable = (await import('jspdf-autotable')).default
 
       const aulaId = cronograma.aulaTerritorial?.id || ''
-      const res = await fetch(`/sistema/api/participantes?aulaTerritorialId=${aulaId}&periodoId=${cronograma.periodo.id}&limit=1000`)
+      const res = await fetch(`/sistema/api/participantes?aulaTerritorialId=${aulaId}&limit=5000`)
       const allPartsData = await res.json()
       const allParts = Array.isArray(allPartsData) ? allPartsData : (Array.isArray(allPartsData?.data) ? allPartsData.data : [])
       

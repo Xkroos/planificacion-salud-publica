@@ -19,11 +19,66 @@ export async function POST(
       return NextResponse.json({ error: 'No se enviaron participantes para inscribir' }, { status: 400 })
     }
 
+    const cronograma = await prisma.cronograma.findUnique({
+      where: { id: cronogramaId },
+      include: {
+        aulaTerritorial: {
+          include: { region: true }
+        }
+      }
+    })
+
+    if (!cronograma) {
+      return NextResponse.json({ error: 'Cronograma no encontrado' }, { status: 404 })
+    }
+
+    const normalizar = (str?: string | null) =>
+      (str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    const normCronAula = normalizar(cronograma.aulaTerritorial?.nombre)
+    const normCronRegion = normalizar(cronograma.aulaTerritorial?.region?.nombre)
+
     const resultados = []
 
     for (const participanteId of participantesIds) {
-      const participante = await prisma.participante.findUnique({ where: { id: participanteId } })
+      const participante = await prisma.participante.findUnique({
+        where: { id: participanteId },
+        include: {
+          region: true,
+          aulaTerritorial: { include: { region: true } }
+        }
+      })
       if (!participante) continue
+
+      // Validar que el participante pertenezca al mismo Estado (Región) y Aula Territorial del cronograma
+      if (cronograma.aulaTerritorialId) {
+        const partAulaNombre = normalizar(participante.aulaTerritorial?.nombre)
+        const partRegionNombre = normalizar(
+          participante.region?.nombre || participante.aulaTerritorial?.region?.nombre
+        )
+
+        const coincideAula =
+          participante.aulaTerritorialId === cronograma.aulaTerritorialId ||
+          (normCronAula && partAulaNombre === normCronAula)
+        const coincideRegion =
+          !normCronRegion ||
+          participante.regionId === cronograma.aulaTerritorial?.regionId ||
+          partRegionNombre === normCronRegion
+
+        if (!coincideAula || !coincideRegion) {
+          return NextResponse.json(
+            {
+              error: `El participante ${participante.apellido || ''} ${participante.nombre} no pertenece al estado ${cronograma.aulaTerritorial?.region?.nombre} ni al aula territorial ${cronograma.aulaTerritorial?.nombre}.`
+            },
+            { status: 400 }
+          )
+        }
+      }
 
       const existing = await prisma.cronogramaParticipante.findUnique({
         where: { cronogramaId_participanteId: { cronogramaId, participanteId } }

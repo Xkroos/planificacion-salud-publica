@@ -15,26 +15,116 @@ export async function GET(req: NextRequest) {
     const regionId = searchParams.get('regionId') || ''
     const aulaTerritorialId = searchParams.get('aulaTerritorialId') || ''
     const periodoId = searchParams.get('periodoId') || ''
+    const soloActivos = searchParams.get('soloActivos') === 'true'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const skip = (page - 1) * limit
 
+    const normalizar = (str: string) =>
+      str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/\s+/g, ' ')
+        .trim()
+
     const where: any = {}
+    const andConditions: any[] = []
+
     if (nombre) {
-      where.OR = [
-        { nombre: { contains: nombre, mode: 'insensitive' } },
-        { apellido: { contains: nombre, mode: 'insensitive' } },
-        { cedula: { contains: nombre, mode: 'insensitive' } }
-      ]
+      andConditions.push({
+        OR: [
+          { nombre: { contains: nombre, mode: 'insensitive' } },
+          { apellido: { contains: nombre, mode: 'insensitive' } },
+          { cedula: { contains: nombre, mode: 'insensitive' } }
+        ]
+      })
     }
     if (cedula) where.cedula = { contains: cedula }
     if (unidadId) where.unidadId = unidadId
     if (genero) where.genero = genero
     if (trimestre) where.trimestre = trimestre
-    if (regionId && regionId !== 'undefined') where.regionId = regionId
-    if (aulaTerritorialId && aulaTerritorialId !== 'undefined') where.aulaTerritorialId = aulaTerritorialId
-    if (periodoId && periodoId !== 'undefined') {
+
+    // Filtro por Estado (Región) y Aula Territorial (tolerante a tildes pero estricto a dicho estado y aula)
+    if (aulaTerritorialId && aulaTerritorialId !== 'undefined') {
+      const aulaTarget = await prisma.aulaTerritorial.findUnique({
+        where: { id: aulaTerritorialId },
+        include: { region: true }
+      })
+
+      if (aulaTarget) {
+        const normAula = normalizar(aulaTarget.nombre)
+        const normRegion = normalizar(aulaTarget.region.nombre)
+
+        const todasRegiones = await prisma.region.findMany({ include: { aulas: true } })
+        const regionesCoincidentes = todasRegiones.filter(r => normalizar(r.nombre) === normRegion)
+        const regionIdsValidos = regionesCoincidentes.map(r => r.id)
+
+        const aulaIdsValidos: string[] = [aulaTarget.id]
+        for (const r of regionesCoincidentes) {
+          for (const a of r.aulas) {
+            if (normalizar(a.nombre) === normAula && !aulaIdsValidos.includes(a.id)) {
+              aulaIdsValidos.push(a.id)
+            }
+          }
+        }
+
+        andConditions.push({
+          aulaTerritorialId: { in: aulaIdsValidos }
+        })
+        if (regionIdsValidos.length > 0) {
+          andConditions.push({
+            OR: [
+              { regionId: { in: regionIdsValidos } },
+              { aulaTerritorial: { regionId: { in: regionIdsValidos } } }
+            ]
+          })
+        }
+      } else {
+        where.aulaTerritorialId = aulaTerritorialId
+        if (regionId && regionId !== 'undefined') where.regionId = regionId
+      }
+    } else if (regionId && regionId !== 'undefined') {
+      const regTarget = await prisma.region.findUnique({ where: { id: regionId } })
+      if (regTarget) {
+        const normRegion = normalizar(regTarget.nombre)
+        const todasRegiones = await prisma.region.findMany()
+        const regionIdsValidos = todasRegiones
+          .filter(r => normalizar(r.nombre) === normRegion)
+          .map(r => r.id)
+        andConditions.push({
+          OR: [
+            { regionId: { in: regionIdsValidos } },
+            { aulaTerritorial: { regionId: { in: regionIdsValidos } } }
+          ]
+        })
+      } else {
+        where.regionId = regionId
+      }
+    }
+
+    // Filtrar solo estudiantes activos (excluir graduados/finalizados o retirados)
+    if (soloActivos) {
+      andConditions.push({
+        OR: [
+          { trimestre: null },
+          {
+            NOT: {
+              trimestre: {
+                in: ['FINALIZADO', 'Finalizado', 'finalizado', 'RETIRADO', 'Retirado', 'retirado']
+              }
+            }
+          }
+        ]
+      })
+    }
+
+    if (periodoId && periodoId !== 'undefined' && periodoId !== 'TODOS' && periodoId !== 'ACTUAL') {
       where.periodoId = periodoId
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions
     }
     // Sin filtro de periodoId → mostrar TODOS los participantes de todos los periodos
 

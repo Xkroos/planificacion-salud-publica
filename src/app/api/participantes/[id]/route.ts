@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { logAction } from '@/lib/bitacora'
+import { asegurarTablaInscripcionesPeriodo } from '@/lib/services/sincronizarCohortes'
 
 // GET /api/participantes/[id]
 export async function GET(
@@ -9,6 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await asegurarTablaInscripcionesPeriodo()
     const { id } = await params
     const participante = await prisma.participante.findUnique({
       where: { id },

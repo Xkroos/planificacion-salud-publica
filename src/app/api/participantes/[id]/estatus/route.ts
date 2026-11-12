@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { logAction } from '@/lib/bitacora'
 import { CondicionAcademica } from '@prisma/client'
+import { asegurarTablaInscripcionesPeriodo } from '@/lib/services/sincronizarCohortes'
 
 // PATCH /api/participantes/[id]/estatus
 export async function PATCH(
@@ -10,6 +11,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await asegurarTablaInscripcionesPeriodo()
     const session = await auth()
     if (!session) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
