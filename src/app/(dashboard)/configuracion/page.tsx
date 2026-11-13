@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Settings, ToggleLeft, ToggleRight, Shield, AlertTriangle, Loader2, UserPlus, Trash2 } from 'lucide-react'
+import { Settings, ToggleLeft, ToggleRight, Shield, AlertTriangle, Loader2, UserPlus, Database, Download } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 
 type Config = {
@@ -17,7 +17,39 @@ export default function ConfiguracionPage() {
   const [config, setConfig] = useState<Config | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [downloadingBackup, setDownloadingBackup] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const handleDownloadBackup = async () => {
+    setDownloadingBackup(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/sistema/api/admin/backup')
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Error al generar el respaldo de la base de datos')
+      }
+      const disposition = res.headers.get('Content-Disposition') || ''
+      const match = disposition.match(/filename="([^"]+)"/)
+      const fileName = match?.[1] || `respaldo_unerg_${new Date().toISOString().slice(0, 10)}.sql`
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+
+      setMessage({ type: 'success', text: `Respaldo descargado exitosamente (${fileName})` })
+    } catch (error: unknown) {
+      setMessage({ type: 'error', text: (error as Error).message || 'Error al descargar el respaldo' })
+    } finally {
+      setDownloadingBackup(false)
+    }
+  }
 
   const fetchConfig = async () => {
     try {
@@ -221,6 +253,47 @@ export default function ConfiguracionPage() {
               style={{ minWidth: '140px' }}
             >
               {saving ? 'Guardando...' : config?.inscripcionParticipantesAbierta ? 'Cerrar Proceso' : 'Abrir Proceso'}
+            </button>
+          </div>
+        </div>
+
+        {/* Respaldo de Base de Datos (.SQL) */}
+        <div className="card" style={{ border: '1px solid #bfdbfe', background: 'linear-gradient(135deg, #ffffff, #f8fafc)' }}>
+          <div style={{ padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{
+                width: '48px', height: '48px', borderRadius: '12px',
+                background: 'linear-gradient(135deg, #1a3a6b, #2d6bc4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(45, 107, 196, 0.25)',
+              }}>
+                <Database size={24} color="white" />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, color: '#1a3a6b', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  Respaldo Completo de Base de Datos (.SQL)
+                  <span className="badge" style={{ background: '#dbeafe', color: '#1e40af', fontSize: '11px' }}>BACKUP</span>
+                </div>
+                <div style={{ fontSize: '13px', color: '#64748b', marginTop: '3px', maxWidth: '580px' }}>
+                  Descarga una copia completa en formato <strong>.sql</strong> con todas las tablas, participantes, cohortes, cronogramas, docentes y registros del sistema antes de realizar cierres de período o promociones masivas.
+                </div>
+              </div>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={handleDownloadBackup}
+              disabled={downloadingBackup}
+              style={{ minWidth: '210px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              {downloadingBackup ? (
+                <>
+                  <Loader2 size={16} className="spin" /> Generando .SQL...
+                </>
+              ) : (
+                <>
+                  <Download size={16} /> Descargar Respaldo (.sql)
+                </>
+              )}
             </button>
           </div>
         </div>
