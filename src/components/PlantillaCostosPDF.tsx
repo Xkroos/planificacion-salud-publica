@@ -277,10 +277,16 @@ export const PlantillaCostosPDF = forwardRef<HTMLDivElement, PlantillaCostosPDFP
           </tr>
           <tr>
             {[0,1,2,3,4,5].map(i => {
-              const fechasFirstAsignacion = cronograma.asignaciones[0]?.fechas || []
+              const asignacionesConFechas = cronograma.asignaciones || []
+              const baseFecha0 = asignacionesConFechas[0]?.fechas?.[0]?.fecha
+              const fechaObj =
+                asignacionesConFechas[0]?.fechas?.[i] ||
+                asignacionesConFechas.find((a: any) => baseFecha0 && a.fechas?.[0]?.fecha === baseFecha0 && a.fechas?.[i])?.fechas?.[i] ||
+                asignacionesConFechas.find((a: any) => a.fechas?.[i])?.fechas?.[i]
+
               let dateStr = ''
-              if (fechasFirstAsignacion[i]) {
-                 const d = new Date(fechasFirstAsignacion[i].fecha)
+              if (fechaObj?.fecha) {
+                 const d = new Date(fechaObj.fecha)
                  dateStr = `${d.getUTCDate().toString().padStart(2, '0')}/${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear().toString().slice(-2)}`
               }
               return (
